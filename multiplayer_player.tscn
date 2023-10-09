@@ -1,0 +1,520 @@
+[gd_scene load_steps=104 format=2]
+
+[ext_resource path="res://MOD_CONTENT/CruS Online/multiplayer_player.gd" type="Script" id=1]
+[ext_resource path="res://MOD_CONTENT/CruS Online/player_model/player_model.tscn" type="PackedScene" id=2]
+[ext_resource path="res://Imported_Mesh/Weapon_Mesh_Only/Nambu.obj" type="ArrayMesh" id=6]
+[ext_resource path="res://Imported_Mesh/Weapon_Mesh_Only/radgun_solid.obj" type="ArrayMesh" id=7]
+[ext_resource path="res://Imported_Mesh/Weapon_Mesh_Only/dartgun.obj" type="ArrayMesh" id=8]
+[ext_resource path="res://Imported_Mesh/Weapon_Mesh_Only/Bore.obj" type="ArrayMesh" id=9]
+[ext_resource path="res://Imported_Mesh/Weapon_Mesh_Only/MG3.obj" type="ArrayMesh" id=10]
+[ext_resource path="res://Imported_Mesh/Weapon_Mesh_Only/Pistol.obj" type="ArrayMesh" id=11]
+[ext_resource path="res://Imported_Mesh/Weapon_Mesh_Only/S_SMG.obj" type="ArrayMesh" id=12]
+[ext_resource path="res://Imported_Mesh/Weapon_Mesh_Only/zippy.obj" type="ArrayMesh" id=13]
+[ext_resource path="res://Imported_Mesh/Weapon_Mesh_Only/an94.obj" type="ArrayMesh" id=14]
+[ext_resource path="res://Imported_Mesh/Weapon_Mesh_Only/mkr.obj" type="ArrayMesh" id=15]
+[ext_resource path="res://Imported_Mesh/Weapon_Mesh_Only/flashlight.obj" type="ArrayMesh" id=16]
+[ext_resource path="res://Imported_Mesh/Weapon_Mesh_Only/Mauser.obj" type="ArrayMesh" id=17]
+[ext_resource path="res://Imported_Mesh/Weapon_Mesh_Only/steyr.obj" type="ArrayMesh" id=18]
+[ext_resource path="res://Imported_Mesh/Weapon_Mesh_Only/Sniper.obj" type="ArrayMesh" id=19]
+[ext_resource path="res://Imported_Mesh/Weapon_Mesh_Only/dna.obj" type="ArrayMesh" id=20]
+[ext_resource path="res://Imported_Mesh/Weapon_Mesh_Only/Autoshotgun.obj" type="ArrayMesh" id=21]
+[ext_resource path="res://Imported_Mesh/Weapon_Mesh_Only/SMG.obj" type="ArrayMesh" id=22]
+[ext_resource path="res://Imported_Mesh/Weapon_Mesh_Only/RL.obj" type="ArrayMesh" id=23]
+[ext_resource path="res://Imported_Mesh/Weapon_Mesh_Only/Gas_Launcher.obj" type="ArrayMesh" id=24]
+[ext_resource path="res://Imported_Mesh/Weapon_Mesh_Only/Shotgun.obj" type="ArrayMesh" id=25]
+[ext_resource path="res://Imported_Mesh/Weapon_Mesh_Only/vag72.obj" type="ArrayMesh" id=26]
+[ext_resource path="res://Imported_Mesh/Weapon_Mesh_Only/AR.obj" type="ArrayMesh" id=27]
+[ext_resource path="res://Imported_Mesh/Weapon_Mesh_Only/rod.obj" type="ArrayMesh" id=28]
+[ext_resource path="res://Imported_Mesh/Weapon_Mesh_Only/baton.obj" type="ArrayMesh" id=29]
+[ext_resource path="res://Imported_Mesh/SMG_Material.material" type="Material" id=30]
+[ext_resource path="res://Imported_Mesh/AR_material.material" type="Material" id=31]
+[ext_resource path="res://Imported_Mesh/Bore_Material.material" type="Material" id=32]
+[ext_resource path="res://Imported_Mesh/Nambu_Material.material" type="Material" id=33]
+[ext_resource path="res://Imported_Mesh/Sniper_Material.material" type="Material" id=34]
+[ext_resource path="res://Textures/Weapons/baton.png" type="Texture" id=35]
+[ext_resource path="res://Textures/Weapons/zippy.png" type="Texture" id=36]
+[ext_resource path="res://Textures/Weapons/silenced_smg.png" type="Texture" id=37]
+[ext_resource path="res://Textures/Weapons/an94.png" type="Texture" id=38]
+[ext_resource path="res://Textures/Weapons/vag72.png" type="Texture" id=39]
+[ext_resource path="res://Textures/Weapons/MG3.png" type="Texture" id=40]
+[ext_resource path="res://Textures/Weapons/autoshotgun.png" type="Texture" id=41]
+[ext_resource path="res://Textures/Weapons/Shotgun.png" type="Texture" id=42]
+[ext_resource path="res://Textures/Weapons/mkr.png" type="Texture" id=43]
+[ext_resource path="res://Textures/Weapons/radgun.png" type="Texture" id=44]
+[ext_resource path="res://Textures/Weapons/flashlight.png" type="Texture" id=45]
+[ext_resource path="res://Textures/Weapons/mauser.png" type="Texture" id=46]
+[ext_resource path="res://Textures/Weapons/Gas_Launcher.png" type="Texture" id=47]
+[ext_resource path="res://Textures/Weapons/dartgun.png" type="Texture" id=48]
+[ext_resource path="res://Textures/Weapons/shockwave.png" type="Texture" id=49]
+[ext_resource path="res://Textures/Weapons/steyr.png" type="Texture" id=50]
+[ext_resource path="res://Textures/Weapons/flamethrower.png" type="Texture" id=51]
+[ext_resource path="res://Textures/Weapons/SKS.png" type="Texture" id=52]
+[ext_resource path="res://Textures/Weapons/dna.png" type="Texture" id=53]
+[ext_resource path="res://Textures/Weapons/nailgun.png" type="Texture" id=54]
+[ext_resource path="res://Imported_Mesh/Pistol_Material.material" type="Material" id=55]
+[ext_resource path="res://Sfx/UI/implant_unequip.wav" type="AudioStream" id=56]
+[ext_resource path="res://Imported_Mesh/RL_Material.material" type="Material" id=57]
+[ext_resource path="res://Materials/rod.tres" type="Material" id=58]
+[ext_resource path="res://Imported_Mesh/Weapon_Mesh_Only/flamethrower.obj" type="ArrayMesh" id=59]
+[ext_resource path="res://Imported_Mesh/Weapon_Mesh_Only/nailer.obj" type="ArrayMesh" id=60]
+[ext_resource path="res://Imported_Mesh/Weapon_Mesh_Only/SKS.obj" type="ArrayMesh" id=61]
+[ext_resource path="res://Imported_Mesh/Weapon_Mesh_Only/shockwave.obj" type="ArrayMesh" id=62]
+[ext_resource path="res://Imported_Mesh/Weapon_Mesh_Only/light.obj" type="ArrayMesh" id=63]
+[ext_resource path="res://Textures/Weapons/light.png" type="Texture" id=64]
+[ext_resource path="res://Sfx/Player/IED_hollow_laughter.wav" type="AudioStream" id=65]
+[ext_resource path="res://Sfx/Player/IED_armed_1.wav" type="AudioStream" id=66]
+[ext_resource path="res://Sfx/Player/IED_armed_2.wav" type="AudioStream" id=67]
+[ext_resource path="res://Sfx/Player/IED_drum.wav" type="AudioStream" id=68]
+[ext_resource path="res://Sfx/WeaponsPickups/Rocket launcher/missile_explosion.wav" type="AudioStream" id=69]
+[ext_resource path="res://Sfx/Player/player_pain_1.wav" type="AudioStream" id=70]
+[ext_resource path="res://Sfx/Player/Jump.wav" type="AudioStream" id=71]
+[ext_resource path="res://Sfx/wood01.wav" type="AudioStream" id=72]
+[ext_resource path="res://Sfx/Player/kick.wav" type="AudioStream" id=73]
+[ext_resource path="res://Sfx/Player/kickgrunt.wav" type="AudioStream" id=74]
+
+[sub_resource type="DynamicFontData" id=33]
+font_path = "res://Fonts/Envy Code R.ttf"
+
+[sub_resource type="DynamicFont" id=34]
+use_mipmaps = true
+font_data = SubResource( 33 )
+
+[sub_resource type="GDScript" id=65]
+script/source = "extends StaticBody
+
+onready var client = get_node(\"../../../../../../\")
+
+func damage(damage, collision_n, collision_p, shooter_pos):
+	client.do_damage(damage * 2, collision_n, collision_p, shooter_pos)
+"
+
+[sub_resource type="BoxShape" id=64]
+extents = Vector3( 0.228365, 0.241875, 0.277687 )
+
+[sub_resource type="SpatialMaterial" id=17]
+albedo_texture = ExtResource( 48 )
+metallic_specular = 0.0
+
+[sub_resource type="SpatialMaterial" id=3]
+albedo_texture = ExtResource( 35 )
+metallic_specular = 0.0
+
+[sub_resource type="SpatialMaterial" id=15]
+albedo_texture = ExtResource( 42 )
+metallic_specular = 0.0
+
+[sub_resource type="SpatialMaterial" id=7]
+albedo_texture = ExtResource( 37 )
+metallic_specular = 0.0
+
+[sub_resource type="SpatialMaterial" id=16]
+albedo_texture = ExtResource( 47 )
+metallic_specular = 0.0
+
+[sub_resource type="SpatialMaterial" id=19]
+albedo_texture = ExtResource( 40 )
+metallic_specular = 0.0
+
+[sub_resource type="SpatialMaterial" id=14]
+albedo_texture = ExtResource( 41 )
+metallic_specular = 0.0
+
+[sub_resource type="SpatialMaterial" id=20]
+albedo_texture = ExtResource( 46 )
+metallic_specular = 0.0
+
+[sub_resource type="SpatialMaterial" id=22]
+albedo_texture = ExtResource( 43 )
+metallic_specular = 0.0
+
+[sub_resource type="SpatialMaterial" id=18]
+albedo_texture = ExtResource( 44 )
+metallic_specular = 0.0
+
+[sub_resource type="SpatialMaterial" id=5]
+albedo_texture = ExtResource( 45 )
+metallic_specular = 0.0
+
+[sub_resource type="SpatialMaterial" id=2]
+albedo_texture = ExtResource( 36 )
+metallic_specular = 0.0
+
+[sub_resource type="SpatialMaterial" id=8]
+albedo_texture = ExtResource( 38 )
+metallic_specular = 0.0
+
+[sub_resource type="SpatialMaterial" id=12]
+albedo_texture = ExtResource( 39 )
+metallic_specular = 0.0
+
+[sub_resource type="SpatialMaterial" id=13]
+albedo_texture = ExtResource( 50 )
+metallic_specular = 0.0
+
+[sub_resource type="SpatialMaterial" id=6]
+albedo_texture = ExtResource( 53 )
+metallic_specular = 0.0
+
+[sub_resource type="SpatialMaterial" id=4]
+albedo_texture = ExtResource( 51 )
+metallic_specular = 0.0
+
+[sub_resource type="SpatialMaterial" id=9]
+params_cull_mode = 2
+albedo_texture = ExtResource( 52 )
+metallic_specular = 0.0
+
+[sub_resource type="SpatialMaterial" id=11]
+params_cull_mode = 2
+albedo_texture = ExtResource( 54 )
+metallic_specular = 0.0
+
+[sub_resource type="SpatialMaterial" id=10]
+params_cull_mode = 2
+albedo_texture = ExtResource( 49 )
+metallic_specular = 0.0
+
+[sub_resource type="SpatialMaterial" id=21]
+albedo_texture = ExtResource( 64 )
+metallic_specular = 0.0
+
+[sub_resource type="GDScript" id=57]
+script/source = "extends StaticBody
+
+onready var client = get_node(\"../../../../../../\")
+
+func destroy(col_n, col_p):
+	client.drop_weapon()
+"
+
+[sub_resource type="BoxShape" id=58]
+extents = Vector3( 0.346302, 0.144416, 0.780459 )
+
+[sub_resource type="GDScript" id=59]
+script/source = "extends StaticBody
+
+onready var client = get_node(\"../../../../../../\")
+
+func damage(damage, collision_n, collision_p, shooter_pos):
+	client.do_damage(damage, collision_n, collision_p, shooter_pos)
+"
+
+[sub_resource type="BoxShape" id=35]
+extents = Vector3( 1.18106, 0.494403, 0.82258 )
+
+[sub_resource type="AudioStreamRandomPitch" id=61]
+audio_stream = ExtResource( 70 )
+
+[sub_resource type="AudioStreamRandomPitch" id=62]
+audio_stream = ExtResource( 72 )
+
+[sub_resource type="AudioStreamRandomPitch" id=63]
+audio_stream = ExtResource( 74 )
+
+[node name="PlayerClient" type="Spatial"]
+script = ExtResource( 1 )
+
+[node name="Puppet" type="Spatial" parent="."]
+
+[node name="Nickname" type="Label3D" parent="Puppet"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.88065, 0 )
+billboard = 2
+modulate = Color( 1, 0, 0.819608, 1 )
+text = "**** <- Youtube don't like this word lmao"
+font = SubResource( 34 )
+
+[node name="PlayerModel" parent="Puppet" instance=ExtResource( 2 )]
+transform = Transform( -1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0.84536, 0 )
+
+[node name="Skeleton" parent="Puppet/PlayerModel/Armature" index="0"]
+bones/0/bound_children = [ NodePath("Chest") ]
+bones/6/bound_children = [ NodePath("RightHand") ]
+
+[node name="Head" type="StaticBody" parent="Puppet/PlayerModel/Armature/Skeleton/Head" index="1"]
+transform = Transform( 0.5, -2.32831e-10, 0, 0, 0.5, -3.72529e-09, 0, 0, 0.5, 0.00151798, 0.125857, 0.0126366 )
+collision_layer = 4
+collision_mask = 0
+script = SubResource( 65 )
+
+[node name="CollisionPolygon" type="CollisionShape" parent="Puppet/PlayerModel/Armature/Skeleton/Head/Head"]
+shape = SubResource( 64 )
+
+[node name="RightHand" type="BoneAttachment" parent="Puppet/PlayerModel/Armature/Skeleton" index="1"]
+transform = Transform( -0.23481, 0.329649, 0.914437, 0.0620954, -0.933732, 0.352548, 0.970056, 0.139564, 0.198779, 0.272535, 0.0655896, 0.00147998 )
+bone_name = "right_hand"
+
+[node name="Weapons" type="Spatial" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand"]
+transform = Transform( 0.998408, -0.00778752, -0.0558536, -0.0559724, -0.0160355, -0.998302, 0.0068792, 0.999842, -0.0164475, -0.0748912, 0.193531, -0.0563843 )
+
+[node name="Pistol_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
+transform = Transform( -1.54134e-07, -1, -1.49012e-08, 1, -1.68569e-07, 1.49012e-08, 0, 7.45058e-09, 1, 0, 0, 0 )
+visible = false
+mesh = ExtResource( 11 )
+material/0 = ExtResource( 55 )
+
+[node name="SMG_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
+transform = Transform( -1.60187e-07, -1, -6.70552e-08, 1, -1.42492e-07, 1.49012e-08, 0, 2.98023e-08, 1, -0.0498072, 0.00876129, -0.020474 )
+visible = false
+mesh = ExtResource( 22 )
+material/0 = ExtResource( 30 )
+
+[node name="Tranq_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
+transform = Transform( -1.62921e-07, -1, 2.84217e-14, 1, -1.62921e-07, 0, 5.68434e-14, 5.68434e-14, 1, 0, 0, -0.0244993 )
+visible = false
+material_override = SubResource( 17 )
+mesh = ExtResource( 8 )
+
+[node name="Baton_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
+transform = Transform( -4.47035e-07, -1.49012e-08, 0.999999, 0.733018, 0.680209, 8.9407e-08, -0.68021, 0.733019, 2.04891e-07, -0.0263802, 0, 0.0769089 )
+visible = false
+mesh = ExtResource( 29 )
+material/0 = SubResource( 3 )
+
+[node name="Shotgun_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
+transform = Transform( -1.78814e-07, -1, -1.11759e-08, 1, -1.78814e-07, 1.21072e-07, -6.51926e-08, -2.23517e-08, 1, 0.023242, -0.0300338, -2.98023e-08 )
+visible = false
+material_override = SubResource( 15 )
+mesh = ExtResource( 25 )
+
+[node name="RL_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
+transform = Transform( -2.38419e-07, -1, -2.32831e-08, 0.995678, -1.49012e-07, 0.0928746, -0.0928747, -2.98023e-08, 0.995678, 0.0301419, 0.00730366, 0.0436859 )
+visible = false
+mesh = ExtResource( 23 )
+material/0 = ExtResource( 57 )
+
+[node name="Sniper_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
+transform = Transform( -1.78814e-07, -1, 0, 1, -1.78814e-07, 5.21541e-08, -3.1665e-08, -1.49012e-08, 1, 2.98023e-08, -5.96046e-08, -0.267074 )
+visible = false
+material_override = ExtResource( 34 )
+mesh = ExtResource( 19 )
+
+[node name="AR_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
+transform = Transform( -1.62921e-07, -1, 3.55271e-14, 1, -1.62921e-07, 0, 7.10543e-14, 7.10543e-14, 1, 0.00964653, -0.00763553, 0 )
+visible = false
+material_override = ExtResource( 31 )
+mesh = ExtResource( 27 )
+
+[node name="S_SMG_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
+transform = Transform( -1.62921e-07, -1, 2.84217e-14, 1, -1.62921e-07, 0, 5.68434e-14, 5.68434e-14, 1, 0, 0, -0.00960273 )
+visible = false
+material_override = SubResource( 7 )
+mesh = ExtResource( 12 )
+
+[node name="Nambu_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
+transform = Transform( -1.62921e-07, -1, 2.13163e-14, 1, -1.62921e-07, 0, 4.26326e-14, 4.26326e-14, 1, 0, -0.0174051, 0 )
+visible = false
+material_override = ExtResource( 33 )
+mesh = ExtResource( 6 )
+
+[node name="Gas_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
+transform = Transform( -1.62921e-07, -1, 2.13163e-14, 1, -1.62921e-07, 0, 4.26326e-14, 4.26326e-14, 1, 0, 0, -0.0167323 )
+visible = false
+material_override = SubResource( 16 )
+mesh = ExtResource( 24 )
+
+[node name="MG3_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
+transform = Transform( -1.62921e-07, -1, 4.9738e-14, 1, -1.62921e-07, 0, 9.9476e-14, 9.9476e-14, 1, 0.0127081, -0.00718672, 0.0170767 )
+visible = false
+material_override = SubResource( 19 )
+mesh = ExtResource( 10 )
+
+[node name="Autoshotgun_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
+transform = Transform( -1.62921e-07, -1, 6.39488e-14, 1, -1.62921e-07, 0, 1.27898e-13, 1.27898e-13, 1, 0.0155858, -0.0170236, 0.021488 )
+visible = false
+material_override = SubResource( 14 )
+mesh = ExtResource( 21 )
+
+[node name="Mauser_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
+transform = Transform( -1.62921e-07, -1, 4.9738e-14, 1, -1.62921e-07, 0, 9.9476e-14, 9.9476e-14, 1, 0.0125899, -0.0349369, 0.0404422 )
+visible = false
+material_override = SubResource( 20 )
+mesh = ExtResource( 17 )
+
+[node name="Bore_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
+transform = Transform( -1.62921e-07, -1, 4.9738e-14, 1, -1.62921e-07, 0, 9.9476e-14, 9.9476e-14, 1, 0.00996399, -0.0128468, 0.0250506 )
+visible = false
+material_override = ExtResource( 32 )
+mesh = ExtResource( 9 )
+
+[node name="MKR_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
+transform = Transform( -1.62921e-07, -1, 5.68434e-14, 1, -1.62921e-07, 0, 1.13687e-13, 1.13687e-13, 1, 0.0252202, -0.025261, 0.0514158 )
+visible = false
+material_override = SubResource( 22 )
+mesh = ExtResource( 15 )
+
+[node name="Rad_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
+transform = Transform( -1.62921e-07, -1, 9.9476e-14, 1, -1.62921e-07, -1.42109e-14, 1.7053e-13, 1.98952e-13, 1, 0.0322447, -0.0232374, 0.086473 )
+visible = false
+material_override = SubResource( 18 )
+mesh = ExtResource( 7 )
+
+[node name="Flashlight_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
+transform = Transform( 0.680209, -0.733018, 4.26326e-14, 0.733018, 0.680209, 0, 0, 8.52651e-14, 1, 0.0678082, 1.49012e-08, 0.0712996 )
+visible = false
+material_override = SubResource( 5 )
+mesh = ExtResource( 16 )
+
+[node name="Zippy_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
+transform = Transform( -1.62921e-07, -1, 6.39488e-14, 1, -1.62921e-07, 0, 1.27898e-13, 1.27898e-13, 1, 0.0326614, -0.0253545, 0.0754782 )
+visible = false
+material_override = SubResource( 2 )
+mesh = ExtResource( 13 )
+
+[node name="AN94_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
+transform = Transform( -1.62921e-07, -1, 4.9738e-14, 1, -1.62921e-07, 0, 9.9476e-14, 9.9476e-14, 1, 0.0205041, -0.0260217, 0.0240001 )
+visible = false
+material_override = SubResource( 8 )
+mesh = ExtResource( 14 )
+
+[node name="VAG72_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
+transform = Transform( -1.62921e-07, -1, 6.39488e-14, 1, -1.62921e-07, 0, 1.27898e-13, 1.27898e-13, 1, 0.0357013, -0.0203427, 0.0429826 )
+visible = false
+material_override = SubResource( 12 )
+mesh = ExtResource( 26 )
+
+[node name="Steyr_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
+transform = Transform( -1.62921e-07, -1, 4.9738e-14, 1, -1.62921e-07, 0, 9.9476e-14, 9.9476e-14, 1, 0.0205038, -0.0243492, 0.0683106 )
+visible = false
+material_override = SubResource( 13 )
+mesh = ExtResource( 18 )
+
+[node name="DNA_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
+transform = Transform( -1.62921e-07, -1, 4.26326e-14, 1, -1.62921e-07, 0, 8.52651e-14, 8.52651e-14, 1, 0, -0.0189149, -0.000422537 )
+visible = false
+material_override = SubResource( 6 )
+mesh = ExtResource( 20 )
+
+[node name="Rod_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
+transform = Transform( -4.32209e-07, -1.61835e-08, 0.999999, 0.733018, 0.680209, 7.45059e-08, -0.68021, 0.733019, 1.94707e-07, -0.272677, -0.0249341, 0.0878842 )
+visible = false
+material_override = ExtResource( 58 )
+mesh = ExtResource( 28 )
+
+[node name="FT_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
+transform = Transform( -1.62921e-07, -1, 2.84217e-14, 1, -1.62921e-07, 0, 5.68434e-14, 5.68434e-14, 1, 0.0508103, 1.49012e-08, 0.0863747 )
+visible = false
+material_override = SubResource( 4 )
+mesh = ExtResource( 59 )
+
+[node name="SKS_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
+transform = Transform( -1.62921e-07, -1, 3.55271e-14, 1, -1.62921e-07, 0, 7.10543e-14, 7.10543e-14, 1, 0.0221109, -0.0333307, 0 )
+visible = false
+material_override = SubResource( 9 )
+mesh = ExtResource( 61 )
+
+[node name="Nailer_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
+transform = Transform( -1.62921e-07, -1, 2.13163e-14, 1, -1.62921e-07, 0, 4.26326e-14, 4.26326e-14, 1, 0, 0, 0.000238955 )
+visible = false
+material_override = SubResource( 11 )
+mesh = ExtResource( 60 )
+
+[node name="SHOCK_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
+transform = Transform( -1.62921e-07, -1, 2.84217e-14, 1, -1.62921e-07, 0, 5.68434e-14, 5.68434e-14, 1, 0, -0.020564, 0.040672 )
+visible = false
+material_override = SubResource( 10 )
+mesh = ExtResource( 62 )
+
+[node name="Light_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
+transform = Transform( -1.78814e-07, -1, 0, 1, -1.78814e-07, 5.21541e-08, -3.1665e-08, -1.49012e-08, 1, -0.0594215, 0.0202921, 0.168891 )
+visible = false
+material_override = SubResource( 21 )
+mesh = ExtResource( 63 )
+
+[node name="Hand" type="StaticBody" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand"]
+transform = Transform( 0.282236, -0.926445, 0.249082, -0.292867, -0.330449, -0.897237, 0.913549, 0.180284, -0.364591, 0.0964885, 0.186504, -0.0474778 )
+collision_layer = 4
+collision_mask = 0
+script = SubResource( 57 )
+
+[node name="CollisionShape" type="CollisionShape" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Hand"]
+transform = Transform( 0.274, 0.000550867, 5.64498e-06, -0.000242077, 0.618844, 0.0243454, 1.80535e-05, -0.0625737, 0.240772, -0.00913414, 0.150854, 0.134093 )
+shape = SubResource( 58 )
+
+[node name="Chest" type="BoneAttachment" parent="Puppet/PlayerModel/Armature/Skeleton" index="2"]
+transform = Transform( 0.999961, 0.000210835, 0.0087927, 0.000671644, 0.994963, -0.100241, -0.00876955, 0.100243, 0.994924, 0, 0.173641, 0 )
+bone_name = "abdomen"
+
+[node name="Body" type="StaticBody" parent="Puppet/PlayerModel/Armature/Skeleton/Chest"]
+transform = Transform( 1, 1.16415e-10, 1.86265e-09, -1.16415e-10, 1, 1.49012e-08, 1.86265e-09, -1.49012e-08, 1, -0.000848833, -0.206449, -0.0201347 )
+collision_layer = 4
+collision_mask = 0
+script = SubResource( 59 )
+
+[node name="CollisionShape" type="CollisionShape" parent="Puppet/PlayerModel/Armature/Skeleton/Chest/Body"]
+transform = Transform( 0.274, 0.000550867, 5.64335e-06, -0.000242077, 0.618844, 0.0243454, 1.80523e-05, -0.0625738, 0.240772, -0.00855047, 0.362073, 0.0626216 )
+shape = SubResource( 35 )
+
+[node name="Torso_Mesh" parent="Puppet/PlayerModel/Armature/Skeleton" index="4"]
+material_override = null
+
+[node name="AnimTree" parent="Puppet/PlayerModel" index="2"]
+parameters/CROUCHMOVE_AMOUNT/blend_amount = 1.0
+parameters/RUN_FORWARD_DIRECTION/blend_amount = 0
+
+[node name="SFX" type="Spatial" parent="Puppet/PlayerModel"]
+transform = Transform( 1, 0, 2.13163e-14, 0, 1, 0, -2.13163e-14, 0, 1, 0, -0.00320655, 0 )
+
+[node name="Health" type="AudioStreamPlayer3D" parent="Puppet/PlayerModel/SFX"]
+stream = ExtResource( 56 )
+unit_size = 4.0
+pitch_scale = 0.75
+bus = "SFX"
+
+[node name="IED1" type="AudioStreamPlayer3D" parent="Puppet/PlayerModel/SFX"]
+stream = ExtResource( 66 )
+unit_size = 4.0
+bus = "SFX"
+
+[node name="IED2" type="AudioStreamPlayer3D" parent="Puppet/PlayerModel/SFX"]
+stream = ExtResource( 67 )
+unit_size = 4.0
+bus = "SFX"
+
+[node name="IED_alert" type="AudioStreamPlayer3D" parent="Puppet/PlayerModel/SFX"]
+stream = ExtResource( 68 )
+unit_size = 4.0
+bus = "SFX"
+
+[node name="IED_explosion" type="AudioStreamPlayer3D" parent="Puppet/PlayerModel/SFX"]
+stream = ExtResource( 69 )
+unit_size = 4.0
+bus = "SFX"
+
+[node name="Intro_Laugh" type="AudioStreamPlayer3D" parent="Puppet/PlayerModel/SFX"]
+stream = ExtResource( 65 )
+unit_size = 4.0
+bus = "SFX"
+
+[node name="Pain" type="AudioStreamPlayer3D" parent="Puppet/PlayerModel/SFX"]
+stream = SubResource( 61 )
+unit_size = 4.0
+pitch_scale = 1.07
+bus = "SFX"
+
+[node name="Jump" type="AudioStreamPlayer3D" parent="Puppet/PlayerModel/SFX"]
+stream = ExtResource( 71 )
+
+[node name="FootStep" type="AudioStreamPlayer3D" parent="Puppet/PlayerModel/SFX"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0193073, 0 )
+stream = SubResource( 62 )
+unit_db = 0.497
+unit_size = 4.0
+max_db = -1.0
+bus = "step"
+
+[node name="Kicksound" type="AudioStreamPlayer3D" parent="Puppet/PlayerModel/SFX"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 8.74228e-08, 0, 0 )
+stream = ExtResource( 73 )
+unit_db = 6.169
+unit_size = 5.7
+bus = "SFX"
+
+[node name="Kicksound2" type="AudioStreamPlayer3D" parent="Puppet/PlayerModel/SFX"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 8.74228e-08, 0, 0 )
+stream = SubResource( 63 )
+unit_db = 1.0
+unit_size = 5.7
+pitch_scale = 0.91
+bus = "SFX"
+
+[editable path="Puppet/PlayerModel"]

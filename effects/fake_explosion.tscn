@@ -1,0 +1,68 @@
+[gd_scene load_steps=8 format=2]
+
+[ext_resource path="res://Textures/Particles/Explosion1.png" type="Texture" id=2]
+
+[sub_resource type="GDScript" id=9]
+script/source = "extends Spatial
+
+func _ready():
+	$Particle.emitting = true
+
+func delete():
+	queue_free()
+"
+
+[sub_resource type="Curve" id=4]
+_data = [ Vector2( 0, 1 ), 0.0, 0.0, 0, 0, Vector2( 1, 1 ), 0.0, 0.0, 0, 0 ]
+
+[sub_resource type="CurveTexture" id=5]
+curve = SubResource( 4 )
+
+[sub_resource type="ParticlesMaterial" id=6]
+lifetime_randomness = 0.09
+trail_divisor = 6
+trail_size_modifier = SubResource( 5 )
+emission_shape = 1
+emission_sphere_radius = 0.82
+flag_rotate_y = true
+direction = Vector3( 0, 1, 0 )
+spread = 180.0
+gravity = Vector3( 0, 0, 0 )
+initial_velocity = 24.95
+initial_velocity_random = 0.34
+scale = 5.22
+scale_random = 0.21
+
+[sub_resource type="SpatialMaterial" id=7]
+flags_unshaded = true
+params_blend_mode = 1
+params_billboard_mode = 1
+params_billboard_keep_scale = true
+params_use_alpha_scissor = true
+params_alpha_scissor_threshold = 0.98
+albedo_color = Color( 0.152941, 0.898039, 0, 1 )
+albedo_texture = ExtResource( 2 )
+
+[sub_resource type="QuadMesh" id=8]
+material = SubResource( 7 )
+
+[node name="Explosion" type="Spatial"]
+script = SubResource( 9 )
+
+[node name="Particle" type="Particles" parent="."]
+emitting = false
+amount = 200
+lifetime = 0.28
+one_shot = true
+randomness = 1.0
+fract_delta = false
+local_coords = false
+process_material = SubResource( 6 )
+draw_pass_1 = SubResource( 8 )
+
+[node name="Timer" type="Timer" parent="."]
+wait_time = 5.0
+one_shot = true
+autostart = true
+
+[connection signal="timeout" from="Timer" to="." method="delete"]

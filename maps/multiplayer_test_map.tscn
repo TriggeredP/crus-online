@@ -1,0 +1,49 @@
+[gd_scene load_steps=10 format=2]
+
+[ext_resource path="res://Maps/textures/base/cobble1.png" type="Texture" id=1]
+[ext_resource path="res://Player_Test.tscn" type="PackedScene" id=2]
+[ext_resource path="res://Textures/sky3.png" type="Texture" id=3]
+[ext_resource path="res://MOD_CONTENT/CruS Online/maps_stuff/WeaponSpawner.tscn" type="PackedScene" id=4]
+
+[sub_resource type="BoxShape" id=4]
+extents = Vector3( 250, 0.1, 250 )
+
+[sub_resource type="SpatialMaterial" id=2]
+albedo_texture = ExtResource( 1 )
+uv1_scale = Vector3( 250, 250, 1 )
+
+[sub_resource type="PlaneMesh" id=3]
+material = SubResource( 2 )
+size = Vector2( 500, 500 )
+
+[sub_resource type="PanoramaSky" id=5]
+panorama = ExtResource( 3 )
+
+[sub_resource type="Environment" id=6]
+background_mode = 2
+background_sky = SubResource( 5 )
+
+[node name="TestMap" type="Spatial"]
+
+[node name="Player" parent="." instance=ExtResource( 2 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.693759, -4.49943 )
+
+[node name="StaticBody" type="StaticBody" parent="."]
+
+[node name="CollisionShape" type="CollisionShape" parent="StaticBody"]
+shape = SubResource( 4 )
+
+[node name="MeshInstance" type="MeshInstance" parent="StaticBody"]
+mesh = SubResource( 3 )
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource( 6 )
+
+[node name="DirectionalLight" type="DirectionalLight" parent="."]
+transform = Transform( 0.866025, 0.433013, 0.25, 0, -0.5, 0.866025, 0.5, -0.75, -0.433013, 0, 8.08222, 0 )
+light_color = Color( 0.45098, 0.882353, 1, 1 )
+
+[node name="WeaponSpawner" parent="." instance=ExtResource( 4 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.410229, 0.0786825, 7.60121 )
+respawnWeaponIds = [ 0, 13, 26, 5, 13, 2, 21, 23, 28, 10 ]
+respawnTime = 10

@@ -1,0 +1,35 @@
+[gd_scene load_steps=5 format=2]
+
+[ext_resource path="res://Entities/Player.tscn" type="PackedScene" id=1]
+[ext_resource path="res://Player_Manager.gd" type="Script" id=2]
+[ext_resource path="res://Entities/Rotation_Helper.tscn" type="PackedScene" id=3]
+[ext_resource path="res://Menu/Stock_Menu2.tscn" type="PackedScene" id=4]
+
+[node name="Player" type="Spatial"]
+script = ExtResource( 2 )
+
+[node name="Player" parent="." instance=ExtResource( 1 )]
+interpolated_camera = true
+
+[node name="BoneAttachment" parent="Player/Body_Mesh/Armature/Skeleton" index="0"]
+transform = Transform( 0.999961, 0.000690037, 0.00876781, 0.000670931, 0.988027, -0.154278, -0.0087693, 0.154278, 0.987988, 0.000147821, 0.615141, 0.0506348 )
+
+[node name="BoneAttachment 2" parent="Player/Body_Mesh/Armature/Skeleton" index="1"]
+transform = Transform( -0.0871775, 0.91109, 0.402883, -0.166965, -0.412065, 0.895726, 0.982101, 0.0108198, 0.188043, 0.696529, 0.397017, 0.0232771 )
+
+[node name="Position3D" type="Position3D" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.481, 0 )
+
+[node name="Rotation_Helper" parent="Position3D" instance=ExtResource( 3 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
+
+[node name="Camera" parent="Position3D/Rotation_Helper" index="1"]
+cull_mask = 1048567
+
+[node name="Stock_Menu" parent="." instance=ExtResource( 4 )]
+visible = false
+
+[editable path="Player"]
+[editable path="Player/Body_Mesh"]
+[editable path="Position3D/Rotation_Helper"]
+[editable path="Stock_Menu"]

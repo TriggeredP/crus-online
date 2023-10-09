@@ -1,0 +1,50 @@
+extends Spatial
+
+var activeWeapon = null
+onready var weaponModels = get_node("Weapons").get_children()
+
+const maxAmmo = [24, 60, 5, 0, 25, 5, 6, 90, 50, 20, 0, 0, 20, 9, 0, 100, 0, 0, 200, 90, 72, 72, 18, 0, 0, 30, 200, 20, 90]
+
+export var rotateSpeed = 0.1
+export var respawnWeaponIds = [0]
+export var respawnTime = 5
+
+remotesync func _disable(disable):
+	$Collect/CollisionShape.disabled = disable
+
+remotesync func _set_weapon(weaponId):
+	if activeWeapon != null:
+		weaponModels[activeWeapon].hide()
+		
+	activeWeapon = weaponId
+	
+	if activeWeapon != null:
+		weaponModels[activeWeapon].show()
+
+mastersync func _enable_timer():
+	$Timer.start()
+
+func _ready():
+	$Timer.wait_time = respawnTime
+	$Timer.connect("timeout", self, "_selectWeapon")
+	
+	print(weaponModels)
+
+func _physics_process(delta):
+	$Weapons.rotate_y(rotateSpeed)
+
+func collected():
+	if activeWeapon != null:
+		if (activeWeapon != Global.player.weapon.weapon1 and activeWeapon != Global.player.weapon.weapon2) or Global.player.weapon.current_weapon == activeWeapon:
+			Global.player.weapon.magazine_ammo[activeWeapon] = Global.player.weapon.MAX_MAG_AMMO[activeWeapon]
+			if Global.player.weapon.ammo[activeWeapon] < maxAmmo[activeWeapon]:
+				Global.player.weapon.ammo[activeWeapon] = maxAmmo[activeWeapon]
+			Global.player.weapon.set_weapon(activeWeapon)
+			rpc("_set_weapon",null)
+			rpc("_disable",true)
+			rpc("_enable_timer")
+
+func _selectWeapon():
+	respawnWeaponIds.shuffle()
+	rpc("_set_weapon",respawnWeaponIds[0])
+	rpc("_disable",false)

@@ -1,0 +1,10 @@
+[DM/COOP]-[DayMonthYear]-[Time]
+
+DM-091023-2157
+
+DM - Deathmatch
+09 - Day
+10 - Month
+23 - Year
+
+2157 - 21:57

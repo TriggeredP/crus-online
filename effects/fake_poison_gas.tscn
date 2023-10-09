@@ -1,0 +1,75 @@
+[gd_scene load_steps=9 format=2]
+
+[ext_resource path="res://Sfx/NPCs/Melee mutant/poison_mist.wav" type="AudioStream" id=1]
+[ext_resource path="res://Textures/Particles/Explosion1.png" type="Texture" id=2]
+
+[sub_resource type="GDScript" id=8]
+script/source = "extends Spatial
+
+func _ready():
+	$Particle.emitting = true
+
+func delete():
+	queue_free()
+"
+
+[sub_resource type="Curve" id=9]
+max_value = 1.88
+_data = [ Vector2( 0, 0.401649 ), 0.0, 0.0, 0, 0, Vector2( 1, 1.88 ), 0.0, 0.0, 0, 0 ]
+
+[sub_resource type="CurveTexture" id=5]
+curve = SubResource( 9 )
+
+[sub_resource type="ParticlesMaterial" id=10]
+emission_shape = 1
+emission_sphere_radius = 1.55
+flag_rotate_y = true
+direction = Vector3( 0, 1, 0 )
+spread = 180.0
+gravity = Vector3( 0, 0, 0 )
+initial_velocity = 0.59
+damping = 0.41
+scale = 3.44
+scale_curve = SubResource( 5 )
+
+[sub_resource type="SpatialMaterial" id=7]
+flags_transparent = true
+flags_unshaded = true
+params_blend_mode = 1
+params_billboard_mode = 1
+params_billboard_keep_scale = true
+params_use_alpha_scissor = true
+params_alpha_scissor_threshold = 0.98
+albedo_color = Color( 0, 0.341176, 0.00392157, 1 )
+albedo_texture = ExtResource( 2 )
+
+[sub_resource type="QuadMesh" id=11]
+material = SubResource( 7 )
+
+[node name="Gas" type="Spatial"]
+script = SubResource( 8 )
+
+[node name="Particle" type="Particles" parent="."]
+emitting = false
+amount = 58
+lifetime = 4.03
+one_shot = true
+randomness = 1.0
+fract_delta = false
+local_coords = false
+process_material = SubResource( 10 )
+draw_pass_1 = SubResource( 11 )
+
+[node name="Timer" type="Timer" parent="."]
+wait_time = 10.0
+one_shot = true
+autostart = true
+
+[node name="Sound" type="AudioStreamPlayer3D" parent="."]
+stream = ExtResource( 1 )
+unit_db = 4.0
+unit_size = 6.5
+max_db = 4.0
+autoplay = true
+
+[connection signal="timeout" from="Timer" to="." method="delete"]

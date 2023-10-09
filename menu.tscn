@@ -1,0 +1,365 @@
+[gd_scene load_steps=33 format=2]
+
+[ext_resource path="res://Menu/menu_theme.tres" type="Theme" id=1]
+[ext_resource path="res://Textures/Misc/mainguy_clothes.png" type="Texture" id=2]
+[ext_resource path="res://Textures/Menu/retry_normal.png" type="Texture" id=3]
+[ext_resource path="res://Textures/NPC/Enemy_Nude.png" type="Texture" id=4]
+[ext_resource path="res://Textures/Menu/hover.png" type="Texture" id=5]
+[ext_resource path="res://Textures/NPC/Enemy_Worker.png" type="Texture" id=6]
+[ext_resource path="res://Textures/Menu/Disabled_Button/1.png" type="Texture" id=7]
+[ext_resource path="res://Textures/Menu/Disabled_Button/2.png" type="Texture" id=8]
+[ext_resource path="res://Textures/Menu/Disabled_Button/3.png" type="Texture" id=9]
+[ext_resource path="res://Textures/Menu/Disabled_Button/4.png" type="Texture" id=10]
+[ext_resource path="res://Textures/Menu/background_1.png" type="Texture" id=11]
+[ext_resource path="res://Textures/Menu/return_normal.png" type="Texture" id=12]
+[ext_resource path="res://Sfx/Flesh/flesh_slap.wav" type="AudioStream" id=13]
+[ext_resource path="res://Sfx/UI/UI_grunt.wav" type="AudioStream" id=14]
+[ext_resource path="res://Textures/NPC/cultist_civilian.png" type="Texture" id=15]
+[ext_resource path="res://Textures/NPC/bosssguy_clothes.png" type="Texture" id=16]
+[ext_resource path="res://Textures/NPC/Enemy_Civilian2.png" type="Texture" id=17]
+[ext_resource path="res://Textures/NPC/Enemy_Assassin_Alt.png" type="Texture" id=18]
+[ext_resource path="res://Textures/NPC/Elsa.png" type="Texture" id=19]
+[ext_resource path="res://Textures/NPC/Enemy_Assassin.png" type="Texture" id=20]
+[ext_resource path="res://Textures/NPC/Objective_CEO.png" type="Texture" id=21]
+[ext_resource path="res://Textures/NPC/Enemy_Kevin.png" type="Texture" id=22]
+[ext_resource path="res://Textures/NPC/Enemy_Cop1.png" type="Texture" id=23]
+
+[sub_resource type="GDScript" id=3]
+script/source = "extends Control
+
+var ip = \"127.0.0.1\"
+var port = 8080
+
+var playerInfo = {
+	\"nickname\": \"MT Foxtrot\",
+	\"skinPath\": \"res://Textures/Misc/mainguy_clothes.png\"
+}
+
+func get_data():
+	ip = $PanelContainer/VBoxContainer/IpPort/IpEdit.text
+	port = int($PanelContainer/VBoxContainer/IpPort/PortEdit.text)
+	if $PanelContainer/VBoxContainer/Nickname/NicknameEdit.text == \"\":
+		playerInfo[\"nickname\"] = \"Im lazy shit that can enter nickname\"
+	else:
+		playerInfo[\"nickname\"] = $PanelContainer/VBoxContainer/Nickname/NicknameEdit.text
+
+func host():
+	get_data()
+	get_tree().get_nodes_in_group(\"Multiplayer\")[0].host_server(port,playerInfo)
+
+func join():
+	get_data()
+	get_tree().get_nodes_in_group(\"Multiplayer\")[0].join_to_server(ip,port,playerInfo)
+
+func enable_menu(event):
+	if event is InputEventMouseButton and event.pressed and $TextureRect.enalbed:
+		$PanelContainer.visible = true
+		$TextureRect/ClickSound.play()
+		$TextureRect.toggle_button(false)
+		$TextureRect2.toggle_button(true)
+
+func disable_menu(event):
+	if event is InputEventMouseButton and event.pressed and not $TextureRect.enalbed:
+		$PanelContainer.visible = false
+		$TextureRect2/ClickSound.play()
+		$TextureRect.toggle_button(true)
+		$TextureRect2.toggle_button(false)
+"
+
+[sub_resource type="GDScript" id=4]
+script/source = "extends TextureRect
+
+export (Texture) var idleTexture
+export (Texture) var hoverTexture
+export (Texture) var disabledTexture
+
+export var enalbed = true
+
+func _ready():
+	toggle_button(enalbed)
+
+func _on_mouse_enter():
+	if enalbed:
+		texture = hoverTexture
+		$PanelContainer.show()
+
+func _on_mouse_exit():
+	if enalbed:
+		texture = idleTexture
+		$PanelContainer.hide()
+
+func toggle_button(toggled):
+	enalbed = toggled
+	
+	if enalbed:
+		texture = idleTexture
+	else:
+		texture = disabledTexture
+		$PanelContainer.hide()
+
+
+func _mouse_input(event):
+	if event is InputEventMouseMotion:
+		$PanelContainer.rect_position = event.position + Vector2(50,30)
+"
+
+[sub_resource type="AnimatedTexture" id=5]
+flags = 19
+frames = 4
+frame_0/texture = ExtResource( 7 )
+frame_0/delay_sec = 0.19
+frame_1/texture = ExtResource( 8 )
+frame_1/delay_sec = 0.06
+frame_2/texture = ExtResource( 9 )
+frame_2/delay_sec = 0.32
+frame_3/texture = ExtResource( 10 )
+frame_3/delay_sec = 0.25
+
+[sub_resource type="StyleBoxTexture" id=6]
+texture = ExtResource( 11 )
+region_rect = Rect2( 0, 0, 256, 256 )
+modulate_color = Color( 0.309804, 0.133333, 0.0823529, 1 )
+
+[sub_resource type="DynamicFontData" id=7]
+font_path = "res://Fonts/MingLiU-ExtB-01.ttf"
+
+[sub_resource type="DynamicFont" id=8]
+size = 48
+use_filter = true
+font_data = SubResource( 7 )
+
+[sub_resource type="AudioStreamRandomPitch" id=10]
+audio_stream = ExtResource( 13 )
+
+[sub_resource type="AudioStreamRandomPitch" id=9]
+audio_stream = ExtResource( 14 )
+
+[sub_resource type="GDScript" id=2]
+script/source = "extends HBoxContainer
+
+export (Array,Array) var playerSkins
+
+func _ready():
+	for skin in playerSkins:
+		$ItemList.add_item(skin[0])
+
+func _skin_selected(index):
+	$TextureRect.texture = playerSkins[index][2]
+	get_tree().get_nodes_in_group(\"MultiplayerMenu\")[0].playerInfo[\"skinPath\"] = playerSkins[index][1]
+"
+
+[node name="MultiplayerMenu" type="Control" groups=["MultiplayerMenu"]]
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme = ExtResource( 1 )
+script = SubResource( 3 )
+__meta__ = {
+"_edit_use_anchors_": true
+}
+
+[node name="TextureRect" type="TextureRect" parent="."]
+margin_left = 101.0
+margin_top = 278.0
+margin_right = 229.0
+margin_bottom = 406.0
+rect_scale = Vector2( 0.5, 0.5 )
+texture = ExtResource( 3 )
+stretch_mode = 1
+script = SubResource( 4 )
+idleTexture = ExtResource( 3 )
+hoverTexture = ExtResource( 5 )
+disabledTexture = SubResource( 5 )
+
+[node name="PanelContainer" type="PanelContainer" parent="TextureRect"]
+visible = false
+margin_right = 6.0
+margin_bottom = 6.0
+custom_styles/panel = SubResource( 6 )
+
+[node name="Label" type="Label" parent="TextureRect/PanelContainer"]
+margin_right = 520.0
+margin_bottom = 57.0
+custom_colors/font_color = Color( 0.101961, 1, 0, 1 )
+custom_fonts/font = SubResource( 8 )
+text = "Cruelty Squad Online"
+
+[node name="ClickSound" type="AudioStreamPlayer" parent="TextureRect"]
+stream = SubResource( 10 )
+volume_db = -5.0
+pitch_scale = 0.43
+
+[node name="TextureRect2" type="TextureRect" parent="."]
+margin_left = 165.0
+margin_top = 278.0
+margin_right = 293.0
+margin_bottom = 406.0
+rect_scale = Vector2( 0.5, 0.5 )
+texture = ExtResource( 12 )
+stretch_mode = 1
+script = SubResource( 4 )
+idleTexture = ExtResource( 12 )
+hoverTexture = ExtResource( 5 )
+enalbed = false
+
+[node name="PanelContainer" type="PanelContainer" parent="TextureRect2"]
+visible = false
+margin_right = 6.0
+margin_bottom = 6.0
+custom_styles/panel = SubResource( 6 )
+
+[node name="Label" type="Label" parent="TextureRect2/PanelContainer"]
+margin_right = 156.0
+margin_bottom = 57.0
+custom_colors/font_color = Color( 0.101961, 1, 0, 1 )
+custom_fonts/font = SubResource( 8 )
+text = "Return"
+
+[node name="ClickSound" type="AudioStreamPlayer" parent="TextureRect2"]
+stream = SubResource( 9 )
+
+[node name="PanelContainer" type="PanelContainer" parent="."]
+visible = false
+anchor_top = 0.421
+anchor_bottom = 0.421
+margin_left = 428.0
+margin_top = -295.12
+margin_right = 1097.0
+margin_bottom = 110.88
+
+[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer"]
+margin_left = 3.0
+margin_top = 3.0
+margin_right = 666.0
+margin_bottom = 403.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+custom_constants/separation = 5
+alignment = 1
+
+[node name="Label" type="Label" parent="PanelContainer/VBoxContainer"]
+margin_right = 663.0
+margin_bottom = 26.0
+text = "Cruelty Squad Online"
+align = 1
+
+[node name="IpPort" type="HBoxContainer" parent="PanelContainer/VBoxContainer"]
+margin_top = 31.0
+margin_right = 663.0
+margin_bottom = 67.0
+alignment = 1
+
+[node name="IpEdit" type="LineEdit" parent="PanelContainer/VBoxContainer/IpPort"]
+margin_right = 249.0
+margin_bottom = 36.0
+rect_min_size = Vector2( 249, 36 )
+text = "127.0.0.1"
+max_length = 15
+placeholder_text = "127.0.0.1"
+
+[node name="Label2" type="Label" parent="PanelContainer/VBoxContainer/IpPort"]
+margin_left = 249.0
+margin_top = 5.0
+margin_right = 263.0
+margin_bottom = 31.0
+text = ":"
+
+[node name="PortEdit" type="LineEdit" parent="PanelContainer/VBoxContainer/IpPort"]
+margin_left = 263.0
+margin_right = 453.0
+margin_bottom = 36.0
+text = "8080"
+max_length = 4
+placeholder_text = "8080"
+
+[node name="Label4" type="Label" parent="PanelContainer/VBoxContainer/IpPort"]
+margin_left = 453.0
+margin_top = 5.0
+margin_right = 468.0
+margin_bottom = 31.0
+text = " "
+
+[node name="JoinButton" type="Button" parent="PanelContainer/VBoxContainer/IpPort"]
+margin_left = 468.0
+margin_right = 558.0
+margin_bottom = 36.0
+text = " Join "
+
+[node name="Label3" type="Label" parent="PanelContainer/VBoxContainer/IpPort"]
+margin_left = 558.0
+margin_top = 5.0
+margin_right = 573.0
+margin_bottom = 31.0
+text = " "
+
+[node name="HostButton" type="Button" parent="PanelContainer/VBoxContainer/IpPort"]
+margin_left = 573.0
+margin_right = 663.0
+margin_bottom = 36.0
+text = " Host "
+
+[node name="ClientSettings" type="Label" parent="PanelContainer/VBoxContainer"]
+margin_top = 72.0
+margin_right = 663.0
+margin_bottom = 98.0
+text = "Client settings:"
+
+[node name="Nickname" type="HBoxContainer" parent="PanelContainer/VBoxContainer"]
+margin_top = 103.0
+margin_right = 663.0
+margin_bottom = 139.0
+custom_constants/separation = 5
+
+[node name="Label3" type="Label" parent="PanelContainer/VBoxContainer/Nickname"]
+margin_top = 5.0
+margin_right = 74.0
+margin_bottom = 31.0
+text = "Name:"
+
+[node name="NicknameEdit" type="LineEdit" parent="PanelContainer/VBoxContainer/Nickname"]
+margin_left = 79.0
+margin_right = 663.0
+margin_bottom = 36.0
+rect_min_size = Vector2( 249, 36 )
+size_flags_horizontal = 3
+text = "MT Foxtrot"
+max_length = 15
+placeholder_text = "MT Foxtrot"
+
+[node name="Skin" type="HBoxContainer" parent="PanelContainer/VBoxContainer"]
+margin_top = 144.0
+margin_right = 663.0
+margin_bottom = 400.0
+custom_constants/separation = 5
+script = SubResource( 2 )
+playerSkins = [ [ "Default", "res://Textures/Misc/mainguy_clothes.png", ExtResource( 2 ) ], [ "Worker", "res://Textures/NPC/Enemy_Worker.png", ExtResource( 6 ) ], [ "Nude (19.99$)", "res://Textures/NPC/Enemy_Nude.png", ExtResource( 4 ) ], [ "Cultist", "res://Textures/NPC/cultist_civilian.png", ExtResource( 15 ) ], [ "Boss guy", "res://Textures/NPC/bosssguy_clothes.png", ExtResource( 16 ) ], [ "Assassin", "res://Textures/NPC/Enemy_Assassin.png", ExtResource( 20 ) ], [ "Assassin (Alt)", "res://Textures/NPC/Enemy_Assassin_Alt.png", ExtResource( 18 ) ], [ "Civilian", "res://Textures/NPC/Enemy_Civilian2.png", ExtResource( 17 ) ], [ "Cop", "res://Textures/NPC/Enemy_Cop1.png", ExtResource( 23 ) ], [ "Kevin", "res://Textures/NPC/Enemy_Kevin.png", ExtResource( 22 ) ], [ "CEO", "res://Textures/NPC/Objective_CEO.png", ExtResource( 21 ) ], [ "Elsa", "res://Textures/NPC/Elsa.png", ExtResource( 19 ) ] ]
+
+[node name="Label3" type="Label" parent="PanelContainer/VBoxContainer/Skin"]
+margin_top = 115.0
+margin_right = 74.0
+margin_bottom = 141.0
+text = "Skin:"
+
+[node name="ItemList" type="ItemList" parent="PanelContainer/VBoxContainer/Skin"]
+margin_left = 79.0
+margin_right = 402.0
+margin_bottom = 256.0
+size_flags_horizontal = 3
+allow_reselect = true
+
+[node name="TextureRect" type="TextureRect" parent="PanelContainer/VBoxContainer/Skin"]
+margin_left = 407.0
+margin_right = 663.0
+margin_bottom = 256.0
+texture = ExtResource( 2 )
+
+[connection signal="gui_input" from="TextureRect" to="." method="enable_menu"]
+[connection signal="gui_input" from="TextureRect" to="TextureRect" method="_mouse_input"]
+[connection signal="mouse_entered" from="TextureRect" to="TextureRect" method="_on_mouse_enter"]
+[connection signal="mouse_exited" from="TextureRect" to="TextureRect" method="_on_mouse_exit"]
+[connection signal="gui_input" from="TextureRect2" to="." method="disable_menu"]
+[connection signal="gui_input" from="TextureRect2" to="TextureRect2" method="_mouse_input"]
+[connection signal="mouse_entered" from="TextureRect2" to="TextureRect2" method="_on_mouse_enter"]
+[connection signal="mouse_exited" from="TextureRect2" to="TextureRect2" method="_on_mouse_exit"]
+[connection signal="pressed" from="PanelContainer/VBoxContainer/IpPort/JoinButton" to="." method="join"]
+[connection signal="pressed" from="PanelContainer/VBoxContainer/IpPort/HostButton" to="." method="host"]
+[connection signal="item_selected" from="PanelContainer/VBoxContainer/Skin/ItemList" to="PanelContainer/VBoxContainer/Skin" method="_skin_selected"]
