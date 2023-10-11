@@ -43,7 +43,145 @@ environment = SubResource( 6 )
 transform = Transform( 0.866025, 0.433013, 0.25, 0, -0.5, 0.866025, 0.5, -0.75, -0.433013, 0, 8.08222, 0 )
 light_color = Color( 0.45098, 0.882353, 1, 1 )
 
-[node name="WeaponSpawner" parent="." instance=ExtResource( 4 )]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.410229, 0.0786825, 7.60121 )
-respawnWeaponIds = [ 0, 13, 26, 5, 13, 2, 21, 23, 28, 10 ]
-respawnTime = 10
+[node name="Spawners" type="Spatial" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 20 )
+
+[node name="WeaponSpawner" parent="Spawners" instance=ExtResource( 4 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 6.13114, 0.0786825, -7.5358 )
+respawnWeaponIds = [ 1 ]
+respawnTime = 1
+
+[node name="WeaponSpawner2" parent="Spawners" instance=ExtResource( 4 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 3.13114, 0.0786825, -7.5358 )
+respawnWeaponIds = [ 2 ]
+respawnTime = 1
+
+[node name="WeaponSpawner3" parent="Spawners" instance=ExtResource( 4 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0.131139, 0.0786825, -7.5358 )
+respawnWeaponIds = [ 3 ]
+respawnTime = 1
+
+[node name="WeaponSpawner4" parent="Spawners" instance=ExtResource( 4 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -2.86886, 0.0786825, -7.5358 )
+respawnWeaponIds = [ 4 ]
+respawnTime = 1
+
+[node name="WeaponSpawner5" parent="Spawners" instance=ExtResource( 4 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -5.86886, 0.0786825, -7.5358 )
+respawnWeaponIds = [ 5 ]
+respawnTime = 1
+
+[node name="WeaponSpawner6" parent="Spawners" instance=ExtResource( 4 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 6.13114, 0.0786825, -4.5358 )
+respawnWeaponIds = [ 6 ]
+respawnTime = 1
+
+[node name="WeaponSpawner7" parent="Spawners" instance=ExtResource( 4 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 3.13114, 0.0786825, -4.5358 )
+respawnWeaponIds = [ 7 ]
+respawnTime = 1
+
+[node name="WeaponSpawner8" parent="Spawners" instance=ExtResource( 4 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0.131139, 0.0786825, -4.5358 )
+respawnWeaponIds = [ 8 ]
+respawnTime = 1
+
+[node name="WeaponSpawner9" parent="Spawners" instance=ExtResource( 4 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -2.86886, 0.0786825, -4.5358 )
+respawnWeaponIds = [ 9 ]
+respawnTime = 1
+
+[node name="WeaponSpawner10" parent="Spawners" instance=ExtResource( 4 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -5.86886, 0.0786825, -4.5358 )
+respawnWeaponIds = [ 10 ]
+respawnTime = 1
+
+[node name="WeaponSpawner11" parent="Spawners" instance=ExtResource( 4 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 6.13114, 0.0786825, -1.5358 )
+respawnWeaponIds = [ 11 ]
+respawnTime = 1
+
+[node name="WeaponSpawner12" parent="Spawners" instance=ExtResource( 4 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 3.13114, 0.0786825, -1.5358 )
+respawnWeaponIds = [ 12 ]
+respawnTime = 1
+
+[node name="WeaponSpawner13" parent="Spawners" instance=ExtResource( 4 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0.131139, 0.0786825, -1.5358 )
+respawnWeaponIds = [ 13 ]
+respawnTime = 1
+
+[node name="WeaponSpawner14" parent="Spawners" instance=ExtResource( 4 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -2.86886, 0.0786825, -1.5358 )
+respawnWeaponIds = [ 14 ]
+respawnTime = 1
+
+[node name="WeaponSpawner15" parent="Spawners" instance=ExtResource( 4 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -5.86886, 0.0786825, -1.5358 )
+respawnWeaponIds = [ 15 ]
+respawnTime = 1
+
+[node name="WeaponSpawner16" parent="Spawners" instance=ExtResource( 4 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 6.13114, 0.0786825, 1.4642 )
+respawnWeaponIds = [ 16 ]
+respawnTime = 1
+
+[node name="WeaponSpawner17" parent="Spawners" instance=ExtResource( 4 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 3.13114, 0.0786825, 1.4642 )
+respawnWeaponIds = [ 17 ]
+respawnTime = 1
+
+[node name="WeaponSpawner18" parent="Spawners" instance=ExtResource( 4 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0.131139, 0.0786825, 1.4642 )
+respawnWeaponIds = [ 18 ]
+respawnTime = 1
+
+[node name="WeaponSpawner19" parent="Spawners" instance=ExtResource( 4 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -2.86886, 0.0786825, 1.4642 )
+respawnWeaponIds = [ 19 ]
+respawnTime = 1
+
+[node name="WeaponSpawner20" parent="Spawners" instance=ExtResource( 4 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -5.86886, 0.0786825, 1.4642 )
+respawnWeaponIds = [ 20 ]
+respawnTime = 1
+
+[node name="WeaponSpawner21" parent="Spawners" instance=ExtResource( 4 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 6.13114, 0.0786825, 4.4642 )
+respawnWeaponIds = [ 21 ]
+respawnTime = 1
+
+[node name="WeaponSpawner22" parent="Spawners" instance=ExtResource( 4 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 3.13114, 0.0786825, 4.4642 )
+respawnWeaponIds = [ 22 ]
+respawnTime = 1
+
+[node name="WeaponSpawner23" parent="Spawners" instance=ExtResource( 4 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0.131139, 0.0786825, 4.4642 )
+respawnWeaponIds = [ 23 ]
+respawnTime = 1
+
+[node name="WeaponSpawner26" parent="Spawners" instance=ExtResource( 4 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 6.13114, 0.0786825, 7.4642 )
+respawnWeaponIds = [ 26 ]
+respawnTime = 1
+
+[node name="WeaponSpawner27" parent="Spawners" instance=ExtResource( 4 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 3.13114, 0.0786825, 7.4642 )
+respawnWeaponIds = [ 27 ]
+respawnTime = 1
+
+[node name="WeaponSpawner28" parent="Spawners" instance=ExtResource( 4 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0.131139, 0.0786825, 7.4642 )
+respawnWeaponIds = [ 28 ]
+respawnTime = 1
+
+[node name="WeaponSpawner24" parent="Spawners" instance=ExtResource( 4 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -2.86886, 0.0786825, 4.4642 )
+respawnWeaponIds = [ 24 ]
+respawnTime = 1
+
+[node name="WeaponSpawner25" parent="Spawners" instance=ExtResource( 4 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -5.86886, 0.0786825, 4.4642 )
+respawnWeaponIds = [ 25 ]
+respawnTime = 1

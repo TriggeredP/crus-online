@@ -1,0 +1,36 @@
+[gd_scene load_steps=4 format=2]
+
+[ext_resource path="res://Entities/Particles/Smoke_1.tscn" type="PackedScene" id=2]
+[ext_resource path="res://Sfx/WeaponsPickups/Rocket launcher/missile_flying_loop.wav" type="AudioStream" id=3]
+
+[sub_resource type="GDScript" id=1]
+script/source = "extends Spatial
+
+remote func _set_transform(recivedTransform):
+	global_transform = recivedTransform
+
+remote func _delete():
+	queue_free()
+
+remote func _create_object(recivedObject,recivedName,recivedTransform):
+	var newObject = load(recivedObject).instance()
+	newObject.set_name(recivedName)
+	get_tree().get_nodes_in_group(\"Sync\")[0].add_child(newObject)
+	newObject.global_transform = recivedTransform
+"
+
+[node name="Spatial" type="Spatial"]
+script = SubResource( 1 )
+
+[node name="Smoke_Particle" parent="." instance=ExtResource( 2 )]
+transform = Transform( 0.123153, 0, 0, 0, 0.123153, 0, 0, 0, 0.123153, 0.00448698, 0, 0 )
+lifetime = 7.54
+speed_scale = 8.53
+fixed_fps = 30
+
+[node name="Sound" type="AudioStreamPlayer3D" parent="."]
+stream = ExtResource( 3 )
+unit_size = 8.2
+max_db = 1.956
+autoplay = true
+bus = "SFX"

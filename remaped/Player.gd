@@ -153,7 +153,7 @@ remote func _play_death_sound():
 
 remote func _spawn_explosion(pos):
 	if get_tree().get_network_unique_id() != get_tree().get_rpc_sender_id():
-		var n_explosion = preload("res://MOD_CONTENT/CruS Online/effects/fake_explosion.tscn").instance()
+		var n_explosion = preload("res://MOD_CONTENT/CruS Online/effects/fake_self_destruct_explosion.tscn").instance()
 		get_parent().add_child(n_explosion)
 		n_explosion.global_transform.origin = pos
 		

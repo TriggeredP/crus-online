@@ -55,7 +55,7 @@ func _connected(id):
 
 remote func disconnect_player(id):
 	if Global.player.health != null:
-		Global.player.UI.notify(player_info[id]["nickname"] + " disconnected", Color(1, 0, 0))
+		Global.UI.notify(player_info[id]["nickname"] + " disconnected", Color(1, 0, 0))
 	
 	get_node("Players/" + str(id)).queue_free()
 	player_info.erase(id)
@@ -67,7 +67,7 @@ remote func register_player(info):
 	player_info[id] = info
 	
 	if Global.player.health != null:
-		Global.player.UI.notify(info["nickname"] + " entered the game", Color(1, 0, 0))
+		Global.UI.notify(info["nickname"] + " entered the game", Color(1, 0, 0))
 	
 	var players = player_info
 	players[playerId] = my_info

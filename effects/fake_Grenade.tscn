@@ -1,0 +1,40 @@
+[gd_scene load_steps=5 format=2]
+
+[ext_resource path="res://Textures/Weapons/Gas_Launcher.png" type="Texture" id=2]
+[ext_resource path="res://Imported_Mesh/Weapon_Mesh_Only/Gas_Grenade.obj" type="ArrayMesh" id=4]
+
+[sub_resource type="GDScript" id=2]
+script/source = "extends KinematicBody
+
+remote func _set_transform(recivedTransform):
+	global_transform = recivedTransform
+
+remote func _delete():
+	queue_free()
+
+remote func _spawn_shrapnel(recivedObject,recivedName,recivedTransform,recivedShrapnel):
+	var newObject = load(recivedObject).instance()
+	newObject.set_name(recivedName)
+	get_tree().get_nodes_in_group(\"Sync\")[0].add_child(newObject)
+	newObject.global_transform = recivedTransform
+	newObject.shrapnel_flag = recivedShrapnel
+
+remote func _create_object(recivedObject,recivedName,recivedTransform):
+	var newObject = load(recivedObject).instance()
+	newObject.set_name(recivedName)
+	get_tree().get_nodes_in_group(\"Sync\")[0].add_child(newObject)
+	newObject.global_transform = recivedTransform
+"
+
+[sub_resource type="SpatialMaterial" id=1]
+albedo_texture = ExtResource( 2 )
+
+[node name="Spatial" type="KinematicBody"]
+collision_layer = 0
+collision_mask = 17
+collision/safe_margin = 0.002
+script = SubResource( 2 )
+
+[node name="MeshInstance" type="MeshInstance" parent="."]
+material_override = SubResource( 1 )
+mesh = ExtResource( 4 )

@@ -1,0 +1,47 @@
+[gd_scene load_steps=7 format=2]
+
+[sub_resource type="SpatialMaterial" id=1]
+flags_transparent = true
+params_blend_mode = 2
+albedo_color = Color( 1, 0.47451, 0.356863, 0.0862745 )
+metallic_specular = 0.0
+transmission_enabled = true
+transmission = Color( 1, 0, 0, 1 )
+
+[sub_resource type="Curve" id=2]
+max_value = 1.98
+_data = [ Vector2( 0, 0 ), 0.0, 0.0, 0, 0, Vector2( 0.533679, 1.90578 ), 0.0, 0.0, 0, 0, Vector2( 1, 0 ), 0.0, 0.0, 0, 0 ]
+
+[sub_resource type="CurveTexture" id=3]
+curve = SubResource( 2 )
+
+[sub_resource type="ParticlesMaterial" id=4]
+emission_shape = 1
+emission_sphere_radius = 1.89
+spread = 180.0
+gravity = Vector3( 0, 0, 0 )
+initial_velocity = 0.29
+scale_curve = SubResource( 3 )
+
+[sub_resource type="SphereMesh" id=5]
+radial_segments = 4
+rings = 4
+
+[sub_resource type="GDScript" id=6]
+script/source = "extends Particles
+
+remote func _set_transform(recivedTransform):
+	global_transform = recivedTransform
+
+remote func _delete():
+	queue_free()
+"
+
+[node name="Particles" type="Particles"]
+material_override = SubResource( 1 )
+amount = 4
+lifetime = 3.27
+preprocess = 1.0
+process_material = SubResource( 4 )
+draw_pass_1 = SubResource( 5 )
+script = SubResource( 6 )
