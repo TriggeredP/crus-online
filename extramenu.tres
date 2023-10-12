@@ -1,0 +1,21 @@
+[gd_resource type="Theme" load_steps=5 format=2]
+
+[ext_resource path="res://Textures/Menu/background_1.png" type="Texture" id=1]
+
+[sub_resource type="DynamicFontData" id=1]
+font_path = "res://Fonts/gamefont(1).ttf"
+
+[sub_resource type="DynamicFont" id=2]
+use_filter = true
+font_data = SubResource( 1 )
+
+[sub_resource type="StyleBoxTexture" id=3]
+texture = ExtResource( 1 )
+region_rect = Rect2( 0, 0, 256, 256 )
+axis_stretch_vertical = 1
+modulate_color = Color( 0.356863, 0.054902, 0.054902, 1 )
+
+[resource]
+LineEdit/colors/font_color = Color( 1, 0, 0, 1 )
+LineEdit/fonts/font = SubResource( 2 )
+LineEdit/styles/normal = SubResource( 3 )

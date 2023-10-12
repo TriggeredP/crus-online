@@ -1,7 +1,8 @@
-[gd_scene load_steps=5 format=2]
+[gd_scene load_steps=6 format=2]
 
 [ext_resource path="res://Fonts/gamefont(1).ttf" type="DynamicFontData" id=1]
 [ext_resource path="res://Textures/Menu/retry_normal.png" type="Texture" id=2]
+[ext_resource path="res://Textures/Menu/implant_menu_button.png" type="Texture" id=3]
 
 [sub_resource type="GDScript" id=2]
 script/source = "extends Control
@@ -101,6 +102,60 @@ custom_colors/font_outline_modulate = Color( 0, 0, 0, 1 )
 custom_colors/font_color_shadow = Color( 0, 0, 0, 1 )
 custom_fonts/font = SubResource( 1 )
 text = "to respawn"
+valign = 1
+__meta__ = {
+"_edit_use_anchors_": true
+}
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="."]
+anchor_top = 0.570833
+anchor_right = 1.0
+anchor_bottom = 0.665277
+alignment = 1
+__meta__ = {
+"_edit_use_anchors_": true
+}
+
+[node name="Label2" type="Label" parent="HBoxContainer2"]
+margin_right = 546.0
+margin_bottom = 67.0
+size_flags_horizontal = 3
+size_flags_vertical = 5
+custom_colors/font_color = Color( 1, 0, 0, 1 )
+custom_colors/font_outline_modulate = Color( 0, 0, 0, 1 )
+custom_colors/font_color_shadow = Color( 0, 0, 0, 1 )
+custom_fonts/font = SubResource( 1 )
+text = "Change"
+align = 2
+valign = 1
+__meta__ = {
+"_edit_use_anchors_": true
+}
+
+[node name="TextureRect" type="TextureRect" parent="HBoxContainer2"]
+modulate = Color( 1, 0, 0, 1 )
+margin_left = 550.0
+margin_right = 730.0
+margin_bottom = 67.0
+rect_min_size = Vector2( 180, 50 )
+texture = ExtResource( 3 )
+expand = true
+stretch_mode = 6
+__meta__ = {
+"_edit_use_anchors_": true
+}
+
+[node name="Label3" type="Label" parent="HBoxContainer2"]
+margin_left = 734.0
+margin_right = 1280.0
+margin_bottom = 67.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+custom_colors/font_color = Color( 1, 0, 0, 1 )
+custom_colors/font_outline_modulate = Color( 0, 0, 0, 1 )
+custom_colors/font_color_shadow = Color( 0, 0, 0, 1 )
+custom_fonts/font = SubResource( 1 )
+text = "Implants"
 valign = 1
 __meta__ = {
 "_edit_use_anchors_": true

@@ -1,4 +1,4 @@
-[gd_scene load_steps=33 format=2]
+[gd_scene load_steps=36 format=2]
 
 [ext_resource path="res://Menu/menu_theme.tres" type="Theme" id=1]
 [ext_resource path="res://Textures/Misc/mainguy_clothes.png" type="Texture" id=2]
@@ -23,6 +23,7 @@
 [ext_resource path="res://Textures/NPC/Objective_CEO.png" type="Texture" id=21]
 [ext_resource path="res://Textures/NPC/Enemy_Kevin.png" type="Texture" id=22]
 [ext_resource path="res://Textures/NPC/Enemy_Cop1.png" type="Texture" id=23]
+[ext_resource path="res://MOD_CONTENT/CruS Online/extramenu.tres" type="Theme" id=24]
 
 [sub_resource type="GDScript" id=3]
 script/source = "extends Control
@@ -33,6 +34,12 @@ var port = 8080
 var playerInfo = {
 	\"nickname\": \"MT Foxtrot\",
 	\"skinPath\": \"res://Textures/Misc/mainguy_clothes.png\"
+}
+
+var hostSettings = {
+	\"gamemode\": \"Cruelty\",
+	\"map\": \"multiplayer_test_map.tscn\",
+	\"bannedImplants\": []
 }
 
 func get_data():
@@ -52,15 +59,15 @@ func join():
 	get_tree().get_nodes_in_group(\"Multiplayer\")[0].join_to_server(ip,port,playerInfo)
 
 func enable_menu(event):
-	if event is InputEventMouseButton and event.pressed and $TextureRect.enalbed:
-		$PanelContainer.visible = true
+	if event is InputEventMouseButton and event.pressed and $CenterContainer.enalbed:
+		$CenterContainer.visible = true
 		$TextureRect/ClickSound.play()
 		$TextureRect.toggle_button(false)
 		$TextureRect2.toggle_button(true)
 
 func disable_menu(event):
-	if event is InputEventMouseButton and event.pressed and not $TextureRect.enalbed:
-		$PanelContainer.visible = false
+	if event is InputEventMouseButton and event.pressed and not $CenterContainer.enalbed:
+		$CenterContainer.visible = false
 		$TextureRect2/ClickSound.play()
 		$TextureRect.toggle_button(true)
 		$TextureRect2.toggle_button(false)
@@ -134,6 +141,16 @@ audio_stream = ExtResource( 13 )
 [sub_resource type="AudioStreamRandomPitch" id=9]
 audio_stream = ExtResource( 14 )
 
+[sub_resource type="GDScript" id=12]
+script/source = "extends PanelContainer
+
+func set_map_label(string):
+	$VBoxContainer/Map/MapLabel.text = string
+
+func set_gamemode_label(string):
+	$VBoxContainer/Gamemode/GamemodeLabel.text = string
+"
+
 [sub_resource type="GDScript" id=2]
 script/source = "extends HBoxContainer
 
@@ -146,6 +163,44 @@ func _ready():
 func _skin_selected(index):
 	$TextureRect.texture = playerSkins[index][2]
 	get_tree().get_nodes_in_group(\"MultiplayerMenu\")[0].playerInfo[\"skinPath\"] = playerSkins[index][1]
+"
+
+[sub_resource type="GDScript" id=11]
+script/source = "extends PanelContainer
+
+var gamemodesList = [
+	[\"Cruelty\",\"The mode without any special goals, kill each other until you get bored, is the standard mode for playing Deathmatch and CO-OP maps\"],
+	[\"Sex\",\"??? SEXO ???\"]
+]
+
+var mapsList = [
+	\"multiplayer_test_map.tscn\",
+	\"sexrp.tscn\"
+]
+
+func _ready():
+	for gamemode in gamemodesList:
+		$HBoxContainer/LevelController/GamemodeList.add_item(gamemode[0])
+	
+	for map in mapsList:
+		$HBoxContainer/LevelController/MapList.add_item(map)
+	
+	$HBoxContainer/LevelController/GamemodeList.select(0)
+	$HBoxContainer/LevelController/MapList.select(0)
+	
+	_gamemode_select(0)
+	_map_select(0)
+
+
+func _gamemode_select(index):
+	get_parent().get_node(\"Main\").set_gamemode_label(gamemodesList[index][0])
+	get_tree().get_nodes_in_group(\"MultiplayerMenu\")[0].hostInfo[\"gamemode\"] = gamemodesList[index][0]
+
+	$HBoxContainer/GamemodeDescription/MapLabel.text = \"Gamemode description:\\n\\n\" + gamemodesList[index][1]
+
+func _map_select(index):
+	get_parent().get_node(\"Main\").set_map_label(mapsList[index])
+	get_tree().get_nodes_in_group(\"MultiplayerMenu\")[0].hostInfo[\"map\"] = mapsList[index]
 "
 
 [node name="MultiplayerMenu" type="Control" groups=["MultiplayerMenu"]]
@@ -177,8 +232,8 @@ margin_bottom = 6.0
 custom_styles/panel = SubResource( 6 )
 
 [node name="Label" type="Label" parent="TextureRect/PanelContainer"]
-margin_right = 520.0
-margin_bottom = 57.0
+margin_right = 480.0
+margin_bottom = 49.0
 custom_colors/font_color = Color( 0.101961, 1, 0, 1 )
 custom_fonts/font = SubResource( 8 )
 text = "Cruelty Squad Online"
@@ -217,140 +272,326 @@ text = "Return"
 [node name="ClickSound" type="AudioStreamPlayer" parent="TextureRect2"]
 stream = SubResource( 9 )
 
-[node name="PanelContainer" type="PanelContainer" parent="."]
+[node name="CenterContainer" type="CenterContainer" parent="."]
 visible = false
-anchor_top = 0.421
-anchor_bottom = 0.421
-margin_left = 428.0
-margin_top = -295.12
-margin_right = 1097.0
-margin_bottom = 110.88
+margin_left = 229.0
+margin_right = 1280.0
+margin_bottom = 720.0
 
-[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer"]
+[node name="TabContainer" type="TabContainer" parent="CenterContainer"]
+margin_left = 518.0
+margin_top = 337.0
+margin_right = 532.0
+margin_bottom = 383.0
+
+[node name="Main" type="PanelContainer" parent="CenterContainer/TabContainer"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_left = 7.0
+margin_top = 39.0
+margin_right = -7.0
+margin_bottom = -7.0
+rect_min_size = Vector2( 647, 499 )
+script = SubResource( 12 )
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/TabContainer/Main"]
 margin_left = 3.0
 margin_top = 3.0
-margin_right = 666.0
-margin_bottom = 403.0
+margin_right = 644.0
+margin_bottom = 496.0
 size_flags_horizontal = 3
 size_flags_vertical = 3
 custom_constants/separation = 5
 alignment = 1
 
-[node name="Label" type="Label" parent="PanelContainer/VBoxContainer"]
-margin_right = 663.0
+[node name="Label" type="Label" parent="CenterContainer/TabContainer/Main/VBoxContainer"]
+margin_right = 641.0
 margin_bottom = 26.0
 text = "Cruelty Squad Online"
 align = 1
 
-[node name="IpPort" type="HBoxContainer" parent="PanelContainer/VBoxContainer"]
+[node name="IpPort" type="HBoxContainer" parent="CenterContainer/TabContainer/Main/VBoxContainer"]
 margin_top = 31.0
-margin_right = 663.0
+margin_right = 641.0
 margin_bottom = 67.0
 alignment = 1
 
-[node name="IpEdit" type="LineEdit" parent="PanelContainer/VBoxContainer/IpPort"]
+[node name="IpEdit" type="LineEdit" parent="CenterContainer/TabContainer/Main/VBoxContainer/IpPort"]
 margin_right = 249.0
 margin_bottom = 36.0
 rect_min_size = Vector2( 249, 36 )
+size_flags_horizontal = 3
+theme = ExtResource( 24 )
 text = "127.0.0.1"
+align = 1
 max_length = 15
 placeholder_text = "127.0.0.1"
 
-[node name="Label2" type="Label" parent="PanelContainer/VBoxContainer/IpPort"]
+[node name="Label2" type="Label" parent="CenterContainer/TabContainer/Main/VBoxContainer/IpPort"]
 margin_left = 249.0
 margin_top = 5.0
 margin_right = 263.0
 margin_bottom = 31.0
 text = ":"
+align = 1
 
-[node name="PortEdit" type="LineEdit" parent="PanelContainer/VBoxContainer/IpPort"]
+[node name="PortEdit" type="LineEdit" parent="CenterContainer/TabContainer/Main/VBoxContainer/IpPort"]
 margin_left = 263.0
-margin_right = 453.0
+margin_right = 431.0
 margin_bottom = 36.0
+theme = ExtResource( 24 )
 text = "8080"
+align = 1
 max_length = 4
 placeholder_text = "8080"
 
-[node name="Label4" type="Label" parent="PanelContainer/VBoxContainer/IpPort"]
-margin_left = 453.0
+[node name="Label4" type="Label" parent="CenterContainer/TabContainer/Main/VBoxContainer/IpPort"]
+margin_left = 431.0
 margin_top = 5.0
-margin_right = 468.0
+margin_right = 446.0
 margin_bottom = 31.0
 text = " "
 
-[node name="JoinButton" type="Button" parent="PanelContainer/VBoxContainer/IpPort"]
-margin_left = 468.0
-margin_right = 558.0
+[node name="JoinButton" type="Button" parent="CenterContainer/TabContainer/Main/VBoxContainer/IpPort"]
+margin_left = 446.0
+margin_right = 536.0
 margin_bottom = 36.0
 text = " Join "
 
-[node name="Label3" type="Label" parent="PanelContainer/VBoxContainer/IpPort"]
-margin_left = 558.0
+[node name="Label3" type="Label" parent="CenterContainer/TabContainer/Main/VBoxContainer/IpPort"]
+margin_left = 536.0
 margin_top = 5.0
-margin_right = 573.0
+margin_right = 551.0
 margin_bottom = 31.0
 text = " "
 
-[node name="HostButton" type="Button" parent="PanelContainer/VBoxContainer/IpPort"]
-margin_left = 573.0
-margin_right = 663.0
+[node name="HostButton" type="Button" parent="CenterContainer/TabContainer/Main/VBoxContainer/IpPort"]
+margin_left = 551.0
+margin_right = 641.0
 margin_bottom = 36.0
 text = " Host "
 
-[node name="ClientSettings" type="Label" parent="PanelContainer/VBoxContainer"]
+[node name="Host info" type="Label" parent="CenterContainer/TabContainer/Main/VBoxContainer"]
 margin_top = 72.0
-margin_right = 663.0
+margin_right = 641.0
 margin_bottom = 98.0
-text = "Client settings:"
+text = "Host info"
+align = 1
 
-[node name="Nickname" type="HBoxContainer" parent="PanelContainer/VBoxContainer"]
+[node name="Gamemode" type="HBoxContainer" parent="CenterContainer/TabContainer/Main/VBoxContainer"]
 margin_top = 103.0
-margin_right = 663.0
-margin_bottom = 139.0
+margin_right = 641.0
+margin_bottom = 129.0
 custom_constants/separation = 5
 
-[node name="Label3" type="Label" parent="PanelContainer/VBoxContainer/Nickname"]
+[node name="Label3" type="Label" parent="CenterContainer/TabContainer/Main/VBoxContainer/Gamemode"]
+margin_right = 134.0
+margin_bottom = 26.0
+text = "Gamemode:"
+
+[node name="GamemodeLabel" type="Label" parent="CenterContainer/TabContainer/Main/VBoxContainer/Gamemode"]
+margin_left = 139.0
+margin_right = 641.0
+margin_bottom = 26.0
+size_flags_horizontal = 3
+text = "PLACEHOLDER"
+align = 2
+
+[node name="Map" type="HBoxContainer" parent="CenterContainer/TabContainer/Main/VBoxContainer"]
+margin_top = 134.0
+margin_right = 641.0
+margin_bottom = 160.0
+custom_constants/separation = 5
+
+[node name="Label3" type="Label" parent="CenterContainer/TabContainer/Main/VBoxContainer/Map"]
+margin_right = 59.0
+margin_bottom = 26.0
+text = "Map:"
+
+[node name="MapLabel" type="Label" parent="CenterContainer/TabContainer/Main/VBoxContainer/Map"]
+margin_left = 64.0
+margin_right = 641.0
+margin_bottom = 26.0
+size_flags_horizontal = 3
+text = "PLACEHOLDER"
+align = 2
+
+[node name="ClientSettings" type="Label" parent="CenterContainer/TabContainer/Main/VBoxContainer"]
+margin_top = 165.0
+margin_right = 641.0
+margin_bottom = 191.0
+text = "Player settings"
+align = 1
+
+[node name="Nickname" type="HBoxContainer" parent="CenterContainer/TabContainer/Main/VBoxContainer"]
+margin_top = 196.0
+margin_right = 641.0
+margin_bottom = 232.0
+custom_constants/separation = 5
+
+[node name="Label3" type="Label" parent="CenterContainer/TabContainer/Main/VBoxContainer/Nickname"]
 margin_top = 5.0
 margin_right = 74.0
 margin_bottom = 31.0
 text = "Name:"
 
-[node name="NicknameEdit" type="LineEdit" parent="PanelContainer/VBoxContainer/Nickname"]
+[node name="NicknameEdit" type="LineEdit" parent="CenterContainer/TabContainer/Main/VBoxContainer/Nickname"]
 margin_left = 79.0
-margin_right = 663.0
+margin_right = 641.0
 margin_bottom = 36.0
 rect_min_size = Vector2( 249, 36 )
 size_flags_horizontal = 3
+theme = ExtResource( 24 )
 text = "MT Foxtrot"
+align = 1
 max_length = 15
 placeholder_text = "MT Foxtrot"
 
-[node name="Skin" type="HBoxContainer" parent="PanelContainer/VBoxContainer"]
-margin_top = 144.0
-margin_right = 663.0
-margin_bottom = 400.0
+[node name="Skin" type="HBoxContainer" parent="CenterContainer/TabContainer/Main/VBoxContainer"]
+margin_top = 237.0
+margin_right = 641.0
+margin_bottom = 493.0
 custom_constants/separation = 5
 script = SubResource( 2 )
 playerSkins = [ [ "Default", "res://Textures/Misc/mainguy_clothes.png", ExtResource( 2 ) ], [ "Worker", "res://Textures/NPC/Enemy_Worker.png", ExtResource( 6 ) ], [ "Nude (19.99$)", "res://Textures/NPC/Enemy_Nude.png", ExtResource( 4 ) ], [ "Cultist", "res://Textures/NPC/cultist_civilian.png", ExtResource( 15 ) ], [ "Boss guy", "res://Textures/NPC/bosssguy_clothes.png", ExtResource( 16 ) ], [ "Assassin", "res://Textures/NPC/Enemy_Assassin.png", ExtResource( 20 ) ], [ "Assassin (Alt)", "res://Textures/NPC/Enemy_Assassin_Alt.png", ExtResource( 18 ) ], [ "Civilian", "res://Textures/NPC/Enemy_Civilian2.png", ExtResource( 17 ) ], [ "Cop", "res://Textures/NPC/Enemy_Cop1.png", ExtResource( 23 ) ], [ "Kevin", "res://Textures/NPC/Enemy_Kevin.png", ExtResource( 22 ) ], [ "CEO", "res://Textures/NPC/Objective_CEO.png", ExtResource( 21 ) ], [ "Elsa", "res://Textures/NPC/Elsa.png", ExtResource( 19 ) ] ]
 
-[node name="Label3" type="Label" parent="PanelContainer/VBoxContainer/Skin"]
+[node name="Label3" type="Label" parent="CenterContainer/TabContainer/Main/VBoxContainer/Skin"]
 margin_top = 115.0
 margin_right = 74.0
 margin_bottom = 141.0
 text = "Skin:"
 
-[node name="ItemList" type="ItemList" parent="PanelContainer/VBoxContainer/Skin"]
+[node name="ItemList" type="ItemList" parent="CenterContainer/TabContainer/Main/VBoxContainer/Skin"]
 margin_left = 79.0
-margin_right = 402.0
+margin_right = 380.0
 margin_bottom = 256.0
+rect_pivot_offset = Vector2( -843, 287 )
 size_flags_horizontal = 3
 allow_reselect = true
 
-[node name="TextureRect" type="TextureRect" parent="PanelContainer/VBoxContainer/Skin"]
-margin_left = 407.0
-margin_right = 663.0
+[node name="TextureRect" type="TextureRect" parent="CenterContainer/TabContainer/Main/VBoxContainer/Skin"]
+margin_left = 385.0
+margin_right = 641.0
 margin_bottom = 256.0
 texture = ExtResource( 2 )
+
+[node name="Game Settings" type="PanelContainer" parent="CenterContainer/TabContainer"]
+visible = false
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_left = 7.0
+margin_top = 39.0
+margin_right = -7.0
+margin_bottom = -7.0
+rect_min_size = Vector2( 647, 499 )
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = SubResource( 11 )
+
+[node name="HBoxContainer" type="HBoxContainer" parent="CenterContainer/TabContainer/Game Settings"]
+margin_left = 3.0
+margin_top = 3.0
+margin_right = 644.0
+margin_bottom = 496.0
+alignment = 1
+
+[node name="LevelController" type="VBoxContainer" parent="CenterContainer/TabContainer/Game Settings/HBoxContainer"]
+margin_right = 305.0
+margin_bottom = 493.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+alignment = 2
+
+[node name="GamemodeLabel" type="Label" parent="CenterContainer/TabContainer/Game Settings/HBoxContainer/LevelController"]
+margin_right = 305.0
+margin_bottom = 26.0
+text = "Gamemodes:"
+align = 1
+
+[node name="GamemodeList" type="ItemList" parent="CenterContainer/TabContainer/Game Settings/HBoxContainer/LevelController"]
+margin_top = 26.0
+margin_right = 305.0
+margin_bottom = 246.0
+rect_pivot_offset = Vector2( -843, 287 )
+size_flags_vertical = 3
+allow_reselect = true
+
+[node name="MapLabel" type="Label" parent="CenterContainer/TabContainer/Game Settings/HBoxContainer/LevelController"]
+margin_top = 246.0
+margin_right = 305.0
+margin_bottom = 272.0
+text = "Maps:"
+align = 1
+
+[node name="MapList" type="ItemList" parent="CenterContainer/TabContainer/Game Settings/HBoxContainer/LevelController"]
+margin_top = 272.0
+margin_right = 305.0
+margin_bottom = 493.0
+rect_pivot_offset = Vector2( -843, 287 )
+size_flags_vertical = 3
+allow_reselect = true
+
+[node name="Label" type="Label" parent="CenterContainer/TabContainer/Game Settings/HBoxContainer"]
+margin_left = 305.0
+margin_top = 233.0
+margin_right = 335.0
+margin_bottom = 259.0
+text = "  "
+
+[node name="GamemodeDescription" type="VBoxContainer" parent="CenterContainer/TabContainer/Game Settings/HBoxContainer"]
+margin_left = 335.0
+margin_right = 641.0
+margin_bottom = 493.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="MapLabel" type="Label" parent="CenterContainer/TabContainer/Game Settings/HBoxContainer/GamemodeDescription"]
+margin_right = 306.0
+margin_bottom = 493.0
+size_flags_horizontal = 3
+size_flags_vertical = 7
+text = "Gamemode description:
+
+The mode without any special goals, kill each other until you get bored, is the standard mode for playing Deathmatch and CO-OP maps"
+align = 1
+autowrap = true
+
+[node name="Implants" type="PanelContainer" parent="CenterContainer/TabContainer"]
+visible = false
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_left = 7.0
+margin_top = 39.0
+margin_right = -7.0
+margin_bottom = -7.0
+rect_min_size = Vector2( 647, 499 )
+
+[node name="Credits" type="PanelContainer" parent="CenterContainer/TabContainer"]
+visible = false
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_left = 7.0
+margin_top = 39.0
+margin_right = -7.0
+margin_bottom = -7.0
+rect_min_size = Vector2( 647, 499 )
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/TabContainer/Credits"]
+margin_left = 3.0
+margin_top = 3.0
+margin_right = 644.0
+margin_bottom = 496.0
+
+[node name="Label" type="Label" parent="CenterContainer/TabContainer/Credits/VBoxContainer"]
+margin_right = 641.0
+margin_bottom = 171.0
+text = "Cruelty Squad Online
+Created by TriggeredP
+
+Special thanks:
+
+DX - Made cool player animations"
+align = 1
 
 [connection signal="gui_input" from="TextureRect" to="." method="enable_menu"]
 [connection signal="gui_input" from="TextureRect" to="TextureRect" method="_mouse_input"]
@@ -360,6 +601,8 @@ texture = ExtResource( 2 )
 [connection signal="gui_input" from="TextureRect2" to="TextureRect2" method="_mouse_input"]
 [connection signal="mouse_entered" from="TextureRect2" to="TextureRect2" method="_on_mouse_enter"]
 [connection signal="mouse_exited" from="TextureRect2" to="TextureRect2" method="_on_mouse_exit"]
-[connection signal="pressed" from="PanelContainer/VBoxContainer/IpPort/JoinButton" to="." method="join"]
-[connection signal="pressed" from="PanelContainer/VBoxContainer/IpPort/HostButton" to="." method="host"]
-[connection signal="item_selected" from="PanelContainer/VBoxContainer/Skin/ItemList" to="PanelContainer/VBoxContainer/Skin" method="_skin_selected"]
+[connection signal="pressed" from="CenterContainer/TabContainer/Main/VBoxContainer/IpPort/JoinButton" to="." method="join"]
+[connection signal="pressed" from="CenterContainer/TabContainer/Main/VBoxContainer/IpPort/HostButton" to="." method="host"]
+[connection signal="item_selected" from="CenterContainer/TabContainer/Main/VBoxContainer/Skin/ItemList" to="CenterContainer/TabContainer/Main/VBoxContainer/Skin" method="_skin_selected"]
+[connection signal="item_selected" from="CenterContainer/TabContainer/Game Settings/HBoxContainer/LevelController/GamemodeList" to="CenterContainer/TabContainer/Game Settings" method="_gamemode_select"]
+[connection signal="item_selected" from="CenterContainer/TabContainer/Game Settings/HBoxContainer/LevelController/MapList" to="CenterContainer/TabContainer/Game Settings" method="_map_select"]
