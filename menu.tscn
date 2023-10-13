@@ -1,4 +1,4 @@
-[gd_scene load_steps=36 format=2]
+[gd_scene load_steps=37 format=2]
 
 [ext_resource path="res://Menu/menu_theme.tres" type="Theme" id=1]
 [ext_resource path="res://Textures/Misc/mainguy_clothes.png" type="Texture" id=2]
@@ -59,14 +59,16 @@ func join():
 	get_tree().get_nodes_in_group(\"Multiplayer\")[0].join_to_server(ip,port,playerInfo)
 
 func enable_menu(event):
-	if event is InputEventMouseButton and event.pressed and $CenterContainer.enalbed:
+	if event is InputEventMouseButton and event.pressed and not $CenterContainer.visible:
+		print(\"asses\")
 		$CenterContainer.visible = true
 		$TextureRect/ClickSound.play()
 		$TextureRect.toggle_button(false)
 		$TextureRect2.toggle_button(true)
 
 func disable_menu(event):
-	if event is InputEventMouseButton and event.pressed and not $CenterContainer.enalbed:
+	if event is InputEventMouseButton and event.pressed and $CenterContainer.visible:
+		print(\"boobies\")
 		$CenterContainer.visible = false
 		$TextureRect2/ClickSound.play()
 		$TextureRect.toggle_button(true)
@@ -203,9 +205,81 @@ func _map_select(index):
 	get_tree().get_nodes_in_group(\"MultiplayerMenu\")[0].hostInfo[\"map\"] = mapsList[index]
 "
 
+[sub_resource type="GDScript" id=13]
+script/source = "extends PanelContainer
+
+var implants = [
+	[preload(\"res://Textures/Menu/Implants/helmet.png\"),\"Composite Helmet\"],
+	[preload(\"res://Textures/Menu/Implants/eyes1.png\"),\"Zoom n Go Bionic Eyes\"],
+	[preload(\"res://Textures/Menu/Implants/lifesensor.png\"),\"Life Sensor\"],
+	[preload(\"res://Textures/Menu/Implants/skullgun.png\"),\"Skull Gun\"],
+	[preload(\"res://Textures/Menu/Implants/goo.png\"),\"Goo Overdrive\"],
+	[preload(\"res://Textures/Menu/Implants/scaledown.png\"),\"Cortical Scaledown+\"],
+	[preload(\"res://Textures/Menu/Implants/fishinghat.png\"),\"Tattered Rain Hat\"],
+	[preload(\"res://Textures/Menu/Implants/finance.png\"),\"Eyes of Corporate Insight\"],
+	[preload(\"res://Textures/Menu/Implants/nightmarescope.png\"),\"Nightmare Vision Goggles\"],
+	[preload(\"res://Textures/Menu/Implants/nightvision.png\"),\"Night Vision Goggles\"],
+	[preload(\"res://Textures/Menu/Implants/holyscope.png\"),\"Holy Scope\"],
+	[preload(\"res://Textures/Menu/Implants/flowerchute.png\"),\"Flowerchute\"],
+	[preload(\"res://Textures/Menu/Implants/light_armor.png\"),\"CSIJ Level II Body Armor\"],
+	[preload(\"res://Textures/Menu/Implants/advanced_armor.png\"),\"CSIJ Level IIB Body Armor\"],
+	[preload(\"res://Textures/Menu/Implants/medium_armor.png\"),\"CSIJ Level III Body Armor\"],
+	[preload(\"res://Textures/Menu/Implants/heavy_armor.png\"),\"CSIJ Level IV Body Armor\"],
+	[preload(\"res://Textures/Menu/Implants/ultra_armor.png\"),\"CSIJ Level V Biosuit\"],
+	[preload(\"res://Textures/Menu/Implants/golem.png\"),\"CSIJ Level VI Golem Exosystem\"],
+	[preload(\"res://Textures/Menu/Implants/blastshield.png\"),\"Tactical Blast Shield\"],
+	[preload(\"res://Textures/Menu/Implants/lbv.png\"),\"Load Bearing Vest\"],
+	[preload(\"res://Textures/Menu/Implants/hazmat.png\"),\"Hazmat Suit\"],
+	[preload(\"res://Textures/Menu/Implants/militarycamo.png\"),\"Military Camouflage\"],
+	[preload(\"res://Textures/Menu/Implants/stealth.png\"),\"Stealth Suit\"],
+	[preload(\"res://Textures/Menu/Implants/bouncy.png\"),\"Bouncy Suit\"],
+	[preload(\"res://Textures/Menu/Implants/tux.png\"),\"Extravagant Suit\"],
+	[preload(\"res://Textures/Menu/Implants/biothruster.png\"),\"Biothruster\"],
+	[preload(\"res://Textures/Menu/Implants/jetpack.png\"),\"Biojet\"],
+	[preload(\"res://Textures/Menu/Implants/he_grenade.png\"),\"HE Grenade\"],
+	[preload(\"res://Textures/Menu/Implants/flechette.png\"),\"Flechette Grenade\"],
+	[preload(\"res://Textures/Menu/Implants/zzz.png\"),\"ZZzzz Special Sedative Grenade\"],
+	[preload(\"res://Textures/Menu/Implants/medikit.png\"),\"First Aid Kit\"],
+	[preload(\"res://Textures/Menu/Implants/radio.png\"),\"Zomy X-200 Portable Cassette Player\"],
+	[preload(\"res://Textures/Menu/Implants/augarm.png\"),\"Augmented Arms\"],
+	[preload(\"res://Textures/Menu/Implants/abominator.png\"),\"Abominator\"],
+	[preload(\"res://Textures/Menu/Implants/grappendix.png\"),\"Grappendix\"],
+	[preload(\"res://Textures/Menu/Implants/angular.png\"),\"Angular Advantage Tactical Munitions\"],
+	[preload(\"res://Textures/Menu/Implants/ammogland.png\"),\"Ammunition Gland\"],
+	[preload(\"res://Textures/Menu/Implants/cursed_torch.png\"),\"Cursed Torch\"],
+	[preload(\"res://Textures/Menu/Implants/speed1.png\"),\"Speed Enhancer Gland\"],
+	[preload(\"res://Textures/Menu/Implants/speed2.png\"),\"Speed Enhancer Node Cluster\"],
+	[preload(\"res://Textures/Menu/Implants/speed3.png\"),\"Speed Enhancer Total Organ Package\"],
+	[preload(\"res://Textures/Menu/Implants/alienleg.png\"),\"Alien Leg Wetware\"],
+	[preload(\"res://Textures/Menu/Implants/pneumalegs.png\"),\"Pneumatic Legs\"],
+	[preload(\"res://Textures/Menu/Implants/verticalentry.png\"),\"Vertical Entry Device\"],
+	[preload(\"res://Textures/Menu/Implants/icaros.png\"),\"Icaros Machine\"],
+	[preload(\"res://Textures/Menu/Implants/gunkbooster.png\"),\"Gunkboosters\"],
+	[preload(\"res://Textures/Menu/Implants/funkgrunters.png\"),\"Funkgrunters\"],
+	[preload(\"res://Textures/Menu/Implants/oil.png\"),\"Microbial Oil Secretion Glands\"]
+]
+
+onready var allowedImplantsList = $HBoxContainer/ImplantsController/AllowedImplantsList
+onready var bannedImplantsList = $HBoxContainer/ImplantsController/BannedImplantsList
+
+func _ready():
+	for implant in implants:
+		allowedImplantsList.add_item(implant[1],implant[0])
+
+func ban_implant(index):
+	if not allowedImplantsList.is_item_disabled(index):
+		allowedImplantsList.set_item_disabled(index,true)
+		allowedImplantsList.unselect(index)
+		bannedImplantsList.add_item(implants[index][1],implants[index][0])
+
+func allow_implant(index):
+	pass
+"
+
 [node name="MultiplayerMenu" type="Control" groups=["MultiplayerMenu"]]
 anchor_right = 1.0
 anchor_bottom = 1.0
+mouse_filter = 1
 theme = ExtResource( 1 )
 script = SubResource( 3 )
 __meta__ = {
@@ -273,18 +347,18 @@ text = "Return"
 stream = SubResource( 9 )
 
 [node name="CenterContainer" type="CenterContainer" parent="."]
-visible = false
 margin_left = 229.0
 margin_right = 1280.0
 margin_bottom = 720.0
 
 [node name="TabContainer" type="TabContainer" parent="CenterContainer"]
-margin_left = 518.0
-margin_top = 337.0
-margin_right = 532.0
-margin_bottom = 383.0
+margin_left = 195.0
+margin_top = 87.0
+margin_right = 856.0
+margin_bottom = 632.0
 
 [node name="Main" type="PanelContainer" parent="CenterContainer/TabContainer"]
+visible = false
 anchor_right = 1.0
 anchor_bottom = 1.0
 margin_left = 7.0
@@ -557,7 +631,6 @@ align = 1
 autowrap = true
 
 [node name="Implants" type="PanelContainer" parent="CenterContainer/TabContainer"]
-visible = false
 anchor_right = 1.0
 anchor_bottom = 1.0
 margin_left = 7.0
@@ -565,6 +638,91 @@ margin_top = 39.0
 margin_right = -7.0
 margin_bottom = -7.0
 rect_min_size = Vector2( 647, 499 )
+script = SubResource( 13 )
+
+[node name="HBoxContainer" type="HBoxContainer" parent="CenterContainer/TabContainer/Implants"]
+margin_left = 3.0
+margin_top = 3.0
+margin_right = 644.0
+margin_bottom = 496.0
+alignment = 1
+
+[node name="ImplantsController" type="VBoxContainer" parent="CenterContainer/TabContainer/Implants/HBoxContainer"]
+margin_right = 431.0
+margin_bottom = 493.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+alignment = 2
+
+[node name="BannedImplantsLabel" type="Label" parent="CenterContainer/TabContainer/Implants/HBoxContainer/ImplantsController"]
+margin_right = 431.0
+margin_bottom = 26.0
+text = "Banned implants:"
+align = 1
+
+[node name="BannedImplantsList" type="ItemList" parent="CenterContainer/TabContainer/Implants/HBoxContainer/ImplantsController"]
+margin_top = 26.0
+margin_right = 431.0
+margin_bottom = 246.0
+rect_pivot_offset = Vector2( -843, 287 )
+size_flags_vertical = 3
+allow_reselect = true
+fixed_icon_size = Vector2( 32, 32 )
+
+[node name="AllowedImplantsLabel" type="Label" parent="CenterContainer/TabContainer/Implants/HBoxContainer/ImplantsController"]
+margin_top = 246.0
+margin_right = 431.0
+margin_bottom = 272.0
+text = "Allowed implants:"
+align = 1
+
+[node name="AllowedImplantsList" type="ItemList" parent="CenterContainer/TabContainer/Implants/HBoxContainer/ImplantsController"]
+margin_top = 272.0
+margin_right = 431.0
+margin_bottom = 493.0
+rect_pivot_offset = Vector2( -843, 287 )
+size_flags_vertical = 3
+allow_reselect = true
+max_text_lines = 2
+fixed_icon_size = Vector2( 32, 32 )
+
+[node name="Label" type="Label" parent="CenterContainer/TabContainer/Implants/HBoxContainer"]
+margin_left = 431.0
+margin_top = 233.0
+margin_right = 446.0
+margin_bottom = 259.0
+text = " "
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/TabContainer/Implants/HBoxContainer"]
+margin_left = 446.0
+margin_right = 641.0
+margin_bottom = 493.0
+custom_constants/separation = 10
+
+[node name="Label" type="Label" parent="CenterContainer/TabContainer/Implants/HBoxContainer/VBoxContainer"]
+margin_right = 195.0
+margin_bottom = 26.0
+text = " Buttons lol"
+
+[node name="LineEdit" type="LineEdit" parent="CenterContainer/TabContainer/Implants/HBoxContainer/VBoxContainer"]
+margin_top = 36.0
+margin_right = 195.0
+margin_bottom = 62.0
+theme = ExtResource( 24 )
+align = 1
+placeholder_text = "Preset name"
+
+[node name="Button" type="Button" parent="CenterContainer/TabContainer/Implants/HBoxContainer/VBoxContainer"]
+margin_top = 72.0
+margin_right = 195.0
+margin_bottom = 98.0
+text = " Save preset "
+
+[node name="Button2" type="Button" parent="CenterContainer/TabContainer/Implants/HBoxContainer/VBoxContainer"]
+margin_top = 108.0
+margin_right = 195.0
+margin_bottom = 134.0
+text = " Load preset "
 
 [node name="Credits" type="PanelContainer" parent="CenterContainer/TabContainer"]
 visible = false
@@ -606,3 +764,5 @@ align = 1
 [connection signal="item_selected" from="CenterContainer/TabContainer/Main/VBoxContainer/Skin/ItemList" to="CenterContainer/TabContainer/Main/VBoxContainer/Skin" method="_skin_selected"]
 [connection signal="item_selected" from="CenterContainer/TabContainer/Game Settings/HBoxContainer/LevelController/GamemodeList" to="CenterContainer/TabContainer/Game Settings" method="_gamemode_select"]
 [connection signal="item_selected" from="CenterContainer/TabContainer/Game Settings/HBoxContainer/LevelController/MapList" to="CenterContainer/TabContainer/Game Settings" method="_map_select"]
+[connection signal="item_selected" from="CenterContainer/TabContainer/Implants/HBoxContainer/ImplantsController/BannedImplantsList" to="CenterContainer/TabContainer/Implants" method="allow_implant"]
+[connection signal="item_selected" from="CenterContainer/TabContainer/Implants/HBoxContainer/ImplantsController/AllowedImplantsList" to="CenterContainer/TabContainer/Implants" method="ban_implant"]

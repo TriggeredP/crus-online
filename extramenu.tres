@@ -12,10 +12,14 @@ font_data = SubResource( 1 )
 [sub_resource type="StyleBoxTexture" id=3]
 texture = ExtResource( 1 )
 region_rect = Rect2( 0, 0, 256, 256 )
+margin_top = 5.0
+margin_bottom = 5.0
 axis_stretch_vertical = 1
 modulate_color = Color( 0.356863, 0.054902, 0.054902, 1 )
 
 [resource]
+LineEdit/colors/cursor_color = Color( 1, 0, 0, 1 )
 LineEdit/colors/font_color = Color( 1, 0, 0, 1 )
+LineEdit/colors/font_color_selected = Color( 1, 0, 0, 0.588235 )
 LineEdit/fonts/font = SubResource( 2 )
 LineEdit/styles/normal = SubResource( 3 )
