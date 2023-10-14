@@ -1,4 +1,4 @@
-[gd_scene load_steps=37 format=2]
+[gd_scene load_steps=40 format=2]
 
 [ext_resource path="res://Menu/menu_theme.tres" type="Theme" id=1]
 [ext_resource path="res://Textures/Misc/mainguy_clothes.png" type="Texture" id=2]
@@ -24,6 +24,8 @@
 [ext_resource path="res://Textures/NPC/Enemy_Kevin.png" type="Texture" id=22]
 [ext_resource path="res://Textures/NPC/Enemy_Cop1.png" type="Texture" id=23]
 [ext_resource path="res://MOD_CONTENT/CruS Online/extramenu.tres" type="Theme" id=24]
+[ext_resource path="res://Sfx/UI/Implant_Equip.wav" type="AudioStream" id=25]
+[ext_resource path="res://Sfx/UI/implant_unequip.wav" type="AudioStream" id=26]
 
 [sub_resource type="GDScript" id=3]
 script/source = "extends Control
@@ -259,22 +261,47 @@ var implants = [
 	[preload(\"res://Textures/Menu/Implants/oil.png\"),\"Microbial Oil Secretion Glands\"]
 ]
 
+var bannedImplants = {}
+
 onready var allowedImplantsList = $HBoxContainer/ImplantsController/AllowedImplantsList
-onready var bannedImplantsList = $HBoxContainer/ImplantsController/BannedImplantsList
 
 func _ready():
 	for implant in implants:
-		allowedImplantsList.add_item(implant[1],implant[0])
+		allowedImplantsList.add_item(implant[1],implant[0],false)
 
-func ban_implant(index):
+func toggle_implant(index):
+	print(index)
 	if not allowedImplantsList.is_item_disabled(index):
+		bannedImplants[allowedImplantsList.get_item_text(index)] = index
 		allowedImplantsList.set_item_disabled(index,true)
-		allowedImplantsList.unselect(index)
-		bannedImplantsList.add_item(implants[index][1],implants[index][0])
+		$Unequip.play()
+	else:
+		bannedImplants.erase(allowedImplantsList.get_item_text(index))
+		allowedImplantsList.set_item_disabled(index,false)
+		$Equip.play()
+	
+	print(len(implants))
 
-func allow_implant(index):
-	pass
+func allow_all():
+	bannedImplants = {}
+	
+	for index in len(implants):
+		allowedImplantsList.set_item_disabled(index,false)
+	
+	$Equip.play()
+
+func ban_all():
+	bannedImplants = {}
+	
+	for index in len(implants):
+		bannedImplants[allowedImplantsList.get_item_text(index)] = index
+		allowedImplantsList.set_item_disabled(index,true)
+	
+	$Unequip.play()
 "
+
+[sub_resource type="AudioStreamRandomPitch" id=14]
+audio_stream = ExtResource( 25 )
 
 [node name="MultiplayerMenu" type="Control" groups=["MultiplayerMenu"]]
 anchor_right = 1.0
@@ -654,36 +681,19 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 alignment = 2
 
-[node name="BannedImplantsLabel" type="Label" parent="CenterContainer/TabContainer/Implants/HBoxContainer/ImplantsController"]
+[node name="AllowedImplantsLabel" type="Label" parent="CenterContainer/TabContainer/Implants/HBoxContainer/ImplantsController"]
 margin_right = 431.0
 margin_bottom = 26.0
-text = "Banned implants:"
-align = 1
-
-[node name="BannedImplantsList" type="ItemList" parent="CenterContainer/TabContainer/Implants/HBoxContainer/ImplantsController"]
-margin_top = 26.0
-margin_right = 431.0
-margin_bottom = 246.0
-rect_pivot_offset = Vector2( -843, 287 )
-size_flags_vertical = 3
-allow_reselect = true
-fixed_icon_size = Vector2( 32, 32 )
-
-[node name="AllowedImplantsLabel" type="Label" parent="CenterContainer/TabContainer/Implants/HBoxContainer/ImplantsController"]
-margin_top = 246.0
-margin_right = 431.0
-margin_bottom = 272.0
 text = "Allowed implants:"
 align = 1
 
 [node name="AllowedImplantsList" type="ItemList" parent="CenterContainer/TabContainer/Implants/HBoxContainer/ImplantsController"]
-margin_top = 272.0
+margin_top = 26.0
 margin_right = 431.0
 margin_bottom = 493.0
 rect_pivot_offset = Vector2( -843, 287 )
 size_flags_vertical = 3
 allow_reselect = true
-max_text_lines = 2
 fixed_icon_size = Vector2( 32, 32 )
 
 [node name="Label" type="Label" parent="CenterContainer/TabContainer/Implants/HBoxContainer"]
@@ -723,6 +733,24 @@ margin_top = 108.0
 margin_right = 195.0
 margin_bottom = 134.0
 text = " Load preset "
+
+[node name="Button3" type="Button" parent="CenterContainer/TabContainer/Implants/HBoxContainer/VBoxContainer"]
+margin_top = 144.0
+margin_right = 195.0
+margin_bottom = 170.0
+text = "Ban all"
+
+[node name="Button4" type="Button" parent="CenterContainer/TabContainer/Implants/HBoxContainer/VBoxContainer"]
+margin_top = 180.0
+margin_right = 195.0
+margin_bottom = 206.0
+text = "Allow all"
+
+[node name="Equip" type="AudioStreamPlayer" parent="CenterContainer/TabContainer/Implants"]
+stream = SubResource( 14 )
+
+[node name="Unequip" type="AudioStreamPlayer" parent="CenterContainer/TabContainer/Implants"]
+stream = ExtResource( 26 )
 
 [node name="Credits" type="PanelContainer" parent="CenterContainer/TabContainer"]
 visible = false
@@ -764,5 +792,6 @@ align = 1
 [connection signal="item_selected" from="CenterContainer/TabContainer/Main/VBoxContainer/Skin/ItemList" to="CenterContainer/TabContainer/Main/VBoxContainer/Skin" method="_skin_selected"]
 [connection signal="item_selected" from="CenterContainer/TabContainer/Game Settings/HBoxContainer/LevelController/GamemodeList" to="CenterContainer/TabContainer/Game Settings" method="_gamemode_select"]
 [connection signal="item_selected" from="CenterContainer/TabContainer/Game Settings/HBoxContainer/LevelController/MapList" to="CenterContainer/TabContainer/Game Settings" method="_map_select"]
-[connection signal="item_selected" from="CenterContainer/TabContainer/Implants/HBoxContainer/ImplantsController/BannedImplantsList" to="CenterContainer/TabContainer/Implants" method="allow_implant"]
-[connection signal="item_selected" from="CenterContainer/TabContainer/Implants/HBoxContainer/ImplantsController/AllowedImplantsList" to="CenterContainer/TabContainer/Implants" method="ban_implant"]
+[connection signal="item_selected" from="CenterContainer/TabContainer/Implants/HBoxContainer/ImplantsController/AllowedImplantsList" to="CenterContainer/TabContainer/Implants" method="toggle_implant"]
+[connection signal="pressed" from="CenterContainer/TabContainer/Implants/HBoxContainer/VBoxContainer/Button3" to="CenterContainer/TabContainer/Implants" method="ban_all"]
+[connection signal="pressed" from="CenterContainer/TabContainer/Implants/HBoxContainer/VBoxContainer/Button4" to="CenterContainer/TabContainer/Implants" method="allow_all"]
