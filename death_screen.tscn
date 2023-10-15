@@ -1,13 +1,19 @@
-[gd_scene load_steps=6 format=2]
+[gd_scene load_steps=15 format=2]
 
 [ext_resource path="res://Fonts/gamefont(1).ttf" type="DynamicFontData" id=1]
 [ext_resource path="res://Textures/Menu/retry_normal.png" type="Texture" id=2]
 [ext_resource path="res://Textures/Menu/implant_menu_button.png" type="Texture" id=3]
+[ext_resource path="res://Textures/Menu/implant_screen_back.png" type="Texture" id=4]
+[ext_resource path="res://Textures/Menu/implant_character.png" type="Texture" id=5]
+[ext_resource path="res://Textures/Menu/Empty_Slot.png" type="Texture" id=6]
+[ext_resource path="res://Sfx/UI/implant_unequip.wav" type="AudioStream" id=7]
+[ext_resource path="res://Sfx/NPCs/Civilian/civilian_pain_2_alt.wav" type="AudioStream" id=8]
+[ext_resource path="res://Sfx/UI/Implant_Equip.wav" type="AudioStream" id=9]
 
 [sub_resource type="GDScript" id=2]
 script/source = "extends Control
 
-func _on_TextureRect_gui_input(event):
+func _restart(event):
 	if event is InputEventMouseButton and event.pressed:
 		var respawnPoint = get_tree().get_nodes_in_group(\"Respawn\")
 		respawnPoint.shuffle()
@@ -23,12 +29,43 @@ func _on_TextureRect_gui_input(event):
 		Global.player.UI.set_death_timer(5.0,false)
 		Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 		self.hide()
+
+func _implants(event):
+	if event is InputEventMouseButton and event.pressed:
+		$ImplantMenu.show()
+		print(Global.implants.head_implant)
+		print(Global.implants.torso_implant)
+		print(Global.implants.leg_implant)
+		print(Global.implants.arm_implant)
+		print(Global.implants.empty_implant)
 "
 
 [sub_resource type="DynamicFont" id=1]
 size = 32
 outline_size = 2
 font_data = ExtResource( 1 )
+
+[sub_resource type="GDScript" id=3]
+script/source = "extends TextureRect
+
+func _ready():
+	var implantTextures = $CenterContainer/HBoxContainer/Implants.get_children()
+	
+	for index in len(Global.implants.IMPLANTS):
+		if Global.implants.IMPLANTS[index].i_name != \"House\":
+			implantTextures[index].texture = Global.implants.IMPLANTS[index].texture
+
+func close(event):
+	print(event)
+	if event is InputEventMouseButton and event.pressed:
+		self.hide()
+"
+
+[sub_resource type="AudioStreamRandomPitch" id=4]
+audio_stream = ExtResource( 9 )
+
+[sub_resource type="AudioStreamRandomPitch" id=5]
+audio_stream = ExtResource( 8 )
 
 [node name="DeathScreen" type="Control"]
 visible = false
@@ -53,7 +90,7 @@ __meta__ = {
 "_edit_use_anchors_": true
 }
 
-[node name="HBoxContainer" type="HBoxContainer" parent="."]
+[node name="RespawnButton" type="HBoxContainer" parent="."]
 anchor_top = 0.454167
 anchor_right = 1.0
 anchor_bottom = 0.548611
@@ -62,7 +99,7 @@ __meta__ = {
 "_edit_use_anchors_": true
 }
 
-[node name="Label2" type="Label" parent="HBoxContainer"]
+[node name="Label2" type="Label" parent="RespawnButton"]
 margin_right = 546.0
 margin_bottom = 67.0
 size_flags_horizontal = 3
@@ -78,7 +115,7 @@ __meta__ = {
 "_edit_use_anchors_": true
 }
 
-[node name="TextureRect" type="TextureRect" parent="HBoxContainer"]
+[node name="TextureRect" type="TextureRect" parent="RespawnButton"]
 modulate = Color( 1, 0, 0, 1 )
 margin_left = 550.0
 margin_right = 730.0
@@ -91,7 +128,7 @@ __meta__ = {
 "_edit_use_anchors_": true
 }
 
-[node name="Label3" type="Label" parent="HBoxContainer"]
+[node name="Label3" type="Label" parent="RespawnButton"]
 margin_left = 734.0
 margin_right = 1280.0
 margin_bottom = 67.0
@@ -107,7 +144,7 @@ __meta__ = {
 "_edit_use_anchors_": true
 }
 
-[node name="HBoxContainer2" type="HBoxContainer" parent="."]
+[node name="ImplantButton" type="HBoxContainer" parent="."]
 anchor_top = 0.570833
 anchor_right = 1.0
 anchor_bottom = 0.665277
@@ -116,7 +153,7 @@ __meta__ = {
 "_edit_use_anchors_": true
 }
 
-[node name="Label2" type="Label" parent="HBoxContainer2"]
+[node name="Label2" type="Label" parent="ImplantButton"]
 margin_right = 546.0
 margin_bottom = 67.0
 size_flags_horizontal = 3
@@ -132,7 +169,7 @@ __meta__ = {
 "_edit_use_anchors_": true
 }
 
-[node name="TextureRect" type="TextureRect" parent="HBoxContainer2"]
+[node name="TextureRect" type="TextureRect" parent="ImplantButton"]
 modulate = Color( 1, 0, 0, 1 )
 margin_left = 550.0
 margin_right = 730.0
@@ -145,7 +182,7 @@ __meta__ = {
 "_edit_use_anchors_": true
 }
 
-[node name="Label3" type="Label" parent="HBoxContainer2"]
+[node name="Label3" type="Label" parent="ImplantButton"]
 margin_left = 734.0
 margin_right = 1280.0
 margin_bottom = 67.0
@@ -161,4 +198,725 @@ __meta__ = {
 "_edit_use_anchors_": true
 }
 
-[connection signal="gui_input" from="HBoxContainer/TextureRect" to="." method="_on_TextureRect_gui_input"]
+[node name="ImplantMenu" type="TextureRect" parent="."]
+visible = false
+self_modulate = Color( 1, 1, 1, 0.686275 )
+anchor_right = 1.0
+anchor_bottom = 1.0
+texture = ExtResource( 4 )
+expand = true
+stretch_mode = 2
+script = SubResource( 3 )
+__meta__ = {
+"_edit_use_anchors_": true
+}
+
+[node name="CenterContainer" type="CenterContainer" parent="ImplantMenu"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 1
+size_flags_horizontal = 3
+size_flags_vertical = 3
+__meta__ = {
+"_edit_use_anchors_": true
+}
+
+[node name="HBoxContainer" type="HBoxContainer" parent="ImplantMenu/CenterContainer"]
+margin_left = 128.0
+margin_top = 104.0
+margin_right = 1152.0
+margin_bottom = 616.0
+mouse_filter = 0
+custom_constants/separation = 0
+
+[node name="Implants" type="GridContainer" parent="ImplantMenu/CenterContainer/HBoxContainer"]
+margin_right = 512.0
+margin_bottom = 512.0
+rect_min_size = Vector2( 512, 512 )
+custom_constants/vseparation = 0
+custom_constants/hseparation = 0
+columns = 8
+
+[node name="TextureRect" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_right = 64.0
+margin_bottom = 64.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect2" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_left = 64.0
+margin_right = 128.0
+margin_bottom = 64.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect3" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_left = 128.0
+margin_right = 192.0
+margin_bottom = 64.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect4" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_left = 192.0
+margin_right = 256.0
+margin_bottom = 64.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect5" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_left = 256.0
+margin_right = 320.0
+margin_bottom = 64.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect6" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_left = 320.0
+margin_right = 384.0
+margin_bottom = 64.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect7" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_left = 384.0
+margin_right = 448.0
+margin_bottom = 64.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect8" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_left = 448.0
+margin_right = 512.0
+margin_bottom = 64.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect9" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_top = 64.0
+margin_right = 64.0
+margin_bottom = 128.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect10" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_left = 64.0
+margin_top = 64.0
+margin_right = 128.0
+margin_bottom = 128.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect11" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_left = 128.0
+margin_top = 64.0
+margin_right = 192.0
+margin_bottom = 128.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect12" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_left = 192.0
+margin_top = 64.0
+margin_right = 256.0
+margin_bottom = 128.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect13" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_left = 256.0
+margin_top = 64.0
+margin_right = 320.0
+margin_bottom = 128.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect14" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_left = 320.0
+margin_top = 64.0
+margin_right = 384.0
+margin_bottom = 128.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect15" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_left = 384.0
+margin_top = 64.0
+margin_right = 448.0
+margin_bottom = 128.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect16" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_left = 448.0
+margin_top = 64.0
+margin_right = 512.0
+margin_bottom = 128.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect17" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_top = 128.0
+margin_right = 64.0
+margin_bottom = 192.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect18" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_left = 64.0
+margin_top = 128.0
+margin_right = 128.0
+margin_bottom = 192.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect19" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_left = 128.0
+margin_top = 128.0
+margin_right = 192.0
+margin_bottom = 192.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect20" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_left = 192.0
+margin_top = 128.0
+margin_right = 256.0
+margin_bottom = 192.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect21" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_left = 256.0
+margin_top = 128.0
+margin_right = 320.0
+margin_bottom = 192.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect22" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_left = 320.0
+margin_top = 128.0
+margin_right = 384.0
+margin_bottom = 192.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect23" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_left = 384.0
+margin_top = 128.0
+margin_right = 448.0
+margin_bottom = 192.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect24" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_left = 448.0
+margin_top = 128.0
+margin_right = 512.0
+margin_bottom = 192.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect25" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_top = 192.0
+margin_right = 64.0
+margin_bottom = 256.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect26" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_left = 64.0
+margin_top = 192.0
+margin_right = 128.0
+margin_bottom = 256.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect27" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_left = 128.0
+margin_top = 192.0
+margin_right = 192.0
+margin_bottom = 256.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect28" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_left = 192.0
+margin_top = 192.0
+margin_right = 256.0
+margin_bottom = 256.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect29" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_left = 256.0
+margin_top = 192.0
+margin_right = 320.0
+margin_bottom = 256.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect30" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_left = 320.0
+margin_top = 192.0
+margin_right = 384.0
+margin_bottom = 256.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect31" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_left = 384.0
+margin_top = 192.0
+margin_right = 448.0
+margin_bottom = 256.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect32" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_left = 448.0
+margin_top = 192.0
+margin_right = 512.0
+margin_bottom = 256.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect33" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_top = 256.0
+margin_right = 64.0
+margin_bottom = 320.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect34" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_left = 64.0
+margin_top = 256.0
+margin_right = 128.0
+margin_bottom = 320.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect35" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_left = 128.0
+margin_top = 256.0
+margin_right = 192.0
+margin_bottom = 320.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect36" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_left = 192.0
+margin_top = 256.0
+margin_right = 256.0
+margin_bottom = 320.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect37" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_left = 256.0
+margin_top = 256.0
+margin_right = 320.0
+margin_bottom = 320.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect38" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_left = 320.0
+margin_top = 256.0
+margin_right = 384.0
+margin_bottom = 320.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect39" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_left = 384.0
+margin_top = 256.0
+margin_right = 448.0
+margin_bottom = 320.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect40" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_left = 448.0
+margin_top = 256.0
+margin_right = 512.0
+margin_bottom = 320.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect41" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_top = 320.0
+margin_right = 64.0
+margin_bottom = 384.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect42" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_left = 64.0
+margin_top = 320.0
+margin_right = 128.0
+margin_bottom = 384.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect43" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_left = 128.0
+margin_top = 320.0
+margin_right = 192.0
+margin_bottom = 384.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect44" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_left = 192.0
+margin_top = 320.0
+margin_right = 256.0
+margin_bottom = 384.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect45" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_left = 256.0
+margin_top = 320.0
+margin_right = 320.0
+margin_bottom = 384.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect46" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_left = 320.0
+margin_top = 320.0
+margin_right = 384.0
+margin_bottom = 384.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect47" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_left = 384.0
+margin_top = 320.0
+margin_right = 448.0
+margin_bottom = 384.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect48" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_left = 448.0
+margin_top = 320.0
+margin_right = 512.0
+margin_bottom = 384.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect49" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_top = 384.0
+margin_right = 64.0
+margin_bottom = 448.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect50" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_left = 64.0
+margin_top = 384.0
+margin_right = 128.0
+margin_bottom = 448.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect51" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_left = 128.0
+margin_top = 384.0
+margin_right = 192.0
+margin_bottom = 448.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect52" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_left = 192.0
+margin_top = 384.0
+margin_right = 256.0
+margin_bottom = 448.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect53" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_left = 256.0
+margin_top = 384.0
+margin_right = 320.0
+margin_bottom = 448.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect54" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_left = 320.0
+margin_top = 384.0
+margin_right = 384.0
+margin_bottom = 448.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect55" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_left = 384.0
+margin_top = 384.0
+margin_right = 448.0
+margin_bottom = 448.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect56" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_left = 448.0
+margin_top = 384.0
+margin_right = 512.0
+margin_bottom = 448.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect57" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_top = 448.0
+margin_right = 64.0
+margin_bottom = 512.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect58" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_left = 64.0
+margin_top = 448.0
+margin_right = 128.0
+margin_bottom = 512.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect59" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_left = 128.0
+margin_top = 448.0
+margin_right = 192.0
+margin_bottom = 512.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect60" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_left = 192.0
+margin_top = 448.0
+margin_right = 256.0
+margin_bottom = 512.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect61" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_left = 256.0
+margin_top = 448.0
+margin_right = 320.0
+margin_bottom = 512.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect62" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_left = 320.0
+margin_top = 448.0
+margin_right = 384.0
+margin_bottom = 512.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect63" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_left = 384.0
+margin_top = 448.0
+margin_right = 448.0
+margin_bottom = 512.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="TextureRect64" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Implants"]
+margin_left = 448.0
+margin_top = 448.0
+margin_right = 512.0
+margin_bottom = 512.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="Player" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer"]
+margin_left = 512.0
+margin_right = 1024.0
+margin_bottom = 512.0
+texture = ExtResource( 5 )
+stretch_mode = 1
+
+[node name="Head" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Player"]
+margin_left = 225.0
+margin_top = 19.0
+margin_right = 289.0
+margin_bottom = 83.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="Torso" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Player"]
+margin_left = 224.0
+margin_top = 112.0
+margin_right = 288.0
+margin_bottom = 176.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="Hand" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Player"]
+margin_left = 129.0
+margin_top = 179.0
+margin_right = 193.0
+margin_bottom = 243.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="Leg" type="TextureRect" parent="ImplantMenu/CenterContainer/HBoxContainer/Player"]
+margin_left = 110.0
+margin_top = 331.0
+margin_right = 174.0
+margin_bottom = 395.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 6 )
+expand = true
+stretch_mode = 1
+
+[node name="Equip" type="AudioStreamPlayer" parent="ImplantMenu"]
+stream = SubResource( 4 )
+
+[node name="Banned" type="AudioStreamPlayer" parent="ImplantMenu"]
+stream = SubResource( 5 )
+
+[node name="Unequip" type="AudioStreamPlayer" parent="ImplantMenu"]
+stream = ExtResource( 7 )
+
+[connection signal="gui_input" from="RespawnButton/TextureRect" to="." method="_restart"]
+[connection signal="gui_input" from="ImplantButton/TextureRect" to="." method="_implants"]
+[connection signal="gui_input" from="ImplantMenu" to="ImplantMenu" method="close"]

@@ -210,64 +210,17 @@ func _map_select(index):
 [sub_resource type="GDScript" id=13]
 script/source = "extends PanelContainer
 
-var implants = [
-	[preload(\"res://Textures/Menu/Implants/helmet.png\"),\"Composite Helmet\"],
-	[preload(\"res://Textures/Menu/Implants/eyes1.png\"),\"Zoom n Go Bionic Eyes\"],
-	[preload(\"res://Textures/Menu/Implants/lifesensor.png\"),\"Life Sensor\"],
-	[preload(\"res://Textures/Menu/Implants/skullgun.png\"),\"Skull Gun\"],
-	[preload(\"res://Textures/Menu/Implants/goo.png\"),\"Goo Overdrive\"],
-	[preload(\"res://Textures/Menu/Implants/scaledown.png\"),\"Cortical Scaledown+\"],
-	[preload(\"res://Textures/Menu/Implants/fishinghat.png\"),\"Tattered Rain Hat\"],
-	[preload(\"res://Textures/Menu/Implants/finance.png\"),\"Eyes of Corporate Insight\"],
-	[preload(\"res://Textures/Menu/Implants/nightmarescope.png\"),\"Nightmare Vision Goggles\"],
-	[preload(\"res://Textures/Menu/Implants/nightvision.png\"),\"Night Vision Goggles\"],
-	[preload(\"res://Textures/Menu/Implants/holyscope.png\"),\"Holy Scope\"],
-	[preload(\"res://Textures/Menu/Implants/flowerchute.png\"),\"Flowerchute\"],
-	[preload(\"res://Textures/Menu/Implants/light_armor.png\"),\"CSIJ Level II Body Armor\"],
-	[preload(\"res://Textures/Menu/Implants/advanced_armor.png\"),\"CSIJ Level IIB Body Armor\"],
-	[preload(\"res://Textures/Menu/Implants/medium_armor.png\"),\"CSIJ Level III Body Armor\"],
-	[preload(\"res://Textures/Menu/Implants/heavy_armor.png\"),\"CSIJ Level IV Body Armor\"],
-	[preload(\"res://Textures/Menu/Implants/ultra_armor.png\"),\"CSIJ Level V Biosuit\"],
-	[preload(\"res://Textures/Menu/Implants/golem.png\"),\"CSIJ Level VI Golem Exosystem\"],
-	[preload(\"res://Textures/Menu/Implants/blastshield.png\"),\"Tactical Blast Shield\"],
-	[preload(\"res://Textures/Menu/Implants/lbv.png\"),\"Load Bearing Vest\"],
-	[preload(\"res://Textures/Menu/Implants/hazmat.png\"),\"Hazmat Suit\"],
-	[preload(\"res://Textures/Menu/Implants/militarycamo.png\"),\"Military Camouflage\"],
-	[preload(\"res://Textures/Menu/Implants/stealth.png\"),\"Stealth Suit\"],
-	[preload(\"res://Textures/Menu/Implants/bouncy.png\"),\"Bouncy Suit\"],
-	[preload(\"res://Textures/Menu/Implants/tux.png\"),\"Extravagant Suit\"],
-	[preload(\"res://Textures/Menu/Implants/biothruster.png\"),\"Biothruster\"],
-	[preload(\"res://Textures/Menu/Implants/jetpack.png\"),\"Biojet\"],
-	[preload(\"res://Textures/Menu/Implants/he_grenade.png\"),\"HE Grenade\"],
-	[preload(\"res://Textures/Menu/Implants/flechette.png\"),\"Flechette Grenade\"],
-	[preload(\"res://Textures/Menu/Implants/zzz.png\"),\"ZZzzz Special Sedative Grenade\"],
-	[preload(\"res://Textures/Menu/Implants/medikit.png\"),\"First Aid Kit\"],
-	[preload(\"res://Textures/Menu/Implants/radio.png\"),\"Zomy X-200 Portable Cassette Player\"],
-	[preload(\"res://Textures/Menu/Implants/augarm.png\"),\"Augmented Arms\"],
-	[preload(\"res://Textures/Menu/Implants/abominator.png\"),\"Abominator\"],
-	[preload(\"res://Textures/Menu/Implants/grappendix.png\"),\"Grappendix\"],
-	[preload(\"res://Textures/Menu/Implants/angular.png\"),\"Angular Advantage Tactical Munitions\"],
-	[preload(\"res://Textures/Menu/Implants/ammogland.png\"),\"Ammunition Gland\"],
-	[preload(\"res://Textures/Menu/Implants/cursed_torch.png\"),\"Cursed Torch\"],
-	[preload(\"res://Textures/Menu/Implants/speed1.png\"),\"Speed Enhancer Gland\"],
-	[preload(\"res://Textures/Menu/Implants/speed2.png\"),\"Speed Enhancer Node Cluster\"],
-	[preload(\"res://Textures/Menu/Implants/speed3.png\"),\"Speed Enhancer Total Organ Package\"],
-	[preload(\"res://Textures/Menu/Implants/alienleg.png\"),\"Alien Leg Wetware\"],
-	[preload(\"res://Textures/Menu/Implants/pneumalegs.png\"),\"Pneumatic Legs\"],
-	[preload(\"res://Textures/Menu/Implants/verticalentry.png\"),\"Vertical Entry Device\"],
-	[preload(\"res://Textures/Menu/Implants/icaros.png\"),\"Icaros Machine\"],
-	[preload(\"res://Textures/Menu/Implants/gunkbooster.png\"),\"Gunkboosters\"],
-	[preload(\"res://Textures/Menu/Implants/funkgrunters.png\"),\"Funkgrunters\"],
-	[preload(\"res://Textures/Menu/Implants/oil.png\"),\"Microbial Oil Secretion Glands\"]
-]
-
 var bannedImplants = {}
 
 onready var allowedImplantsList = $HBoxContainer/ImplantsController/AllowedImplantsList
 
 func _ready():
-	for implant in implants:
-		allowedImplantsList.add_item(implant[1],implant[0],false)
+	print(\"FUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUCK\",Global.implants.IMPLANTS)
+	print(\"FUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUCK\",Global.implants)
+	for index in len(Global.implants.IMPLANTS):
+		print(Global.implants.IMPLANTS[index].i_name)
+		if Global.implants.IMPLANTS[index].i_name != \"House\":
+			allowedImplantsList.add_item(Global.implants.IMPLANTS[index].i_name,Global.implants.IMPLANTS[index].texture,false)
 
 func toggle_implant(index):
 	print(index)
@@ -279,23 +232,23 @@ func toggle_implant(index):
 		bannedImplants.erase(allowedImplantsList.get_item_text(index))
 		allowedImplantsList.set_item_disabled(index,false)
 		$Equip.play()
-	
-	print(len(implants))
 
 func allow_all():
 	bannedImplants = {}
 	
-	for index in len(implants):
-		allowedImplantsList.set_item_disabled(index,false)
+	for index in len(Global.implants.IMPLANTS):
+		if Global.implants.IMPLANTS[index].i_name != \"House\":
+			allowedImplantsList.set_item_disabled(index,false)
 	
 	$Equip.play()
 
 func ban_all():
 	bannedImplants = {}
 	
-	for index in len(implants):
-		bannedImplants[allowedImplantsList.get_item_text(index)] = index
-		allowedImplantsList.set_item_disabled(index,true)
+	for index in len(Global.implants.IMPLANTS):
+		if Global.implants.IMPLANTS[index].i_name != \"House\":
+			bannedImplants[allowedImplantsList.get_item_text(index)] = index
+			allowedImplantsList.set_item_disabled(index,true)
 	
 	$Unequip.play()
 "
@@ -374,18 +327,18 @@ text = "Return"
 stream = SubResource( 9 )
 
 [node name="CenterContainer" type="CenterContainer" parent="."]
+visible = false
 margin_left = 229.0
 margin_right = 1280.0
 margin_bottom = 720.0
 
 [node name="TabContainer" type="TabContainer" parent="CenterContainer"]
-margin_left = 195.0
-margin_top = 87.0
-margin_right = 856.0
-margin_bottom = 632.0
+margin_left = 518.0
+margin_top = 337.0
+margin_right = 532.0
+margin_bottom = 383.0
 
 [node name="Main" type="PanelContainer" parent="CenterContainer/TabContainer"]
-visible = false
 anchor_right = 1.0
 anchor_bottom = 1.0
 margin_left = 7.0
@@ -658,6 +611,7 @@ align = 1
 autowrap = true
 
 [node name="Implants" type="PanelContainer" parent="CenterContainer/TabContainer"]
+visible = false
 anchor_right = 1.0
 anchor_bottom = 1.0
 margin_left = 7.0
