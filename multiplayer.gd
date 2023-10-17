@@ -9,23 +9,22 @@ var player_info = {}
 
 var my_info = {name:"gay"}
 
-var loaded = false
+var hostSettings
 
 func _ready():
 	get_tree().connect("network_peer_connected", self, "_connected")
 	get_tree().connect("network_peer_disconnected", self, "_disconnected")
 
-func host_server(port,info): 
+func host_server(port,info,recivedHostSettings): 
 	my_info = info
+	hostSettings = recivedHostSettings
 	var server = NetworkedMultiplayerENet.new()
 	server.create_server(port,16)
 	get_tree().set_network_peer(server)
 	type = players_type.HOST
 	playerId = 1
 	
-	if not loaded:
-		Global.goto_scene("res://MOD_CONTENT/CruS Online/maps/multiplayer_test_map.tscn")
-		loaded = true
+	Global.goto_scene("res://MOD_CONTENT/CruS Online/maps/" + hostSettings.map)
 	
 	print("Server hosted")
 
@@ -45,39 +44,32 @@ func _disconnected(id):
 		print("Disconnected")
 
 func _connected(id):
-	if not loaded:
-		Global.goto_scene("res://MOD_CONTENT/CruS Online/maps/multiplayer_test_map.tscn")
-		loaded = true
-	if player_info[id] == null:
-		print("My id ",playerId)
-		rpc_id(id, "register_player", my_info)
-		print("Player connected")
+	rpc("connect_init",id)
+
+master func connect_init(recivedId):
+	rpc("client_connect_init",hostSettings,recivedId)
+
+puppet func client_connect_init(recivedHostSettings,recivedId):
+	hostSettings = recivedHostSettings
+	Global.goto_scene("res://MOD_CONTENT/CruS Online/maps/" + hostSettings.map)
+	rpc("register_player", my_info)
+	print("Player connected")
 
 remote func disconnect_player(id):
-	if Global.player.health != null:
-		Global.UI.notify(player_info[id]["nickname"] + " disconnected", Color(1, 0, 0))
-	
 	get_node("Players/" + str(id)).queue_free()
 	player_info.erase(id)
 
-remote func register_player(info):
+sync func register_player(info):
 	var id = get_tree().get_rpc_sender_id()
-	print("Get id ",id)
 	
 	player_info[id] = info
-	
-	if Global.player.health != null:
-		Global.UI.notify(info["nickname"] + " entered the game", Color(1, 0, 0))
-	
-	var players = player_info
-	players[playerId] = my_info
+	player_info[playerId] = my_info
 	
 	var puppetsNames = []
-	
 	for puppetNode in get_node("Players").get_children():
 		puppetsNames.append(int(puppetNode.name))
 	
-	for key in players.keys():
+	for key in player_info.keys():
 		if not puppetsNames.has(key):
 			var player = preload("res://MOD_CONTENT/CruS Online/multiplayer_player.tscn").instance()
 			player.set_name(key)

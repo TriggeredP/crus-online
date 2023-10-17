@@ -27,8 +27,6 @@ mastersync func _enable_timer():
 func _ready():
 	$Timer.wait_time = respawnTime
 	$Timer.connect("timeout", self, "_selectWeapon")
-	
-	print(weaponModels)
 
 func _physics_process(delta):
 	$Weapons.rotate_y(rotateSpeed)

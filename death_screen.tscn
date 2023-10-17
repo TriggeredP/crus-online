@@ -31,6 +31,10 @@ func _restart(event):
 		self.hide()
 
 func _implants(event):
+	$ImplantMenu/CenterContainer/HBoxContainer.update()
+	
+	$ImplantMenu/CenterContainer/HBoxContainer.rect_scale = Vector2(Global.resolution[0] / 1280 ,Global.resolution[1] / 720 )
+	
 	if event is InputEventMouseButton and event.pressed:
 		$ImplantMenu.show()
 		print(Global.implants.head_implant)
@@ -48,16 +52,16 @@ font_data = ExtResource( 1 )
 [sub_resource type="GDScript" id=3]
 script/source = "extends TextureRect
 
-func _ready():
-	var implantTextures = $CenterContainer/HBoxContainer/Implants.get_children()
-	
+onready var implantTextures = $CenterContainer/HBoxContainer/Implants.get_children()
+
+func update():
 	for index in len(Global.implants.IMPLANTS):
 		if Global.implants.IMPLANTS[index].i_name != \"House\":
 			implantTextures[index].texture = Global.implants.IMPLANTS[index].texture
 
 func close(event):
 	print(event)
-	if event is InputEventMouseButton and event.pressed:
+	if event is InputEventMouseButton or event is InputEventKey and event.keycode == KEY_ESCAPE and event.pressed:
 		self.hide()
 "
 
@@ -203,31 +207,28 @@ visible = false
 self_modulate = Color( 1, 1, 1, 0.686275 )
 anchor_right = 1.0
 anchor_bottom = 1.0
+rect_pivot_offset = Vector2( 640, 360 )
 texture = ExtResource( 4 )
 expand = true
 stretch_mode = 2
 script = SubResource( 3 )
-__meta__ = {
-"_edit_use_anchors_": true
-}
 
 [node name="CenterContainer" type="CenterContainer" parent="ImplantMenu"]
 anchor_right = 1.0
 anchor_bottom = 1.0
 mouse_filter = 1
-size_flags_horizontal = 3
-size_flags_vertical = 3
-__meta__ = {
-"_edit_use_anchors_": true
-}
+size_flags_horizontal = 15
+size_flags_vertical = 15
 
 [node name="HBoxContainer" type="HBoxContainer" parent="ImplantMenu/CenterContainer"]
 margin_left = 128.0
 margin_top = 104.0
 margin_right = 1152.0
 margin_bottom = 616.0
+rect_pivot_offset = Vector2( 512, 256 )
 mouse_filter = 0
 custom_constants/separation = 0
+alignment = 1
 
 [node name="Implants" type="GridContainer" parent="ImplantMenu/CenterContainer/HBoxContainer"]
 margin_right = 512.0

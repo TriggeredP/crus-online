@@ -45,22 +45,25 @@ var hostSettings = {
 }
 
 func get_data():
-	ip = $PanelContainer/VBoxContainer/IpPort/IpEdit.text
-	port = int($PanelContainer/VBoxContainer/IpPort/PortEdit.text)
-	if $PanelContainer/VBoxContainer/Nickname/NicknameEdit.text == \"\":
+	ip = $CenterContainer/TabContainer/Main/VBoxContainer/IpPort/IpEdit.text
+	port = int($CenterContainer/TabContainer/Main/VBoxContainer/IpPort/PortEdit.text)
+	if $CenterContainer/TabContainer/Main/VBoxContainer/Nickname/NicknameEdit.text == \"\":
 		playerInfo[\"nickname\"] = \"Im lazy shit that can enter nickname\"
 	else:
-		playerInfo[\"nickname\"] = $PanelContainer/VBoxContainer/Nickname/NicknameEdit.text
+		playerInfo[\"nickname\"] = $CenterContainer/TabContainer/Main/VBoxContainer/Nickname/NicknameEdit.text
 
 func host():
 	get_data()
-	get_tree().get_nodes_in_group(\"Multiplayer\")[0].host_server(port,playerInfo)
+	get_tree().get_nodes_in_group(\"Multiplayer\")[0].host_server(port,playerInfo,hostSettings)
 
 func join():
 	get_data()
 	get_tree().get_nodes_in_group(\"Multiplayer\")[0].join_to_server(ip,port,playerInfo)
 
 func enable_menu(event):
+	if not $CenterContainer/TabContainer/Implants.updated:
+		$CenterContainer/TabContainer/Implants.update()
+	
 	if event is InputEventMouseButton and event.pressed and not $CenterContainer.visible:
 		print(\"asses\")
 		$CenterContainer.visible = true
@@ -214,16 +217,16 @@ var bannedImplants = {}
 
 onready var allowedImplantsList = $HBoxContainer/ImplantsController/AllowedImplantsList
 
-func _ready():
-	print(\"FUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUCK\",Global.implants.IMPLANTS)
-	print(\"FUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUCK\",Global.implants)
+var updated = false
+
+func update():
+	updated = true
+	
 	for index in len(Global.implants.IMPLANTS):
-		print(Global.implants.IMPLANTS[index].i_name)
 		if Global.implants.IMPLANTS[index].i_name != \"House\":
 			allowedImplantsList.add_item(Global.implants.IMPLANTS[index].i_name,Global.implants.IMPLANTS[index].texture,false)
 
 func toggle_implant(index):
-	print(index)
 	if not allowedImplantsList.is_item_disabled(index):
 		bannedImplants[allowedImplantsList.get_item_text(index)] = index
 		allowedImplantsList.set_item_disabled(index,true)
