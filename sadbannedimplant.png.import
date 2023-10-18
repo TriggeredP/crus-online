@@ -2,15 +2,15 @@
 
 importer="texture"
 type="StreamTexture"
-path="res://.import/bannedimplant.png-309313e794cbfa18f174c26e593cc3d6.stex"
+path="res://.import/sadbannedimplant.png-bf7e2c2f56c852eb4c6e9cf459809f07.stex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://MOD_CONTENT/CruS Online/bannedimplant.png"
-dest_files=[ "res://.import/bannedimplant.png-309313e794cbfa18f174c26e593cc3d6.stex" ]
+source_file="res://MOD_CONTENT/CruS Online/sadbannedimplant.png"
+dest_files=[ "res://.import/sadbannedimplant.png-bf7e2c2f56c852eb4c6e9cf459809f07.stex" ]
 
 [params]
 
@@ -19,7 +19,7 @@ compress/lossy_quality=0.7
 compress/hdr_mode=0
 compress/bptc_ldr=0
 compress/normal_map=0
-flags/repeat=1
+flags/repeat=true
 flags/filter=false
 flags/mipmaps=false
 flags/anisotropic=false

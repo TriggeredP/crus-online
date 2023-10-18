@@ -54,6 +54,10 @@ func get_data():
 
 func host():
 	get_data()
+	
+	for implant in $CenterContainer/TabContainer/Implants.bannedImplants:
+		hostSettings[\"bannedImplants\"].append(implant)
+	
 	get_tree().get_nodes_in_group(\"Multiplayer\")[0].host_server(port,playerInfo,hostSettings)
 
 func join():
@@ -342,6 +346,7 @@ margin_right = 532.0
 margin_bottom = 383.0
 
 [node name="Main" type="PanelContainer" parent="CenterContainer/TabContainer"]
+visible = false
 anchor_right = 1.0
 anchor_bottom = 1.0
 margin_left = 7.0
@@ -614,7 +619,6 @@ align = 1
 autowrap = true
 
 [node name="Implants" type="PanelContainer" parent="CenterContainer/TabContainer"]
-visible = false
 anchor_right = 1.0
 anchor_bottom = 1.0
 margin_left = 7.0

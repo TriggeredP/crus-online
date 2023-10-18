@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=2]
+[gd_scene load_steps=21 format=2]
 
 [ext_resource path="res://Fonts/gamefont(1).ttf" type="DynamicFontData" id=1]
 [ext_resource path="res://Textures/Menu/retry_normal.png" type="Texture" id=2]
@@ -9,6 +9,8 @@
 [ext_resource path="res://Sfx/UI/implant_unequip.wav" type="AudioStream" id=7]
 [ext_resource path="res://Sfx/NPCs/Civilian/civilian_pain_2_alt.wav" type="AudioStream" id=8]
 [ext_resource path="res://Sfx/UI/Implant_Equip.wav" type="AudioStream" id=9]
+[ext_resource path="res://Textures/Menu/background_1.png" type="Texture" id=10]
+[ext_resource path="res://Textures/Menu/Implants/lifesensor.png" type="Texture" id=11]
 
 [sub_resource type="GDScript" id=2]
 script/source = "extends Control
@@ -31,17 +33,12 @@ func _restart(event):
 		self.hide()
 
 func _implants(event):
-	$ImplantMenu/CenterContainer/HBoxContainer.update()
-	
 	$ImplantMenu/CenterContainer/HBoxContainer.rect_scale = Vector2(Global.resolution[0] / 1280 ,Global.resolution[1] / 720 )
+	$ImplantMenu/HoverInfo.rect_scale = Vector2(Global.resolution[0] / 1280 ,Global.resolution[1] / 720 )
 	
 	if event is InputEventMouseButton and event.pressed:
+		$ImplantMenu.update()
 		$ImplantMenu.show()
-		print(Global.implants.head_implant)
-		print(Global.implants.torso_implant)
-		print(Global.implants.leg_implant)
-		print(Global.implants.arm_implant)
-		print(Global.implants.empty_implant)
 "
 
 [sub_resource type="DynamicFont" id=1]
@@ -54,15 +51,80 @@ script/source = "extends TextureRect
 
 onready var implantTextures = $CenterContainer/HBoxContainer/Implants.get_children()
 
+onready var bannedTexture = preload(\"res://MOD_CONTENT/CruS Online/bannedimplant.png\")
+onready var goofyBannedTexture = preload(\"res://MOD_CONTENT/CruS Online/sadbannedimplant.png\")
+onready var mysteryTexture = preload(\"res://Textures/Menu/mystery.png\")
+
+onready var singleton = get_tree().get_nodes_in_group(\"Multiplayer\")[0]
+
+func _ready():
+	for index in len(implantTextures):
+		implantTextures[index].connect(\"gui_input\",self,\"button_input\",[index])
+
 func update():
 	for index in len(Global.implants.IMPLANTS):
 		if Global.implants.IMPLANTS[index].i_name != \"House\":
-			implantTextures[index].texture = Global.implants.IMPLANTS[index].texture
+			if not Global.implants.IMPLANTS[index].i_name in Global.implants.purchased_implants:
+				implantTextures[index].texture = mysteryTexture
+				implantTextures[index].modulate = Color(0.8,0,0,1)
+			elif Global.implants.IMPLANTS[index].i_name in singleton.hostSettings[\"bannedImplants\"]:
+				var goofyRandom = int(rand_range(1,100))
+				if goofyRandom != 1:
+					implantTextures[index].texture = bannedTexture
+				else:
+					implantTextures[index].texture = goofyBannedTexture
+			else:
+				implantTextures[index].texture = Global.implants.IMPLANTS[index].texture
+	
+	$CenterContainer/HBoxContainer/Player/Head.texture = Global.implants.head_implant.texture
+	$CenterContainer/HBoxContainer/Player/Hand.texture = Global.implants.arm_implant.texture
+	$CenterContainer/HBoxContainer/Player/Torso.texture = Global.implants.torso_implant.texture
+	$CenterContainer/HBoxContainer/Player/Leg.texture = Global.implants.leg_implant.texture
 
 func close(event):
-	print(event)
-	if event is InputEventMouseButton or event is InputEventKey and event.keycode == KEY_ESCAPE and event.pressed:
+	if event is InputEventMouseButton and event.pressed:
 		self.hide()
+
+func move_hover_info(event):
+	if event is InputEventMouseMotion:
+		$HoverInfo.rect_position = event.global_position + Vector2(25,25)
+
+func mouse_enter():
+	$HoverInfo.show()
+
+func mouse_exit():
+	$HoverInfo.hide()
+
+func check_implant_slot(index):
+	if Global.implants.IMPLANTS[index].head:
+		return \"Head\"
+	elif Global.implants.IMPLANTS[index].torso:
+		return \"Torso\"
+	elif Global.implants.IMPLANTS[index].arms:
+		return \"Arms\"
+	elif Global.implants.IMPLANTS[index].legs:
+		return \"Legs\"
+
+func button_input(event,index):
+	if Global.implants.IMPLANTS[index].i_name == null or Global.implants.IMPLANTS[index].i_name == \"House\":
+		$HoverInfo.modulate = Color(1,1,1,0)
+	else:
+		$HoverInfo.modulate = Color(1,1,1,1)
+		if not Global.implants.IMPLANTS[index].i_name in Global.implants.purchased_implants:
+			$HoverInfo/VBoxContainer/Icon.texture = mysteryTexture
+			$HoverInfo/VBoxContainer/Name.text = \"???\"
+			$HoverInfo/VBoxContainer/Slot.text = \"Slot: None\"
+			$HoverInfo/VBoxContainer/Description.text = \"You need to buy/find this implant to use it when you respawn\"
+		elif Global.implants.IMPLANTS[index].i_name in singleton.hostSettings[\"bannedImplants\"]:
+			$HoverInfo/VBoxContainer/Icon.texture = bannedTexture
+			$HoverInfo/VBoxContainer/Name.text = Global.implants.IMPLANTS[index].i_name + \" (Banned)\"
+			$HoverInfo/VBoxContainer/Slot.text = \"Slot: None\"
+			$HoverInfo/VBoxContainer/Description.text = \"This implant was banned by host, you can't equip that\"
+		else:
+			$HoverInfo/VBoxContainer/Icon.texture = Global.implants.IMPLANTS[index].texture
+			$HoverInfo/VBoxContainer/Name.text = Global.implants.IMPLANTS[index].i_name
+			$HoverInfo/VBoxContainer/Slot.text = \"Slot: \" + check_implant_slot(index)
+			$HoverInfo/VBoxContainer/Description.text = Global.implants.IMPLANTS[index].explanation
 "
 
 [sub_resource type="AudioStreamRandomPitch" id=4]
@@ -70,6 +132,23 @@ audio_stream = ExtResource( 9 )
 
 [sub_resource type="AudioStreamRandomPitch" id=5]
 audio_stream = ExtResource( 8 )
+
+[sub_resource type="StyleBoxTexture" id=6]
+texture = ExtResource( 10 )
+region_rect = Rect2( 0, 0, 256, 256 )
+modulate_color = Color( 0.290196, 0.117647, 0.117647, 1 )
+
+[sub_resource type="DynamicFontData" id=7]
+font_path = "res://Fonts/MingLiU-ExtB-01.ttf"
+
+[sub_resource type="DynamicFont" id=8]
+size = 24
+use_filter = true
+font_data = SubResource( 7 )
+
+[sub_resource type="DynamicFont" id=9]
+use_filter = true
+font_data = SubResource( 7 )
 
 [node name="DeathScreen" type="Control"]
 visible = false
@@ -918,6 +997,51 @@ stream = SubResource( 5 )
 [node name="Unequip" type="AudioStreamPlayer" parent="ImplantMenu"]
 stream = ExtResource( 7 )
 
+[node name="HoverInfo" type="PanelContainer" parent="ImplantMenu"]
+visible = false
+margin_right = 468.0
+margin_bottom = 339.0
+rect_min_size = Vector2( 468, 0 )
+custom_styles/panel = SubResource( 6 )
+
+[node name="VBoxContainer" type="VBoxContainer" parent="ImplantMenu/HoverInfo"]
+margin_right = 468.0
+margin_bottom = 339.0
+size_flags_vertical = 0
+
+[node name="Icon" type="TextureRect" parent="ImplantMenu/HoverInfo/VBoxContainer"]
+margin_right = 468.0
+margin_bottom = 128.0
+texture = ExtResource( 11 )
+
+[node name="Name" type="Label" parent="ImplantMenu/HoverInfo/VBoxContainer"]
+margin_top = 132.0
+margin_right = 468.0
+margin_bottom = 157.0
+custom_colors/font_color = Color( 0, 1, 0.0392157, 1 )
+custom_fonts/font = SubResource( 8 )
+text = "Life sensor"
+
+[node name="Slot" type="Label" parent="ImplantMenu/HoverInfo/VBoxContainer"]
+margin_top = 161.0
+margin_right = 468.0
+margin_bottom = 178.0
+custom_colors/font_color = Color( 0.521569, 1, 0, 1 )
+custom_fonts/font = SubResource( 9 )
+text = "Slot: Head"
+
+[node name="Description" type="Label" parent="ImplantMenu/HoverInfo/VBoxContainer"]
+margin_top = 182.0
+margin_right = 468.0
+margin_bottom = 339.0
+custom_colors/font_color = Color( 0.521569, 1, 0, 1 )
+custom_fonts/font = SubResource( 9 )
+text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
+autowrap = true
+
 [connection signal="gui_input" from="RespawnButton/TextureRect" to="." method="_restart"]
 [connection signal="gui_input" from="ImplantButton/TextureRect" to="." method="_implants"]
 [connection signal="gui_input" from="ImplantMenu" to="ImplantMenu" method="close"]
+[connection signal="gui_input" from="ImplantMenu/CenterContainer/HBoxContainer/Implants" to="ImplantMenu" method="move_hover_info"]
+[connection signal="mouse_entered" from="ImplantMenu/CenterContainer/HBoxContainer/Implants" to="ImplantMenu" method="mouse_enter"]
+[connection signal="mouse_exited" from="ImplantMenu/CenterContainer/HBoxContainer/Implants" to="ImplantMenu" method="mouse_exit"]

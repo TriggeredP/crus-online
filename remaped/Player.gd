@@ -179,6 +179,77 @@ func cancer():
 		speed_bonus = - 10
 		set_move_speed()
 
+func update_implants():
+	if GLOBAL.CURRENT_LEVEL == 18 and Global.DEAD_CIVS.find("Limit Chancellor") == - 1:
+		Global.implants.head_implant = Global.implants.empty_implant
+		Global.implants.torso_implant = Global.implants.empty_implant
+		Global.implants.leg_implant = Global.implants.empty_implant
+		Global.implants.arm_implant = Global.implants.empty_implant
+		UI.notify("A malign influence strips you of power.", Color(0, 0, 1))
+		Global.menu.get_node("Character_Menu/Character_Container").clear_equips()
+		Global.menu.get_node("Character_Menu/Character_Container").update_buttons()
+	
+	if not GLOBAL.implants.head_implant.nightmare and not GLOBAL.implants.head_implant.nightvision:
+		$NV.hide()
+		shader_screen.material.set_shader_param("nightmare_vision", false)
+		shader_screen.material.set_shader_param("scope", false)
+	
+	if Global.implants.torso_implant.orbsuit:
+		orb = true
+	else :
+		orb = false
+	
+	if Global.implants.head_implant.nightvision:
+		$NV.show()
+		shader_screen.material.set_shader_param("scope", true)
+	
+	if not GLOBAL.implants.arm_implant.radio:
+		if GLOBAL.LEVEL_AMBIENCE[GLOBAL.CURRENT_LEVEL] != null:
+			GLOBAL.ambience.stream = GLOBAL.LEVEL_AMBIENCE[GLOBAL.CURRENT_LEVEL]
+			GLOBAL.ambience.play()
+	
+	if GLOBAL.implants.head_implant.nightmare:
+		$NV.show()
+		shader_screen.material.set_shader_param("nightmare_vision", true)
+	
+	if GLOBAL.implants.head_implant.holy:
+		shader_screen.material.set_shader_param("holy_mode", true)
+	else:
+		shader_screen.material.set_shader_param("holy_mode", false)
+	
+	if not GLOBAL.implants.arm_implant.radio:
+		GLOBAL.music.play()
+	
+	if orb:
+		health = 200
+		UI.set_health(health)
+		jump_bonus += 3
+		speed_bonus += 1
+		$Foot_Step.stream = load("res://Sfx/orbwalk.wav")
+	
+	if GLOBAL.implants.torso_implant.terror:
+		terrorsuit.show()
+		UI.hide()
+		shader_screen.material.set_shader_param("scope", true)
+	else:
+		terrorsuit.hide()
+		UI.show()
+		shader_screen.material.set_shader_param("scope", false)
+	
+	var leg_implant = GLOBAL.implants.leg_implant
+	var arm_implant = GLOBAL.implants.arm_implant
+	var head_implant = GLOBAL.implants.head_implant
+	var torso_implant = GLOBAL.implants.torso_implant
+	
+	if leg_implant.toxic_shield or torso_implant.toxic_shield or arm_implant.toxic_shield or head_implant.toxic_shield or orb:
+		hazmat = true
+	else:
+		hazmat = false
+	
+	jump_bonus = leg_implant.jump_bonus + torso_implant.jump_bonus + head_implant.jump_bonus + arm_implant.jump_bonus
+	speed_bonus = leg_implant.speed_bonus + torso_implant.speed_bonus + head_implant.speed_bonus + arm_implant.speed_bonus
+	armor = leg_implant.armor * torso_implant.armor * head_implant.armor * arm_implant.armor
+
 func _ready():
 	death_timer = Timer.new()
 	add_child(death_timer)
