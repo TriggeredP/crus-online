@@ -9,7 +9,9 @@ var player_info = {}
 
 var my_info = {name:"gay"}
 
-var hostSettings
+var hostSettings = {}
+
+var dataLoaded = false
 
 func _ready():
 	get_tree().connect("network_peer_connected", self, "_connected")
@@ -24,7 +26,12 @@ func host_server(port,info,recivedHostSettings):
 	type = players_type.HOST
 	playerId = 1
 	
+	print(hostSettings)
+	
+	player_info[1] = my_info
+	
 	Global.goto_scene("res://MOD_CONTENT/CruS Online/maps/" + hostSettings.map)
+	dataLoaded = true
 	
 	print("Server hosted")
 
@@ -43,27 +50,60 @@ func _disconnected(id):
 		rpc("disconnect_player",id)
 		print("Disconnected")
 
-func _connected(id):
-	rpc("connect_init",id)
-
-master func connect_init(recivedId):
-	rpc("client_connect_init",hostSettings,recivedId)
-
-puppet func client_connect_init(recivedHostSettings,recivedId):
-	hostSettings = recivedHostSettings
-	Global.goto_scene("res://MOD_CONTENT/CruS Online/maps/" + hostSettings.map)
-	rpc("register_player", my_info)
-	print("Player connected")
-
 remote func disconnect_player(id):
 	get_node("Players/" + str(id)).queue_free()
 	player_info.erase(id)
 
-sync func register_player(info):
+################################################################################
+
+# ALL: 			_connected
+# HOST: 		connected_init
+# CLIENT: 		client_connected_init
+# HOST: 		host_add_player 			-> 		load_players
+# CLIENTS: 		sync_players 				-> 		load_players
+
+################################################################################
+
+func _connected(id):
+	if not dataLoaded:
+		rpc("connect_init")
+		print("[CLIENT]: Connect Init")
+
+master func connect_init():
+	var id = get_tree().get_rpc_sender_id()
+	rpc_id(id,"client_connect_init",hostSettings,player_info)
+	print("[HOST]: Client Connect Init")
+
+puppet func client_connect_init(recivedHostSettings,recivedPlayerInfo):
+	hostSettings = recivedHostSettings
+	player_info = recivedPlayerInfo
+	Global.goto_scene("res://MOD_CONTENT/CruS Online/maps/" + hostSettings.map)
+	dataLoaded = true
+	rpc("host_add_player", my_info)
+	print("[CLIENT]: Player connected")
+
+master func host_add_player(info):
 	var id = get_tree().get_rpc_sender_id()
 	
-	player_info[id] = info
-	player_info[playerId] = my_info
+	if player_info[id] == null:
+		player_info[id] = info
+		rpc("sync_players",player_info)
+		print("[HOST]: Sync player info")
+		load_players()
+
+master func host_remove_player():
+	var id = get_tree().get_rpc_sender_id()
+
+	if player_info[id] != null:
+		player_info.erase(id)
+		rpc("sync_players",player_info)
+
+puppet func sync_players(info):
+	player_info = info
+	load_players()
+
+func load_players():
+	print("[LOCAL]: Load players")
 	
 	var puppetsNames = []
 	for puppetNode in get_node("Players").get_children():
@@ -79,6 +119,5 @@ sync func register_player(info):
 			player.singleton = self
 			get_node("Players").add_child(player)
 			player_info[key]["puppet"] = player
-			player.global_transform.origin = Vector3(-100,-100,-100)
-	
+			player.global_transform.origin = Vector3(0,0,0)
 	print(player_info)

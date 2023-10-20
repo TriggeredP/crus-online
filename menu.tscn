@@ -186,7 +186,7 @@ var gamemodesList = [
 
 var mapsList = [
 	\"multiplayer_test_map.tscn\",
-	\"sexrp.tscn\"
+	\"Construct_Blam.tscn\"
 ]
 
 func _ready():
@@ -211,7 +211,7 @@ func _gamemode_select(index):
 
 func _map_select(index):
 	get_parent().get_node(\"Main\").set_map_label(mapsList[index])
-	get_tree().get_nodes_in_group(\"MultiplayerMenu\")[0].hostInfo[\"map\"] = mapsList[index]
+	get_tree().get_nodes_in_group(\"MultiplayerMenu\")[0].hostSettings[\"map\"] = mapsList[index]
 "
 
 [sub_resource type="GDScript" id=13]
@@ -346,7 +346,6 @@ margin_right = 532.0
 margin_bottom = 383.0
 
 [node name="Main" type="PanelContainer" parent="CenterContainer/TabContainer"]
-visible = false
 anchor_right = 1.0
 anchor_bottom = 1.0
 margin_left = 7.0
@@ -619,6 +618,7 @@ align = 1
 autowrap = true
 
 [node name="Implants" type="PanelContainer" parent="CenterContainer/TabContainer"]
+visible = false
 anchor_right = 1.0
 anchor_bottom = 1.0
 margin_left = 7.0
