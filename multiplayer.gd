@@ -16,6 +16,24 @@ var dataLoaded = false
 func _ready():
 	get_tree().connect("network_peer_connected", self, "_connected")
 	get_tree().connect("network_peer_disconnected", self, "_disconnected")
+	
+	var thread = Thread.new()
+	thread.start(self, "_upnp_setup", 6969)
+
+func _upnp_setup(server_port):
+	var upnp = UPNP.new()
+	var err = upnp.discover()
+	
+	print(err)
+
+	if err != OK:
+		push_error(str(err))
+		print("UPNP error")
+
+	if upnp.get_gateway() and upnp.get_gateway().is_valid_gateway():
+		upnp.add_port_mapping(server_port, server_port, ProjectSettings.get_setting("application/config/name"), "UDP")
+		upnp.add_port_mapping(server_port, server_port, ProjectSettings.get_setting("application/config/name"), "TCP")
+		print("UPNP completed")
 
 func host_server(port,info,recivedHostSettings): 
 	my_info = info

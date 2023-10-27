@@ -135,6 +135,9 @@ var cancer_count = 0
 var on_ceiling = false
 var r
 
+onready var orbWalkSound = preload("res://Sfx/orbwalk.wav")
+var playerWalkSound
+
 ################################################################################
 
 remote func _spawn_gib(gib,gibName,gibPos,recivedDamage):
@@ -225,7 +228,9 @@ func update_implants():
 		UI.set_health(health)
 		jump_bonus += 3
 		speed_bonus += 1
-		$Foot_Step.stream = load("res://Sfx/orbwalk.wav")
+		$Foot_Step.stream = orbWalkSound
+	else:
+		$Foot_Step.stream = playerWalkSound
 	
 	if GLOBAL.implants.torso_implant.terror:
 		terrorsuit.show()
@@ -256,6 +261,8 @@ func _ready():
 	death_timer.wait_time = 5
 	death_timer.one_shot = true
 	death_timer.connect("timeout", self, "instadie")
+	
+	playerWalkSound = $Foot_Step.stream
 	
 	current_time = OS.get_system_time_msecs()
 	last_time = OS.get_system_time_msecs()
@@ -292,7 +299,6 @@ func _ready():
 		shader_screen.material.set_shader_param("scope", true)
 	r = Global.status()
 
-	
 	if not GLOBAL.implants.arm_implant.radio:
 		if GLOBAL.LEVEL_AMBIENCE[GLOBAL.CURRENT_LEVEL] != null:
 			GLOBAL.ambience.stream = GLOBAL.LEVEL_AMBIENCE[GLOBAL.CURRENT_LEVEL]
@@ -345,7 +351,7 @@ func _ready():
 		UI.set_health(health)
 		jump_bonus += 3
 		speed_bonus += 1
-		$Foot_Step.stream = load("res://Sfx/orbwalk.wav")
+		$Foot_Step.stream = orbWalkSound
 	speed_bonus = leg_implant.speed_bonus + torso_implant.speed_bonus + head_implant.speed_bonus + arm_implant.speed_bonus
 	if GLOBAL.husk_mode:
 		speed_bonus += 0.25

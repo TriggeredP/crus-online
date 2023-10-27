@@ -10,7 +10,7 @@
 [ext_resource path="res://Sfx/NPCs/Civilian/civilian_pain_2_alt.wav" type="AudioStream" id=8]
 [ext_resource path="res://Sfx/UI/Implant_Equip.wav" type="AudioStream" id=9]
 [ext_resource path="res://Textures/Menu/background_1.png" type="Texture" id=10]
-[ext_resource path="res://Textures/Menu/Implants/lifesensor.png" type="Texture" id=11]
+[ext_resource path="res://MOD_CONTENT/CruS Online/bannedimplant.png" type="Texture" id=11]
 
 [sub_resource type="GDScript" id=2]
 script/source = "extends Control
@@ -31,6 +31,9 @@ func _restart(event):
 		Global.player.UI.set_death_timer(5.0,false)
 		Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 		self.hide()
+		
+		Global.player.update_implants()
+		Global.player.weapon.update_implants()
 
 func _implants(event):
 	$ImplantMenu/CenterContainer/HBoxContainer.rect_scale = Vector2(Global.resolution[0] / 1280 ,Global.resolution[1] / 720 )
@@ -54,6 +57,8 @@ onready var implantTextures = $CenterContainer/HBoxContainer/Implants.get_childr
 onready var bannedTexture = preload(\"res://MOD_CONTENT/CruS Online/bannedimplant.png\")
 onready var goofyBannedTexture = preload(\"res://MOD_CONTENT/CruS Online/sadbannedimplant.png\")
 onready var mysteryTexture = preload(\"res://Textures/Menu/mystery.png\")
+
+onready var emptyImplant = preload(\"res://Textures/Menu/Empty_Slot.png\")
 
 onready var singleton = get_tree().get_nodes_in_group(\"Multiplayer\")[0]
 
@@ -105,6 +110,20 @@ func check_implant_slot(index):
 	elif Global.implants.IMPLANTS[index].legs:
 		return \"Legs\"
 
+func set_implant(index):
+	if Global.implants.IMPLANTS[index].head:
+		Global.implants.head_implant = Global.implants.IMPLANTS[index]
+		$CenterContainer/HBoxContainer/Player/Head.texture = Global.implants.head_implant.texture
+	elif Global.implants.IMPLANTS[index].torso:
+		Global.implants.torso_implant = Global.implants.IMPLANTS[index]
+		$CenterContainer/HBoxContainer/Player/Torso.texture = Global.implants.torso_implant.texture
+	elif Global.implants.IMPLANTS[index].arms:
+		Global.implants.arm_implant = Global.implants.IMPLANTS[index]
+		$CenterContainer/HBoxContainer/Player/Hand.texture = Global.implants.arm_implant.texture
+	elif Global.implants.IMPLANTS[index].legs:
+		Global.implants.leg_implant = Global.implants.IMPLANTS[index]
+		$CenterContainer/HBoxContainer/Player/Leg.texture = Global.implants.leg_implant.texture
+
 func button_input(event,index):
 	if Global.implants.IMPLANTS[index].i_name == null or Global.implants.IMPLANTS[index].i_name == \"House\":
 		$HoverInfo.modulate = Color(1,1,1,0)
@@ -120,11 +139,35 @@ func button_input(event,index):
 			$HoverInfo/VBoxContainer/Name.text = Global.implants.IMPLANTS[index].i_name + \" (Banned)\"
 			$HoverInfo/VBoxContainer/Slot.text = \"Slot: None\"
 			$HoverInfo/VBoxContainer/Description.text = \"This implant was banned by host, you can't equip that\"
+			
+			if event is InputEventMouseButton and event.pressed:
+				$Banned.play()
 		else:
 			$HoverInfo/VBoxContainer/Icon.texture = Global.implants.IMPLANTS[index].texture
 			$HoverInfo/VBoxContainer/Name.text = Global.implants.IMPLANTS[index].i_name
 			$HoverInfo/VBoxContainer/Slot.text = \"Slot: \" + check_implant_slot(index)
 			$HoverInfo/VBoxContainer/Description.text = Global.implants.IMPLANTS[index].explanation
+			
+			if event is InputEventMouseButton and event.pressed:
+				$Equip.play()
+				set_implant(index)
+
+func clear_implant(event,type):
+	if event is InputEventMouseButton and event.pressed:
+		$Unequip.play()
+		match type:
+			\"head\":
+				Global.implants.head_implant = Global.implants.empty_implant
+				$CenterContainer/HBoxContainer/Player/Head.texture = emptyImplant
+			\"torso\":
+				Global.implants.torso_implant = Global.implants.empty_implant
+				$CenterContainer/HBoxContainer/Player/Torso.texture = emptyImplant
+			\"arms\":
+				Global.implants.arm_implant = Global.implants.empty_implant
+				$CenterContainer/HBoxContainer/Player/Hand.texture = emptyImplant
+			\"legs\":
+				Global.implants.leg_implant = Global.implants.empty_implant
+				$CenterContainer/HBoxContainer/Player/Leg.texture = emptyImplant
 "
 
 [sub_resource type="AudioStreamRandomPitch" id=4]
@@ -1012,7 +1055,11 @@ size_flags_vertical = 0
 [node name="Icon" type="TextureRect" parent="ImplantMenu/HoverInfo/VBoxContainer"]
 margin_right = 468.0
 margin_bottom = 128.0
+rect_min_size = Vector2( 128, 128 )
+size_flags_vertical = 0
 texture = ExtResource( 11 )
+expand = true
+stretch_mode = 5
 
 [node name="Name" type="Label" parent="ImplantMenu/HoverInfo/VBoxContainer"]
 margin_top = 132.0
@@ -1045,3 +1092,7 @@ autowrap = true
 [connection signal="gui_input" from="ImplantMenu/CenterContainer/HBoxContainer/Implants" to="ImplantMenu" method="move_hover_info"]
 [connection signal="mouse_entered" from="ImplantMenu/CenterContainer/HBoxContainer/Implants" to="ImplantMenu" method="mouse_enter"]
 [connection signal="mouse_exited" from="ImplantMenu/CenterContainer/HBoxContainer/Implants" to="ImplantMenu" method="mouse_exit"]
+[connection signal="gui_input" from="ImplantMenu/CenterContainer/HBoxContainer/Player/Head" to="ImplantMenu" method="clear_implant" binds= [ "head" ]]
+[connection signal="gui_input" from="ImplantMenu/CenterContainer/HBoxContainer/Player/Torso" to="ImplantMenu" method="clear_implant" binds= [ "torso" ]]
+[connection signal="gui_input" from="ImplantMenu/CenterContainer/HBoxContainer/Player/Hand" to="ImplantMenu" method="clear_implant" binds= [ "arms" ]]
+[connection signal="gui_input" from="ImplantMenu/CenterContainer/HBoxContainer/Player/Leg" to="ImplantMenu" method="clear_implant" binds= [ "legs" ]]

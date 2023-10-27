@@ -187,6 +187,8 @@ var grapple_point = Vector3.ZERO
 var grapple_flag = false
 var melee = false
 
+onready var stealthMaterial = preload("res://Materials/seethrough.tres")
+
 ########################################
 # Островок спокойствия
 
@@ -213,6 +215,28 @@ remote func _play_sound(soundName):
 	var netId = get_tree().get_rpc_sender_id()
 	get_tree().get_nodes_in_group("Multiplayer")[0].player_info[netId].puppet.get_node("Puppet/PlayerModel/SFX/" + soundName).play()
 
+func update_implants():
+	if Global.implants.torso_implant.orbsuit:
+		orb = true
+		$orbarms.show()
+		
+		current_weapon = null
+		weapon1 = null
+		weapon2 = null
+	else :
+		orb = false
+		$orbarms.hide()
+		
+	if glob.implants.torso_implant.stealth:
+		left_arm_mesh.material_override = stealthMaterial
+		right_arm_mesh.material_override = stealthMaterial
+	elif Global.implants.torso_implant.instadeath:
+		left_arm_mesh.material_override = suitmat
+		right_arm_mesh.material_override = suitmat
+	elif Global.ending_2:
+		left_arm_mesh.material_override = lifemat
+		right_arm_mesh.material_override = lifemat
+
 ########################################
 
 func _ready()->void :
@@ -231,10 +255,10 @@ func _ready()->void :
 	if player:
 		if Global.implants.torso_implant.orbsuit:
 			orb = true
+			$orbarms.show()
 		else :
 			orb = false
-		if not orb:
-			$orbarms.queue_free()
+			$orbarms.hide()
 		line_mesh = Mesh.new()
 		IM = $ImmediateGeometry
 		flashlight = $Player_Weapon / Flashlight
@@ -259,8 +283,8 @@ func _ready()->void :
 		left_arm_mesh = get_node_or_null("Player_Weapon/Player_Weapon/Skeleton/Left_Arm")
 		right_arm_mesh = get_node_or_null("Player_Weapon/Player_Weapon/Skeleton/Right_Arm")
 		if glob.implants.torso_implant.stealth:
-			left_arm_mesh.material_override = load("res://Materials/seethrough.tres")
-			right_arm_mesh.material_override = load("res://Materials/seethrough.tres")
+			left_arm_mesh.material_override = stealthMaterial
+			right_arm_mesh.material_override = stealthMaterial
 		elif Global.implants.torso_implant.instadeath:
 			left_arm_mesh.material_override = suitmat
 			right_arm_mesh.material_override = suitmat
@@ -299,42 +323,25 @@ func _ready()->void :
 		right_arm_mesh.set_layer_mask_bit(2, 1)
 		IM2 = $ImmediateGeometry2
 		
-		
-		
-		
-		
-		
-		
-
-
-
-
-
-
-
-
-
-
-	
 		weapon1 = glob.menu.weapon_1
 		weapon2 = glob.menu.weapon_2
 		ammo[weapon1] += MAX_MAG_AMMO[weapon1] * glob.implants.torso_implant.ammo_bonus
 		ammo[weapon2] += MAX_MAG_AMMO[weapon2] * glob.implants.torso_implant.ammo_bonus
 		current_weapon = weapon1
+		
 		if orb:
 			current_weapon = null
 			weapon1 = null
 			weapon2 = null
 		
-		if glob.implants.arm_implant.regen_ammo:
-			regentimer1 = Timer.new()
-			add_child(regentimer1)
-			regentimer1.one_shot = true
-			regentimer1.connect("timeout", self, "regen_timeout1")
-			regentimer2 = Timer.new()
-			add_child(regentimer2)
-			regentimer2.one_shot = true
-			regentimer2.connect("timeout", self, "regen_timeout2")
+		regentimer1 = Timer.new()
+		add_child(regentimer1)
+		regentimer1.one_shot = true
+		regentimer1.connect("timeout", self, "regen_timeout1")
+		regentimer2 = Timer.new()
+		add_child(regentimer2)
+		regentimer2.one_shot = true
+		regentimer2.connect("timeout", self, "regen_timeout2")
 		
 	initpos = translation
 	initrot = rotation
@@ -392,14 +399,10 @@ func _input(event):
 	if event is InputEventMouseMotion and player and current_weapon != null:
 		if Input.is_action_pressed("reload"):
 			rotate_x(deg2rad(event.relative.y * glob.mouse_sensitivity))
-			
 			var camera_rot = rotation_degrees
 			camera_rot.x = clamp(camera_rot.x, 0, 75)
 			rotation_degrees = camera_rot
-			
-			
 			if camera_rot.x > 45 and magazine_ammo[current_weapon] < MAX_MAG_AMMO[current_weapon]:
-				
 				if current_weapon == W_NAMBU and ammo[current_weapon] > 0:
 					spawn_shell(SHELLS[current_weapon], clamp(MAX_MAG_AMMO[current_weapon] - magazine_ammo[current_weapon], 1, 5), 10, get_parent().get_parent().transform.basis.xform(Vector3(5, - 10, 0).normalized()), $Player_Weapon / ShellPosition.global_transform.origin)
 				reload()
@@ -413,7 +416,6 @@ func regen_timeout2():
 		magazine_ammo[weapon2] += 1
 		set_UI_ammo()
 func _physics_process(delta):
-	
 	if disabled:
 		return 
 	recoil = lerp(recoil, 0, 4 * delta)
@@ -430,14 +432,15 @@ func _physics_process(delta):
 		rotation.x = lerp(rotation.x, initrot.x + 0.5, 5 * delta)
 	elif player:
 		rotation.x = lerp(rotation.x, initrot.x, 4 * delta)
-	
 	if kickflag:
 		kicktimer += delta * 35
+
 func draw_line(begin, end):
 	begin = global_transform.xform_inv(begin)
 	end = global_transform.xform_inv(end)
 	IM.add_vertex(begin)
 	IM.add_vertex(end)
+
 func draw_line2(begin, end):
 	begin = global_transform.xform_inv(begin)
 	end = global_transform.xform_inv(end)
@@ -452,12 +455,6 @@ func normalize(value, mn, mx):
 func _process(delta)->void :
 	if disabled:
 		return 
-	
-		
-			
-				
-				
-				
 	t += 1
 	if not player:
 		raycast_init_rot.x = rand_range( - enemy_accuracy, enemy_accuracy)
@@ -465,26 +462,13 @@ func _process(delta)->void :
 		if (reload_timer.is_stopped() and magazine_ammo[current_weapon] == 0 and ammo[current_weapon] > 0):
 			reload()
 		return 
-		
-
-	
-	
-	
 	if player:
 		if Global.implants.arm_implant.ricochet:
 			if raycast.is_colliding():
 				IM2.clear()
 				IM2.begin(line_mesh.PRIMITIVE_LINES)
-				
-				
-				
-				
-				
-				
-				
 				var begin = raycast.get_collision_point()
 				var end = begin + (begin - raycast.global_transform.origin).bounce(raycast.get_collision_normal())
-				
 				draw_line2(begin, end)
 				IM2.end()
 			else :
@@ -518,7 +502,6 @@ func _process(delta)->void :
 				glob.player.grapple(grapple_point)
 			if grapple_target != null:
 				grapple_target.grapple(grapple_point)
-		
 		radiation_cylinder.rotation.z -= cylinder_velocity
 		RAD_light.light_energy = cylinder_velocity * 10
 		if current_weapon != W_RADIATOR:
@@ -526,7 +509,6 @@ func _process(delta)->void :
 		else :
 			RAD_light.show()
 		cylinder_velocity = lerp(cylinder_velocity, 0, 0.01)
-		
 		radiation_mesh.scale.z = lerp(radiation_mesh.scale.z, 0, 0.5)
 		radiation_mesh.scale.x = lerp(radiation_mesh.scale.x, 0, 0.5)
 		if current_weapon == W_LIGHT:
@@ -2584,10 +2566,7 @@ func set_UI_ammo():
 		UI.set_ammo(ammo[current_weapon], magazine_ammo[current_weapon], MAX_MAG_AMMO[current_weapon], MAX_AMMO[current_weapon])
 
 func set_weapon(weapon_index):
-	
-	
 	if player and not orb:
-		
 		anim.stop()
 		if current_weapon == weapon1:
 			weapon1 = weapon_index
@@ -2600,17 +2579,9 @@ func set_weapon(weapon_index):
 		UI.set_ammo(ammo[current_weapon], magazine_ammo[current_weapon], MAX_MAG_AMMO[current_weapon], MAX_AMMO[current_weapon])
 
 func add_ammo(amount:int, type:int, ammobox:Spatial):
-
 	ammo[type] += amount
-
-
-
 	if amount > 0:
 		UI.notify("(" + str(amount) + ") " + W_NAMES[type] + " ammo received", Color(0, 1, 1))
-
-
-
-
 	if current_weapon != null:
 		UI.set_ammo(ammo[current_weapon], magazine_ammo[current_weapon], MAX_MAG_AMMO[current_weapon], MAX_AMMO[current_weapon])
 
