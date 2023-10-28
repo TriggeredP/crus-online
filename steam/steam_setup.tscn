@@ -1,0 +1,52 @@
+[gd_scene load_steps=5 format=2]
+
+[ext_resource path="res://MOD_CONTENT/CruS Online/steam/steam_lobby.gd" type="Script" id=1]
+[ext_resource path="res://MOD_CONTENT/CruS Online/steam/steam_init.gd" type="Script" id=2]
+[ext_resource path="res://MOD_CONTENT/CruS Online/steam/steam_network.gd" type="Script" id=3]
+
+[sub_resource type="GDScript" id=1]
+script/source = "extends Node
+
+onready var Steam = preload(\"res://addons/godotsteam/godotsteam.gdns\").new()
+
+onready var SteamInit = $SteamInit
+onready var SteamLobby = $SteamLobby
+onready var SteamNetwork = $SteamNetwork
+
+func _ready():
+	$SteamNetwork.SteamLobby = $SteamLobby
+	
+	OS.set_environment(\"SteamAppId\", str(1388770))
+	OS.set_environment(\"SteamGameId\", str(1388770))
+	
+	SteamInit.Steam = Steam
+	SteamLobby.Steam = Steam
+	SteamNetwork.Steam = Steam
+	
+	SteamInit.setup()
+	SteamLobby.setup()
+	SteamNetwork.setup()
+"
+
+[node name="SteamBase" type="Node" groups=["Steam"]]
+script = SubResource( 1 )
+
+[node name="SteamInit" type="Node" parent="."]
+script = ExtResource( 2 )
+
+[node name="ConfirmationDialog" type="ConfirmationDialog" parent="SteamInit"]
+visible = true
+margin_left = 440.0
+margin_top = 322.0
+margin_right = 840.0
+margin_bottom = 397.0
+rect_min_size = Vector2( 400, 70 )
+window_title = "Cruelty Squad Online"
+dialog_text = "Some placeholder shit
+if you see that then some shit happend"
+
+[node name="SteamLobby" type="Node" parent="."]
+script = ExtResource( 1 )
+
+[node name="SteamNetwork" type="Node" parent="."]
+script = ExtResource( 3 )
