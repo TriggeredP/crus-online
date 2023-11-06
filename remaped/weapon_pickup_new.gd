@@ -16,6 +16,11 @@ remote func _change_visible(mesh,visibility):
 
 ################################################################################
 
+func syncUpdate():
+	for meshGun in MESH:
+		meshGun.hide()
+	MESH[current_weapon].show()
+
 func _ready():
 	MESH[current_weapon].show()
 	if not menu:

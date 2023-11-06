@@ -103,6 +103,10 @@ remote func _remove():
 
 ################################################################################
 
+func syncUpdate():
+	if gun != null:
+		gun.syncUpdate()
+
 func _ready():
 	if get_tree().network_peer != null:
 		rset_config("holdId",MultiplayerAPI.RPC_MODE_REMOTE)

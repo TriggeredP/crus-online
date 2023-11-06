@@ -44,8 +44,6 @@ var hostSettings = {
 	\"bannedImplants\": []
 }
 
-onready var SteamBase = get_tree().get_nodes_in_group(\"Steam\")[0]
-
 func get_data():
 	ip = $CenterContainer/TabContainer/Main/VBoxContainer/IpPort/IpEdit.text
 	port = int($CenterContainer/TabContainer/Main/VBoxContainer/IpPort/PortEdit.text)
@@ -71,14 +69,10 @@ func enable_menu(event):
 		$CenterContainer/TabContainer/Implants.update()
 	
 	if event is InputEventMouseButton and event.pressed and not $CenterContainer.visible:
-		var steamInit = SteamBase.SteamInit
-		if steamInit.status == 1:
-			$CenterContainer.visible = true
-			$TextureRect/ClickSound.play()
-			$TextureRect.toggle_button(false)
-			$TextureRect2.toggle_button(true)
-		else:
-			steamInit.get_node(\"ConfirmationDialog\").popup_centered()
+		$CenterContainer.visible = true
+		$TextureRect/ClickSound.play()
+		$TextureRect.toggle_button(false)
+		$TextureRect2.toggle_button(true)
 
 func disable_menu(event):
 	if event is InputEventMouseButton and event.pressed and $CenterContainer.visible:

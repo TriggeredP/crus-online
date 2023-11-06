@@ -7,6 +7,13 @@ var G_HEAD = preload("res://Entities/Physics_Objects/Player_Head_Gib.tscn")
 
 var gibs = [G_CHEST,G_LEG,G_ARM,G_HEAD]
 
+var gibsPath = [
+	"res://Entities/Physics_Objects/Chest_Gib.tscn",
+	"res://Entities/Physics_Objects/Leg_Gib.tscn",
+	"res://Entities/Physics_Objects/Arm_Gib.tscn",
+	"res://Entities/Physics_Objects/Player_Head_Gib.tscn"
+]
+
 var EXPLOSION = preload("res://Entities/Bullets/Self_Destruct_Explosion.tscn")
 var VOMIT = preload("res://Entities/Decals/FleshDecal2.tscn")
 var stair = true
@@ -146,6 +153,13 @@ remote func _spawn_gib(gib,gibName,gibPos,recivedDamage):
 	get_tree().get_nodes_in_group("Sync")[0].add_child(new_gib)
 	new_gib.global_transform.origin = gibPos
 	new_gib.damage(recivedDamage[0], recivedDamage[1], recivedDamage[2], recivedDamage[3])
+	
+	new_gib.set_meta("syncData",{
+		"assetPath": gibsPath[gib],
+		"syncProperties": [
+			"global_transform"
+		]
+	})
 
 remote func _play_sound(soundName):
 	var netId = get_tree().get_rpc_sender_id()
@@ -1144,6 +1158,14 @@ func spawn_gib(gib, count, damage, collision_n, collision_p):
 		new_gib.global_transform.origin = global_transform.origin
 		var damageArgs = [damage * 10, - collision_n + Vector3(rand_range(0, 0.1), rand_range(0, 0.1), rand_range(0, 0.1)), collision_p, Vector3.ZERO]
 		new_gib.damage(damageArgs[0], damageArgs[1], damageArgs[2], damageArgs[3])
+		
+		new_gib.set_meta("syncData",{
+			"assetPath": gibsPath[gib],
+			"syncProperties": [
+				"global_transform"
+			]
+		})
+		
 		rpc("_spawn_gib",gib,new_gib.name,new_gib.global_transform.origin,damageArgs)
 		return new_gib
 

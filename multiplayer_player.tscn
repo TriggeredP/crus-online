@@ -220,7 +220,7 @@ script = ExtResource( 1 )
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.88065, 0 )
 billboard = 2
 modulate = Color( 1, 0, 0.819608, 1 )
-text = "**** <- Youtube don't like this word lmao"
+text = "Placeholder"
 font = SubResource( 34 )
 
 [node name="PlayerModel" parent="Puppet" instance=ExtResource( 2 )]
@@ -229,6 +229,9 @@ transform = Transform( -1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0.84
 [node name="Skeleton" parent="Puppet/PlayerModel/Armature" index="0"]
 bones/0/bound_children = [ NodePath("Chest") ]
 bones/6/bound_children = [ NodePath("RightHand") ]
+
+[node name="Head" parent="Puppet/PlayerModel/Armature/Skeleton" index="0"]
+transform = Transform( 0.998235, -0.00611006, -0.0590595, 0.012, 0.994926, 0.0998948, 0.0581494, -0.100428, 0.993244, -0.00361, 0.616729, 0.0323869 )
 
 [node name="Head" type="StaticBody" parent="Puppet/PlayerModel/Armature/Skeleton/Head" index="1"]
 transform = Transform( 0.5, -2.32831e-10, 0, 0, 0.5, -3.72529e-09, 0, 0, 0.5, 0.00151798, 0.125857, 0.0126366 )
@@ -240,7 +243,7 @@ script = SubResource( 65 )
 shape = SubResource( 64 )
 
 [node name="RightHand" type="BoneAttachment" parent="Puppet/PlayerModel/Armature/Skeleton" index="1"]
-transform = Transform( -0.23481, 0.329649, 0.914437, 0.0620954, -0.933732, 0.352548, 0.970056, 0.139564, 0.198779, 0.272535, 0.0655896, 0.00147998 )
+transform = Transform( -0.23481, 0.329649, 0.914437, 0.0620954, -0.933732, 0.352548, 0.970056, 0.139564, 0.198779, 0.272535, 0.0655897, 0.00147997 )
 bone_name = "right_hand"
 
 [node name="Weapons" type="Spatial" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand"]

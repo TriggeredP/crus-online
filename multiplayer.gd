@@ -13,18 +13,11 @@ var hostSettings = {}
 
 var dataLoaded = false
 
-onready var SteamBase = get_tree().get_nodes_in_group("Steam")[0]
+onready var Sync = $Sync
 
 func _ready():
 	get_tree().connect("network_peer_connected", self, "_connected")
 	get_tree().connect("network_peer_disconnected", self, "_disconnected")
-	
-	SteamBase.SteamNetwork.register_rpcs(self,
-	[
-	 ["_server_button_pressed", SteamBase.SteamNetwork.PERMISSION.CLIENT_ALL],
-	 ["_client_button_pressed", SteamBase.SteamNetwork.PERMISSION.SERVER],
-	]
-   )
 
 func host_server(port,info,recivedHostSettings): 
 	my_info = info
@@ -98,6 +91,7 @@ master func host_add_player(info):
 		player_info[id] = info
 		rpc("sync_players",player_info)
 		print("[HOST]: Sync player info")
+		Sync.sync_nodes()
 		load_players()
 
 master func host_remove_player():

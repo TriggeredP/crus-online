@@ -11,10 +11,6 @@ script = ExtResource( 2 )
 [node name="Player" parent="." instance=ExtResource( 1 )]
 interpolated_camera = true
 
-[node name="Skeleton" parent="Player/Body_Mesh/Armature" index="0"]
-bones/2/bound_children = [  ]
-bones/6/bound_children = [  ]
-
 [node name="BoneAttachment" parent="Player/Body_Mesh/Armature/Skeleton" index="0"]
 transform = Transform( 0.999961, 0.000690037, 0.00876781, 0.000670931, 0.988027, -0.154278, -0.0087693, 0.154278, 0.987988, 0.000147821, 0.615141, 0.0506348 )
 
