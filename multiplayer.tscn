@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=2]
+[gd_scene load_steps=4 format=2]
 
 [ext_resource path="res://MOD_CONTENT/CruS Online/multiplayer.gd" type="Script" id=1]
 [ext_resource path="res://MOD_CONTENT/CruS Online/Sync.gd" type="Script" id=2]
+[ext_resource path="res://MOD_CONTENT/CruS Online/Players.gd" type="Script" id=3]
 
 [node name="Multiplayer" type="Node" groups=["Multiplayer"]]
 script = ExtResource( 1 )
@@ -10,3 +11,4 @@ script = ExtResource( 1 )
 script = ExtResource( 2 )
 
 [node name="Players" type="Node" parent="."]
+script = ExtResource( 3 )

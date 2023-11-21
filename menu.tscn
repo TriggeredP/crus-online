@@ -184,7 +184,8 @@ var gamemodesList = [
 
 var mapsList = [
 	\"multiplayer_test_map.tscn\",
-	\"Construct_Blam.tscn\"
+	\"Construct_Blam.tscn\",
+	\"bonesquad_museum.tscn\"
 ]
 
 func _ready():

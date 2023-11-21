@@ -14,6 +14,7 @@ var hostSettings = {}
 var dataLoaded = false
 
 onready var Sync = $Sync
+onready var Players = $Players
 
 func _ready():
 	get_tree().connect("network_peer_connected", self, "_connected")
@@ -92,7 +93,7 @@ master func host_add_player(info):
 		rpc("sync_players",player_info)
 		print("[HOST]: Sync player info")
 		Sync.sync_nodes()
-		load_players()
+		Players.load_players()
 
 master func host_remove_player():
 	var id = get_tree().get_rpc_sender_id()
@@ -103,24 +104,4 @@ master func host_remove_player():
 
 puppet func sync_players(info):
 	player_info = info
-	load_players()
-
-func load_players():
-	print("[LOCAL]: Load players")
-	
-	var puppetsNames = []
-	for puppetNode in get_node("Players").get_children():
-		puppetsNames.append(int(puppetNode.name))
-	
-	for key in player_info.keys():
-		if not puppetsNames.has(key):
-			var player = preload("res://MOD_CONTENT/CruS Online/multiplayer_player.tscn").instance()
-			player.set_name(key)
-			player.set_network_master(key)
-			player.nickname = player_info[key]["nickname"]
-			player.skinPath = player_info[key]["skinPath"]
-			player.singleton = self
-			get_node("Players").add_child(player)
-			player_info[key]["puppet"] = player
-			player.global_transform.origin = Vector3(0,0,0)
-	print(player_info)
+	Players.load_players()
