@@ -1124,7 +1124,7 @@ func instadie(damage = 100, collision_n = Vector3.ZERO, collision_p = Vector3.ZE
 	spawn_gib(2, 2, damage, collision_n, collision_p)
 	spawn_gib(3, 1, damage, collision_n, collision_p)
 	UI.hide()
-	GLOBAL.get_node('DeathScreen').show()
+	GLOBAL.get_node('DeathScreen').player_died()
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 
 func _on_Crush_Check_body_entered(body):

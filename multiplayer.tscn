@@ -1,8 +1,42 @@
-[gd_scene load_steps=4 format=2]
+[gd_scene load_steps=14 format=2]
 
 [ext_resource path="res://MOD_CONTENT/CruS Online/multiplayer.gd" type="Script" id=1]
 [ext_resource path="res://MOD_CONTENT/CruS Online/Sync.gd" type="Script" id=2]
 [ext_resource path="res://MOD_CONTENT/CruS Online/Players.gd" type="Script" id=3]
+[ext_resource path="res://MOD_CONTENT/CruS Online/Button.tscn" type="PackedScene" id=4]
+[ext_resource path="res://Textures/Menu/start_normal.png" type="Texture" id=5]
+[ext_resource path="res://MOD_CONTENT/CruS Online/Menu.gd" type="Script" id=6]
+[ext_resource path="res://Textures/Menu/exit_menu_normal.png" type="Texture" id=7]
+[ext_resource path="res://Textures/Menu/exit_level_normal.png" type="Texture" id=8]
+[ext_resource path="res://Textures/Menu/background_1.png" type="Texture" id=9]
+
+[sub_resource type="StyleBoxTexture" id=6]
+texture = ExtResource( 9 )
+region_rect = Rect2( 0, 0, 256, 256 )
+modulate_color = Color( 0.309804, 0.133333, 0.0823529, 1 )
+
+[sub_resource type="GDScript" id=9]
+script/source = "extends PanelContainer
+
+func _ready():
+	hide()
+
+func change_pos(pos,enabled):
+	rect_global_position = pos
+	if not visible and enabled:
+		show()
+
+func change_text(text):
+	$Label.text = text
+"
+
+[sub_resource type="DynamicFontData" id=7]
+font_path = "res://Fonts/MingLiU-ExtB-01.ttf"
+
+[sub_resource type="DynamicFont" id=8]
+size = 48
+use_filter = true
+font_data = SubResource( 7 )
 
 [node name="Multiplayer" type="Node" groups=["Multiplayer"]]
 script = ExtResource( 1 )
@@ -12,3 +46,67 @@ script = ExtResource( 2 )
 
 [node name="Players" type="Node" parent="."]
 script = ExtResource( 3 )
+
+[node name="Menu" type="Control" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource( 6 )
+__meta__ = {
+"_edit_use_anchors_": true
+}
+
+[node name="Start" parent="Menu" instance=ExtResource( 4 )]
+margin_left = 100.0
+margin_top = 100.0
+margin_right = 228.0
+margin_bottom = 228.0
+texture = ExtResource( 5 )
+idleTexture = ExtResource( 5 )
+labelText = "Start"
+buttonType = "Start"
+
+[node name="Disconnect" parent="Menu" instance=ExtResource( 4 )]
+margin_left = 164.0
+margin_top = 100.0
+margin_right = 292.0
+margin_bottom = 228.0
+texture = ExtResource( 8 )
+idleTexture = ExtResource( 8 )
+labelText = "Disconnect"
+buttonType = "Disconnect"
+
+[node name="Exit" parent="Menu" instance=ExtResource( 4 )]
+margin_left = 228.0
+margin_top = 100.0
+margin_right = 356.0
+margin_bottom = 228.0
+texture = ExtResource( 7 )
+idleTexture = ExtResource( 7 )
+labelText = "Exit"
+buttonType = "Exit"
+
+[node name="Hint" type="PanelContainer" parent="." groups=["Hint"]]
+margin_right = 312.0
+margin_bottom = 49.0
+rect_scale = Vector2( 0.75, 0.75 )
+size_flags_horizontal = 12
+size_flags_vertical = 12
+custom_styles/panel = SubResource( 6 )
+script = SubResource( 9 )
+__meta__ = {
+"_edit_use_anchors_": true
+}
+
+[node name="Label" type="Label" parent="Hint"]
+margin_right = 312.0
+margin_bottom = 49.0
+size_flags_horizontal = 9
+custom_colors/font_color = Color( 0.101961, 1, 0, 1 )
+custom_fonts/font = SubResource( 8 )
+text = "Cruelty Squad"
+
+[connection signal="button_pressed" from="Menu/Start" to="Menu" method="hide_menu"]
+[connection signal="button_pressed" from="Menu/Disconnect" to="Menu" method="leave_server"]

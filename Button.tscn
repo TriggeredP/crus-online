@@ -1,0 +1,92 @@
+[gd_scene load_steps=11 format=2]
+
+[ext_resource path="res://Textures/Menu/Disabled_Button/4.png" type="Texture" id=1]
+[ext_resource path="res://Textures/Menu/Disabled_Button/3.png" type="Texture" id=2]
+[ext_resource path="res://Sfx/Flesh/flesh_slap.wav" type="AudioStream" id=3]
+[ext_resource path="res://Textures/Menu/hover.png" type="Texture" id=4]
+[ext_resource path="res://Textures/Menu/Disabled_Button/1.png" type="Texture" id=5]
+[ext_resource path="res://Textures/Menu/Disabled_Button/2.png" type="Texture" id=6]
+[ext_resource path="res://Textures/Menu/retry_normal.png" type="Texture" id=7]
+
+[sub_resource type="GDScript" id=4]
+script/source = "extends TextureRect
+
+export (Texture) var idleTexture
+export (Texture) var hoverTexture
+export (Texture) var disabledTexture
+
+export var enalbed = true
+
+export var labelText = \"Cruelty Squad Online\"
+export var buttonType = \"Menu\"
+
+var hint
+
+signal button_pressed(type)
+
+func _ready():
+	hint = get_tree().get_nodes_in_group(\"Hint\")[0]
+	if enalbed:
+		button_enable()
+	else:
+		button_disable()
+
+func _on_mouse_enter():
+	if enalbed:
+		texture = hoverTexture
+
+func _on_mouse_exit():
+	if enalbed:
+		texture = idleTexture
+		hint.hide()
+
+func button_enable():
+	enalbed = true
+	texture = idleTexture
+
+func button_disable():
+	enalbed = false
+	texture = disabledTexture
+
+func _mouse_input(event):
+	if event is InputEventMouseMotion:
+		hint.change_pos(event.global_position + Vector2(50,30),enalbed)
+		hint.change_text(labelText)
+	if event is InputEventMouseButton and event.pressed and enalbed:
+		emit_signal(\"button_pressed\",buttonType)
+"
+
+[sub_resource type="AnimatedTexture" id=5]
+flags = 19
+frames = 4
+frame_0/texture = ExtResource( 5 )
+frame_0/delay_sec = 0.19
+frame_1/texture = ExtResource( 6 )
+frame_1/delay_sec = 0.06
+frame_2/texture = ExtResource( 2 )
+frame_2/delay_sec = 0.32
+frame_3/texture = ExtResource( 1 )
+frame_3/delay_sec = 0.25
+
+[sub_resource type="AudioStreamRandomPitch" id=10]
+audio_stream = ExtResource( 3 )
+
+[node name="Button" type="TextureRect"]
+margin_right = 128.0
+margin_bottom = 128.0
+rect_scale = Vector2( 0.5, 0.5 )
+texture = ExtResource( 7 )
+stretch_mode = 1
+script = SubResource( 4 )
+idleTexture = ExtResource( 7 )
+hoverTexture = ExtResource( 4 )
+disabledTexture = SubResource( 5 )
+
+[node name="ClickSound" type="AudioStreamPlayer" parent="."]
+stream = SubResource( 10 )
+volume_db = -5.0
+pitch_scale = 0.43
+
+[connection signal="gui_input" from="." to="." method="_mouse_input"]
+[connection signal="mouse_entered" from="." to="." method="_on_mouse_enter"]
+[connection signal="mouse_exited" from="." to="." method="_on_mouse_exit"]

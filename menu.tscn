@@ -1,19 +1,11 @@
-[gd_scene load_steps=40 format=2]
+[gd_scene load_steps=25 format=2]
 
 [ext_resource path="res://Menu/menu_theme.tres" type="Theme" id=1]
 [ext_resource path="res://Textures/Misc/mainguy_clothes.png" type="Texture" id=2]
-[ext_resource path="res://Textures/Menu/retry_normal.png" type="Texture" id=3]
+[ext_resource path="res://MOD_CONTENT/CruS Online/Button.tscn" type="PackedScene" id=3]
 [ext_resource path="res://Textures/NPC/Enemy_Nude.png" type="Texture" id=4]
-[ext_resource path="res://Textures/Menu/hover.png" type="Texture" id=5]
 [ext_resource path="res://Textures/NPC/Enemy_Worker.png" type="Texture" id=6]
-[ext_resource path="res://Textures/Menu/Disabled_Button/1.png" type="Texture" id=7]
-[ext_resource path="res://Textures/Menu/Disabled_Button/2.png" type="Texture" id=8]
-[ext_resource path="res://Textures/Menu/Disabled_Button/3.png" type="Texture" id=9]
-[ext_resource path="res://Textures/Menu/Disabled_Button/4.png" type="Texture" id=10]
-[ext_resource path="res://Textures/Menu/background_1.png" type="Texture" id=11]
 [ext_resource path="res://Textures/Menu/return_normal.png" type="Texture" id=12]
-[ext_resource path="res://Sfx/Flesh/flesh_slap.wav" type="AudioStream" id=13]
-[ext_resource path="res://Sfx/UI/UI_grunt.wav" type="AudioStream" id=14]
 [ext_resource path="res://Textures/NPC/cultist_civilian.png" type="Texture" id=15]
 [ext_resource path="res://Textures/NPC/bosssguy_clothes.png" type="Texture" id=16]
 [ext_resource path="res://Textures/NPC/Enemy_Civilian2.png" type="Texture" id=17]
@@ -64,91 +56,21 @@ func join():
 	get_data()
 	get_tree().get_nodes_in_group(\"Multiplayer\")[0].join_to_server(ip,port,playerInfo)
 
-func enable_menu(event):
+func enable_menu(type):
 	if not $CenterContainer/TabContainer/Implants.updated:
 		$CenterContainer/TabContainer/Implants.update()
-	
-	if event is InputEventMouseButton and event.pressed and not $CenterContainer.visible:
-		$CenterContainer.visible = true
-		$TextureRect/ClickSound.play()
-		$TextureRect.toggle_button(false)
-		$TextureRect2.toggle_button(true)
+		
+	$CenterContainer.visible = true
+	$Menu/ClickSound.play()
+	$Menu.button_disable()
+	$ExitMenu.button_enable()
 
-func disable_menu(event):
-	if event is InputEventMouseButton and event.pressed and $CenterContainer.visible:
-		$CenterContainer.visible = false
-		$TextureRect2/ClickSound.play()
-		$TextureRect.toggle_button(true)
-		$TextureRect2.toggle_button(false)
+func disable_menu(type):
+	$CenterContainer.visible = false
+	$ExitMenu/ClickSound.play()
+	$Menu.button_enable()
+	$ExitMenu.button_disable()
 "
-
-[sub_resource type="GDScript" id=4]
-script/source = "extends TextureRect
-
-export (Texture) var idleTexture
-export (Texture) var hoverTexture
-export (Texture) var disabledTexture
-
-export var enalbed = true
-
-func _ready():
-	toggle_button(enalbed)
-
-func _on_mouse_enter():
-	if enalbed:
-		texture = hoverTexture
-		$PanelContainer.show()
-
-func _on_mouse_exit():
-	if enalbed:
-		texture = idleTexture
-		$PanelContainer.hide()
-
-func toggle_button(toggled):
-	enalbed = toggled
-	
-	if enalbed:
-		texture = idleTexture
-	else:
-		texture = disabledTexture
-		$PanelContainer.hide()
-
-
-func _mouse_input(event):
-	if event is InputEventMouseMotion:
-		$PanelContainer.rect_position = event.position + Vector2(50,30)
-"
-
-[sub_resource type="AnimatedTexture" id=5]
-flags = 19
-frames = 4
-frame_0/texture = ExtResource( 7 )
-frame_0/delay_sec = 0.19
-frame_1/texture = ExtResource( 8 )
-frame_1/delay_sec = 0.06
-frame_2/texture = ExtResource( 9 )
-frame_2/delay_sec = 0.32
-frame_3/texture = ExtResource( 10 )
-frame_3/delay_sec = 0.25
-
-[sub_resource type="StyleBoxTexture" id=6]
-texture = ExtResource( 11 )
-region_rect = Rect2( 0, 0, 256, 256 )
-modulate_color = Color( 0.309804, 0.133333, 0.0823529, 1 )
-
-[sub_resource type="DynamicFontData" id=7]
-font_path = "res://Fonts/MingLiU-ExtB-01.ttf"
-
-[sub_resource type="DynamicFont" id=8]
-size = 48
-use_filter = true
-font_data = SubResource( 7 )
-
-[sub_resource type="AudioStreamRandomPitch" id=10]
-audio_stream = ExtResource( 13 )
-
-[sub_resource type="AudioStreamRandomPitch" id=9]
-audio_stream = ExtResource( 14 )
 
 [sub_resource type="GDScript" id=12]
 script/source = "extends PanelContainer
@@ -265,72 +187,30 @@ audio_stream = ExtResource( 25 )
 [node name="MultiplayerMenu" type="Control" groups=["MultiplayerMenu"]]
 anchor_right = 1.0
 anchor_bottom = 1.0
-mouse_filter = 1
+mouse_filter = 2
 theme = ExtResource( 1 )
 script = SubResource( 3 )
 __meta__ = {
 "_edit_use_anchors_": true
 }
 
-[node name="TextureRect" type="TextureRect" parent="."]
+[node name="Menu" parent="." instance=ExtResource( 3 )]
 margin_left = 101.0
 margin_top = 278.0
 margin_right = 229.0
 margin_bottom = 406.0
-rect_scale = Vector2( 0.5, 0.5 )
-texture = ExtResource( 3 )
-stretch_mode = 1
-script = SubResource( 4 )
-idleTexture = ExtResource( 3 )
-hoverTexture = ExtResource( 5 )
-disabledTexture = SubResource( 5 )
 
-[node name="PanelContainer" type="PanelContainer" parent="TextureRect"]
-visible = false
-margin_right = 6.0
-margin_bottom = 6.0
-custom_styles/panel = SubResource( 6 )
-
-[node name="Label" type="Label" parent="TextureRect/PanelContainer"]
-margin_right = 480.0
-margin_bottom = 49.0
-custom_colors/font_color = Color( 0.101961, 1, 0, 1 )
-custom_fonts/font = SubResource( 8 )
-text = "Cruelty Squad Online"
-
-[node name="ClickSound" type="AudioStreamPlayer" parent="TextureRect"]
-stream = SubResource( 10 )
-volume_db = -5.0
-pitch_scale = 0.43
-
-[node name="TextureRect2" type="TextureRect" parent="."]
+[node name="ExitMenu" parent="." instance=ExtResource( 3 )]
 margin_left = 165.0
 margin_top = 278.0
 margin_right = 293.0
 margin_bottom = 406.0
-rect_scale = Vector2( 0.5, 0.5 )
 texture = ExtResource( 12 )
-stretch_mode = 1
-script = SubResource( 4 )
 idleTexture = ExtResource( 12 )
-hoverTexture = ExtResource( 5 )
+disabledTexture = null
 enalbed = false
-
-[node name="PanelContainer" type="PanelContainer" parent="TextureRect2"]
-visible = false
-margin_right = 6.0
-margin_bottom = 6.0
-custom_styles/panel = SubResource( 6 )
-
-[node name="Label" type="Label" parent="TextureRect2/PanelContainer"]
-margin_right = 156.0
-margin_bottom = 57.0
-custom_colors/font_color = Color( 0.101961, 1, 0, 1 )
-custom_fonts/font = SubResource( 8 )
-text = "Return"
-
-[node name="ClickSound" type="AudioStreamPlayer" parent="TextureRect2"]
-stream = SubResource( 9 )
+labelText = "Return"
+buttonType = "ExitMenu"
 
 [node name="CenterContainer" type="CenterContainer" parent="."]
 visible = false
@@ -739,14 +619,8 @@ Special thanks:
 DX - Made cool player animations"
 align = 1
 
-[connection signal="gui_input" from="TextureRect" to="." method="enable_menu"]
-[connection signal="gui_input" from="TextureRect" to="TextureRect" method="_mouse_input"]
-[connection signal="mouse_entered" from="TextureRect" to="TextureRect" method="_on_mouse_enter"]
-[connection signal="mouse_exited" from="TextureRect" to="TextureRect" method="_on_mouse_exit"]
-[connection signal="gui_input" from="TextureRect2" to="." method="disable_menu"]
-[connection signal="gui_input" from="TextureRect2" to="TextureRect2" method="_mouse_input"]
-[connection signal="mouse_entered" from="TextureRect2" to="TextureRect2" method="_on_mouse_enter"]
-[connection signal="mouse_exited" from="TextureRect2" to="TextureRect2" method="_on_mouse_exit"]
+[connection signal="button_pressed" from="Menu" to="." method="enable_menu"]
+[connection signal="button_pressed" from="ExitMenu" to="." method="disable_menu"]
 [connection signal="pressed" from="CenterContainer/TabContainer/Main/VBoxContainer/IpPort/JoinButton" to="." method="join"]
 [connection signal="pressed" from="CenterContainer/TabContainer/Main/VBoxContainer/IpPort/HostButton" to="." method="host"]
 [connection signal="item_selected" from="CenterContainer/TabContainer/Main/VBoxContainer/Skin/ItemList" to="CenterContainer/TabContainer/Main/VBoxContainer/Skin" method="_skin_selected"]

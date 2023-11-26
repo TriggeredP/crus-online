@@ -192,6 +192,8 @@ onready var stealthMaterial = preload("res://Materials/seethrough.tres")
 ########################################
 # Островок спокойствия
 
+var inMenu = false
+
 remote func _create_drop_weapon(recivedTransform,recivedHoldPos,implantThrowBonus,recivedCurrentWeapon,recivedAmmo,playerVelocity,recivdeRandName):
 	var new_weapon_drop = weapon_drop.instance()
 	new_weapon_drop.set_name(new_weapon_drop.name + "#" + str(recivdeRandName))
@@ -1089,7 +1091,7 @@ func _process(delta)->void :
 				$orbarms / AnimationPlayer2.play("AttackR", - 1)
 				orb_left = not orb_left
 				
-		if Input.is_action_pressed("mouse_1") and reload_timer.is_stopped() and current_weapon != null:
+		if Input.is_action_pressed("mouse_1") and reload_timer.is_stopped() and current_weapon != null and not inMenu:
 			if magazine_ammo[current_weapon] > 0:
 				rotation.x = initrot.x
 				shoot()

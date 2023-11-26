@@ -15,6 +15,51 @@
 [sub_resource type="GDScript" id=2]
 script/source = "extends Control
 
+var deathCount = 0
+
+const diffSetup = {
+	\"dl\": [\"Divine Light\",1,true,false,false],
+	\"fa\": [\"Flesh Automaton\",0,false,false,false],
+	\"pim\": [\"Power In Misery\",2,false,true,false],
+	\"he\": [\"Hope Eradicated\",3,false,false,true]
+}
+
+func player_died():
+	show()
+	
+	if get_tree().network_peer == null:
+		var diff = get_diff()
+	
+		if diff == \"dl\":
+			set_diff(\"fa\")
+		elif diff == \"fa\":
+			if deathCount < 4:
+				deathCount += 1
+			else:
+				deathCount = 0
+				set_diff(\"pim\")
+
+func set_diff(type):
+	Global.border.texture = Global.BORDERS[diffSetup[type][1]]
+	Global.soul_intact = diffSetup[type][2]
+	Global.husk_mode = diffSetup[type][3]
+	
+	Global.hope_discarded = diffSetup[type][4]
+	Global.hell_discovered = diffSetup[type][4]
+	
+	Global.consecutive_deaths = 0
+	Global.save_game()
+
+func get_diff() -> String:
+	if Global.soul_intact:
+		return \"dl\"
+	elif Global.husk_mode:
+		return \"pim\"
+	elif Global.hope_discarded or Global.hell_discovered:
+		return \"he\"
+	else:
+		return \"fa\"
+
 func _restart(event):
 	if event is InputEventMouseButton and event.pressed:
 		var respawnPoint = get_tree().get_nodes_in_group(\"Respawn\")

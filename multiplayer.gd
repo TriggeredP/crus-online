@@ -15,6 +15,8 @@ var dataLoaded = false
 
 onready var Sync = $Sync
 onready var Players = $Players
+onready var Menu = $Menu
+onready var Hint = $Hint
 
 func _ready():
 	get_tree().connect("network_peer_connected", self, "_connected")
@@ -33,9 +35,12 @@ func host_server(port,info,recivedHostSettings):
 	
 	player_info[1] = my_info
 	
+	Global.menu.hide()
+	Global.menu.set_process_input(false)
 	Global.goto_scene("res://MOD_CONTENT/CruS Online/maps/" + hostSettings.map)
-	dataLoaded = true
+	Menu.set_process_input(true)
 	
+	dataLoaded = true
 	print("Server hosted")
 
 func join_to_server(ip,port,info):
@@ -50,12 +55,9 @@ func join_to_server(ip,port,info):
 
 func _disconnected(id):
 	if player_info[id] != null:
-		rpc("disconnect_player",id)
+		Players.get_node(str(id)).queue_free()
+		player_info.erase(id)
 		print("Disconnected")
-
-remote func disconnect_player(id):
-	get_node("Players/" + str(id)).queue_free()
-	player_info.erase(id)
 
 ################################################################################
 
@@ -80,7 +82,12 @@ master func connect_init():
 puppet func client_connect_init(recivedHostSettings,recivedPlayerInfo):
 	hostSettings = recivedHostSettings
 	player_info = recivedPlayerInfo
+	
+	Global.menu.hide()
+	Global.menu.set_process_input(false)
 	Global.goto_scene("res://MOD_CONTENT/CruS Online/maps/" + hostSettings.map)
+	Menu.set_process_input(true)
+	
 	dataLoaded = true
 	rpc("host_add_player", my_info)
 	print("[CLIENT]: Player connected")
