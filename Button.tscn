@@ -20,12 +20,11 @@ export var enalbed = true
 export var labelText = \"Cruelty Squad Online\"
 export var buttonType = \"Menu\"
 
-var hint
+onready var hint = get_tree().get_nodes_in_group(\"Hint\")[0]
 
 signal button_pressed(type)
 
 func _ready():
-	hint = get_tree().get_nodes_in_group(\"Hint\")[0]
 	if enalbed:
 		button_enable()
 	else:
@@ -34,6 +33,7 @@ func _ready():
 func _on_mouse_enter():
 	if enalbed:
 		texture = hoverTexture
+		hint.show()
 
 func _on_mouse_exit():
 	if enalbed:
@@ -49,11 +49,14 @@ func button_disable():
 	texture = disabledTexture
 
 func _mouse_input(event):
-	if event is InputEventMouseMotion:
-		hint.change_pos(event.global_position + Vector2(50,30),enalbed)
+	if event is InputEventMouseMotion and enalbed:
+		hint.change_pos(event.global_position + Vector2(50,30))
 		hint.change_text(labelText)
 	if event is InputEventMouseButton and event.pressed and enalbed:
+		texture = idleTexture
 		emit_signal(\"button_pressed\",buttonType)
+		$ClickSound.play()
+		hint.hide()
 "
 
 [sub_resource type="AnimatedTexture" id=5]

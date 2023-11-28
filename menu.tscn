@@ -1,9 +1,10 @@
-[gd_scene load_steps=25 format=2]
+[gd_scene load_steps=26 format=2]
 
 [ext_resource path="res://Menu/menu_theme.tres" type="Theme" id=1]
 [ext_resource path="res://Textures/Misc/mainguy_clothes.png" type="Texture" id=2]
 [ext_resource path="res://MOD_CONTENT/CruS Online/Button.tscn" type="PackedScene" id=3]
 [ext_resource path="res://Textures/NPC/Enemy_Nude.png" type="Texture" id=4]
+[ext_resource path="res://Sfx/UI/UI_grunt.wav" type="AudioStream" id=5]
 [ext_resource path="res://Textures/NPC/Enemy_Worker.png" type="Texture" id=6]
 [ext_resource path="res://Textures/Menu/return_normal.png" type="Texture" id=12]
 [ext_resource path="res://Textures/NPC/cultist_civilian.png" type="Texture" id=15]
@@ -36,13 +37,23 @@ var hostSettings = {
 	\"bannedImplants\": []
 }
 
-func get_data():
-	ip = $CenterContainer/TabContainer/Main/VBoxContainer/IpPort/IpEdit.text
-	port = int($CenterContainer/TabContainer/Main/VBoxContainer/IpPort/PortEdit.text)
-	if $CenterContainer/TabContainer/Main/VBoxContainer/Nickname/NicknameEdit.text == \"\":
-		playerInfo[\"nickname\"] = \"Im lazy shit that can enter nickname\"
+onready var IpEdit = $CenterContainer/TabContainer/Main/VBoxContainer/IpPort/IpEdit
+onready var PortEdit = $CenterContainer/TabContainer/Main/VBoxContainer/IpPort/PortEdit
+onready var NicknameEdit = $CenterContainer/TabContainer/Main/VBoxContainer/Nickname/NicknameEdit
+
+func _physics_process(delta):
+	if Global.menu.in_game:
+		hide()
 	else:
-		playerInfo[\"nickname\"] = $CenterContainer/TabContainer/Main/VBoxContainer/Nickname/NicknameEdit.text
+		show()
+
+func get_data():
+	ip = IpEdit.text
+	port = int(PortEdit.text)
+	if NicknameEdit.text == \"\":
+		playerInfo[\"nickname\"] = \"Mt Foxtrot\"
+	else:
+		playerInfo[\"nickname\"] = NicknameEdit.text
 
 func host():
 	get_data()
@@ -195,22 +206,27 @@ __meta__ = {
 }
 
 [node name="Menu" parent="." instance=ExtResource( 3 )]
-margin_left = 101.0
-margin_top = 278.0
-margin_right = 229.0
-margin_bottom = 406.0
+margin_left = 100.0
+margin_top = 164.0
+margin_right = 228.0
+margin_bottom = 292.0
 
 [node name="ExitMenu" parent="." instance=ExtResource( 3 )]
-margin_left = 165.0
-margin_top = 278.0
-margin_right = 293.0
-margin_bottom = 406.0
+margin_left = 164.0
+margin_top = 164.0
+margin_right = 292.0
+margin_bottom = 292.0
 texture = ExtResource( 12 )
 idleTexture = ExtResource( 12 )
 disabledTexture = null
 enalbed = false
 labelText = "Return"
 buttonType = "ExitMenu"
+
+[node name="ClickSound" parent="ExitMenu" index="0"]
+stream = ExtResource( 5 )
+volume_db = 0.0
+pitch_scale = 1.0
 
 [node name="CenterContainer" type="CenterContainer" parent="."]
 visible = false
@@ -629,3 +645,5 @@ align = 1
 [connection signal="item_selected" from="CenterContainer/TabContainer/Implants/HBoxContainer/ImplantsController/AllowedImplantsList" to="CenterContainer/TabContainer/Implants" method="toggle_implant"]
 [connection signal="pressed" from="CenterContainer/TabContainer/Implants/HBoxContainer/VBoxContainer/Button3" to="CenterContainer/TabContainer/Implants" method="ban_all"]
 [connection signal="pressed" from="CenterContainer/TabContainer/Implants/HBoxContainer/VBoxContainer/Button4" to="CenterContainer/TabContainer/Implants" method="allow_all"]
+
+[editable path="ExitMenu"]

@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=2]
+[gd_scene load_steps=27 format=2]
 
 [ext_resource path="res://MOD_CONTENT/CruS Online/multiplayer.gd" type="Script" id=1]
 [ext_resource path="res://MOD_CONTENT/CruS Online/Sync.gd" type="Script" id=2]
@@ -6,9 +6,32 @@
 [ext_resource path="res://MOD_CONTENT/CruS Online/Button.tscn" type="PackedScene" id=4]
 [ext_resource path="res://Textures/Menu/start_normal.png" type="Texture" id=5]
 [ext_resource path="res://MOD_CONTENT/CruS Online/Menu.gd" type="Script" id=6]
-[ext_resource path="res://Textures/Menu/exit_menu_normal.png" type="Texture" id=7]
+[ext_resource path="res://Textures/Menu/Civ_Mouth/2.png" type="Texture" id=7]
 [ext_resource path="res://Textures/Menu/exit_level_normal.png" type="Texture" id=8]
 [ext_resource path="res://Textures/Menu/background_1.png" type="Texture" id=9]
+[ext_resource path="res://MOD_CONTENT/CruS Online/extramenu.tres" type="Theme" id=10]
+[ext_resource path="res://Menu/menu_theme.tres" type="Theme" id=11]
+[ext_resource path="res://MOD_CONTENT/CruS Online/redpanel.tres" type="StyleBox" id=12]
+[ext_resource path="res://MOD_CONTENT/CruS Online/ChatBox.gd" type="Script" id=13]
+[ext_resource path="res://Fonts/gamefont(1).ttf" type="DynamicFontData" id=14]
+[ext_resource path="res://Textures/Menu/Civ_Mouth/1.png" type="Texture" id=15]
+[ext_resource path="res://Textures/Menu/stock.png" type="Texture" id=16]
+[ext_resource path="res://Textures/Menu/return_normal.png" type="Texture" id=17]
+[ext_resource path="res://Sfx/UI/UI_grunt.wav" type="AudioStream" id=18]
+[ext_resource path="res://Textures/Menu/exit_menu_normal.png" type="Texture" id=19]
+
+[sub_resource type="DynamicFont" id=12]
+use_filter = true
+font_data = ExtResource( 14 )
+
+[sub_resource type="DynamicFont" id=10]
+use_filter = true
+extra_spacing_bottom = 5
+font_data = ExtResource( 14 )
+
+[sub_resource type="DynamicFont" id=11]
+use_filter = true
+font_data = ExtResource( 14 )
 
 [sub_resource type="StyleBoxTexture" id=6]
 texture = ExtResource( 9 )
@@ -21,12 +44,11 @@ script/source = "extends PanelContainer
 func _ready():
 	hide()
 
-func change_pos(pos,enabled):
+func change_pos(pos):
 	rect_global_position = pos
-	if not visible and enabled:
-		show()
 
 func change_text(text):
+	rect_size.x = 0
 	$Label.text = text
 "
 
@@ -69,31 +91,149 @@ labelText = "Start"
 buttonType = "Start"
 
 [node name="Disconnect" parent="Menu" instance=ExtResource( 4 )]
-margin_left = 164.0
+margin_left = 292.0
 margin_top = 100.0
-margin_right = 292.0
+margin_right = 420.0
 margin_bottom = 228.0
 texture = ExtResource( 8 )
 idleTexture = ExtResource( 8 )
 labelText = "Disconnect"
 buttonType = "Disconnect"
 
-[node name="Exit" parent="Menu" instance=ExtResource( 4 )]
+[node name="OpenChat" parent="Menu" instance=ExtResource( 4 )]
+margin_left = 164.0
+margin_top = 100.0
+margin_right = 292.0
+margin_bottom = 228.0
+texture = ExtResource( 7 )
+expand = true
+idleTexture = ExtResource( 7 )
+labelText = "Open chat"
+buttonType = "chat"
+
+[node name="CloseChat" parent="Menu" instance=ExtResource( 4 )]
+margin_left = 164.0
+margin_top = 164.0
+margin_right = 292.0
+margin_bottom = 292.0
+texture = ExtResource( 15 )
+expand = true
+idleTexture = ExtResource( 15 )
+disabledTexture = null
+enalbed = false
+labelText = "Close chat"
+buttonType = "chat"
+
+[node name="ClickSound" parent="Menu/CloseChat" index="0"]
+stream = ExtResource( 18 )
+volume_db = 0.0
+pitch_scale = 1.0
+
+[node name="OpenStat" parent="Menu" instance=ExtResource( 4 )]
 margin_left = 228.0
 margin_top = 100.0
 margin_right = 356.0
 margin_bottom = 228.0
-texture = ExtResource( 7 )
-idleTexture = ExtResource( 7 )
+texture = ExtResource( 16 )
+expand = true
+idleTexture = ExtResource( 16 )
+labelText = "Open stat"
+buttonType = "chat"
+
+[node name="OpenStat2" parent="Menu" instance=ExtResource( 4 )]
+margin_left = 356.0
+margin_top = 100.0
+margin_right = 484.0
+margin_bottom = 228.0
+texture = ExtResource( 19 )
+expand = true
+idleTexture = ExtResource( 19 )
 labelText = "Exit"
-buttonType = "Exit"
+buttonType = "chat"
+
+[node name="CloseStat" parent="Menu" instance=ExtResource( 4 )]
+margin_left = 228.0
+margin_top = 164.0
+margin_right = 356.0
+margin_bottom = 292.0
+texture = ExtResource( 17 )
+expand = true
+idleTexture = ExtResource( 17 )
+disabledTexture = null
+enalbed = false
+labelText = "Close stat"
+buttonType = "chat"
+
+[node name="ClickSound" parent="Menu/CloseStat" index="0"]
+stream = ExtResource( 18 )
+volume_db = 0.0
+pitch_scale = 1.0
+
+[node name="ChatBox" type="PanelContainer" parent="Menu"]
+anchor_left = 0.410156
+anchor_top = 0.329167
+anchor_right = 0.651563
+anchor_bottom = 0.628472
+margin_right = 309.0
+margin_bottom = 215.5
+rect_scale = Vector2( 0.5, 0.5 )
+theme = ExtResource( 11 )
+script = ExtResource( 13 )
+__meta__ = {
+"_edit_use_anchors_": true
+}
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Menu/ChatBox"]
+margin_left = 3.0
+margin_top = 3.0
+margin_right = 615.0
+margin_bottom = 428.0
+custom_constants/separation = 3
+
+[node name="Label" type="Label" parent="Menu/ChatBox/VBoxContainer"]
+margin_right = 612.0
+margin_bottom = 26.0
+custom_fonts/font = SubResource( 12 )
+custom_styles/normal = ExtResource( 12 )
+text = "Chatbox"
+align = 1
+
+[node name="PanelContainer" type="PanelContainer" parent="Menu/ChatBox/VBoxContainer"]
+margin_top = 29.0
+margin_right = 612.0
+margin_bottom = 396.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+custom_styles/panel = ExtResource( 12 )
+
+[node name="RichTextLabel" type="RichTextLabel" parent="Menu/ChatBox/VBoxContainer/PanelContainer"]
+margin_left = 10.0
+margin_top = 5.0
+margin_right = 602.0
+margin_bottom = 362.0
+custom_fonts/normal_font = SubResource( 10 )
+bbcode_enabled = true
+bbcode_text = "You have connected to the server"
+text = "You have connected to the server"
+scroll_following = true
+
+[node name="LineEdit" type="LineEdit" parent="Menu/ChatBox/VBoxContainer"]
+margin_top = 399.0
+margin_right = 612.0
+margin_bottom = 425.0
+theme = ExtResource( 10 )
+custom_constants/minimum_spaces = 0
+custom_fonts/font = SubResource( 11 )
+selecting_enabled = false
+deselect_on_focus_loss_enabled = false
+placeholder_text = " / to type"
 
 [node name="Hint" type="PanelContainer" parent="." groups=["Hint"]]
-margin_right = 312.0
+margin_right = 500.0
 margin_bottom = 49.0
 rect_scale = Vector2( 0.75, 0.75 )
-size_flags_horizontal = 12
-size_flags_vertical = 12
+size_flags_horizontal = 3
+size_flags_vertical = 3
 custom_styles/panel = SubResource( 6 )
 script = SubResource( 9 )
 __meta__ = {
@@ -101,12 +241,18 @@ __meta__ = {
 }
 
 [node name="Label" type="Label" parent="Hint"]
-margin_right = 312.0
+margin_right = 500.0
 margin_bottom = 49.0
 size_flags_horizontal = 9
 custom_colors/font_color = Color( 0.101961, 1, 0, 1 )
 custom_fonts/font = SubResource( 8 )
-text = "Cruelty Squad"
+text = "Cruelty Squad Online"
 
 [connection signal="button_pressed" from="Menu/Start" to="Menu" method="hide_menu"]
 [connection signal="button_pressed" from="Menu/Disconnect" to="Menu" method="leave_server"]
+[connection signal="button_pressed" from="Menu/OpenChat" to="Menu/ChatBox" method="open_chat"]
+[connection signal="button_pressed" from="Menu/CloseChat" to="Menu/ChatBox" method="close_chat"]
+[connection signal="text_entered" from="Menu/ChatBox/VBoxContainer/LineEdit" to="Menu/ChatBox" method="_text_entered"]
+
+[editable path="Menu/CloseChat"]
+[editable path="Menu/CloseStat"]
