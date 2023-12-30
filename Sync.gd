@@ -7,6 +7,14 @@ extends Node
 #		syncProperties: []
 #	}
 
+var npcList = [
+	
+]
+
+master func has_npc(npc):
+	if npcList.has(npc):
+		print("ok")
+
 master func sync_nodes():
 	for child in get_children():
 		if child.has_meta("syncData"):
@@ -50,3 +58,4 @@ puppet func _spawn_node(nodeName,rawSyncData,syncData):
 
 puppet func _delete_node(nodeName):
 	pass
+

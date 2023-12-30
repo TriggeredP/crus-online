@@ -147,6 +147,40 @@ var playerWalkSound
 
 ################################################################################
 
+const deathMessages = {
+	"general":[
+		"%s was killed by god",
+		"%s didn't want to live too much",
+		"%s just lose 500$",
+		"%s decided to start from scratch"
+	],
+	"killedByPlayer":[
+		"%s was killed by %s",
+		"%s decided to give his life to %s",
+		"%s was distracted by %s"
+	]
+}
+
+var lastDamagerId = null
+var lastDamagerIdTimer
+
+func set_last_damager_id(id):
+	lastDamagerId = id
+	lastDamagerIdTimer.stop()
+	lastDamagerIdTimer.start()
+
+func reset_last_damager_id():
+	lastDamagerId = null
+
+remote func send_death_nofify(killerId):
+	var deadNickname = get_tree().get_nodes_in_group("Multiplayer")[0].player_info[get_tree().get_rpc_sender_id()].nickname
+	
+	if killerId == null:
+		Global.UI.notify(deathMessages.general[randi() % deathMessages.general.size()] % deadNickname, Color(1, 0, 0))
+	else:
+		var killerNickname = get_tree().get_nodes_in_group("Multiplayer")[0].player_info[killerId].nickname
+		Global.UI.notify(deathMessages.killedByPlayer[randi() % deathMessages.killedByPlayer.size()] % [deadNickname,killerNickname], Color(1, 0, 0))
+
 remote func _spawn_gib(gib,gibName,gibPos,recivedDamage):
 	var new_gib = gibs[gib].instance()
 	new_gib.set_name(gibName)
@@ -275,6 +309,12 @@ func _ready():
 	death_timer.wait_time = 5
 	death_timer.one_shot = true
 	death_timer.connect("timeout", self, "instadie")
+	
+	lastDamagerIdTimer = Timer.new()
+	add_child(lastDamagerIdTimer)
+	lastDamagerIdTimer.wait_time = 5
+	lastDamagerIdTimer.one_shot = true
+	lastDamagerIdTimer.connect("timeout", self, "reset_last_damager_id")
 	
 	playerWalkSound = $Foot_Step.stream
 	
@@ -1126,6 +1166,8 @@ func instadie(damage = 100, collision_n = Vector3.ZERO, collision_p = Vector3.ZE
 	UI.hide()
 	GLOBAL.get_node('DeathScreen').player_died()
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+	
+	rpc("send_death_nofify",lastDamagerId)
 
 func _on_Crush_Check_body_entered(body):
 		if body.get_class() == "StaticBody":

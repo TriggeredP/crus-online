@@ -13,16 +13,16 @@ var crouchBlend
 
 var skinPath = "res://Textures/Misc/mainguy_clothes.png"
 var nickname = "MT Foxtrot"
+var color = "ff0000"
 
 onready var animTree = $Puppet/PlayerModel/AnimTree
 
-remote func _do_damage(damage, collision_n, collision_p, shooter_pos, puppetId):
-	if singleton.playerId == int(puppetId):
-		Global.player.damage(damage, collision_n, collision_p, shooter_pos)
+remote func _do_damage(damage, collision_n, collision_p, shooter_pos, damagerId):
+	Global.player.set_last_damager_id(damagerId)
+	Global.player.damage(damage, collision_n, collision_p, shooter_pos)
 
-remote func _drop_weapon(puppetId):
-	if singleton.playerId == int(puppetId):
-		Input.action_press("drop")
+remote func _drop_weapon():
+	Input.action_press("drop")
 
 remote func _set_death(death):
 	if death:
@@ -77,6 +77,7 @@ func _ready():
 	skinMaterial.albedo_texture = load(skinPath)
 	$Puppet/PlayerModel/Armature/Skeleton/Torso_Mesh.material_override = skinMaterial
 	$Puppet/Nickname.text = nickname
+	$Puppet/Nickname.modulate = Color(color)
 
 func play_death_sound():
 	$Puppet/PlayerModel/SFX/IED1.play()
@@ -110,7 +111,7 @@ func _process(delta):
 		hide()
 
 func do_damage(damage, collision_n, collision_p, shooter_pos):
-	rpc("_do_damage", damage, collision_n, collision_p, shooter_pos, self.name)
+	rpc_id(int(self.name),"_do_damage", damage, collision_n, collision_p, shooter_pos, get_tree().get_network_unique_id())
 
 func drop_weapon():
-	rpc("_drop_weapon", self.name)
+	rpc_id(int(self.name),"_drop_weapon")

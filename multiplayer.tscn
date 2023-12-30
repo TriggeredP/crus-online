@@ -1,4 +1,4 @@
-[gd_scene load_steps=27 format=2]
+[gd_scene load_steps=30 format=2]
 
 [ext_resource path="res://MOD_CONTENT/CruS Online/multiplayer.gd" type="Script" id=1]
 [ext_resource path="res://MOD_CONTENT/CruS Online/Sync.gd" type="Script" id=2]
@@ -19,6 +19,8 @@
 [ext_resource path="res://Textures/Menu/return_normal.png" type="Texture" id=17]
 [ext_resource path="res://Sfx/UI/UI_grunt.wav" type="AudioStream" id=18]
 [ext_resource path="res://Textures/Menu/exit_menu_normal.png" type="Texture" id=19]
+[ext_resource path="res://Sfx/NPCs/night_creep_pain_1.wav" type="AudioStream" id=20]
+[ext_resource path="res://MOD_CONTENT/CruS Online/Stats.gd" type="Script" id=21]
 
 [sub_resource type="DynamicFont" id=12]
 use_filter = true
@@ -32,6 +34,10 @@ font_data = ExtResource( 14 )
 [sub_resource type="DynamicFont" id=11]
 use_filter = true
 font_data = ExtResource( 14 )
+
+[sub_resource type="AudioStreamRandomPitch" id=13]
+audio_stream = ExtResource( 20 )
+random_pitch = 1.3
 
 [sub_resource type="StyleBoxTexture" id=6]
 texture = ExtResource( 9 )
@@ -129,7 +135,7 @@ stream = ExtResource( 18 )
 volume_db = 0.0
 pitch_scale = 1.0
 
-[node name="OpenStat" parent="Menu" instance=ExtResource( 4 )]
+[node name="OpenStats" parent="Menu" instance=ExtResource( 4 )]
 margin_left = 228.0
 margin_top = 100.0
 margin_right = 356.0
@@ -137,10 +143,28 @@ margin_bottom = 228.0
 texture = ExtResource( 16 )
 expand = true
 idleTexture = ExtResource( 16 )
-labelText = "Open stat"
+labelText = "Open stats"
 buttonType = "chat"
 
-[node name="OpenStat2" parent="Menu" instance=ExtResource( 4 )]
+[node name="CloseStats" parent="Menu" instance=ExtResource( 4 )]
+margin_left = 228.0
+margin_top = 164.0
+margin_right = 356.0
+margin_bottom = 292.0
+texture = ExtResource( 17 )
+expand = true
+idleTexture = ExtResource( 17 )
+disabledTexture = null
+enalbed = false
+labelText = "Close stats"
+buttonType = "chat"
+
+[node name="ClickSound" parent="Menu/CloseStats" index="0"]
+stream = ExtResource( 18 )
+volume_db = 0.0
+pitch_scale = 1.0
+
+[node name="Exit" parent="Menu" instance=ExtResource( 4 )]
 margin_left = 356.0
 margin_top = 100.0
 margin_right = 484.0
@@ -151,29 +175,11 @@ idleTexture = ExtResource( 19 )
 labelText = "Exit"
 buttonType = "chat"
 
-[node name="CloseStat" parent="Menu" instance=ExtResource( 4 )]
-margin_left = 228.0
-margin_top = 164.0
-margin_right = 356.0
-margin_bottom = 292.0
-texture = ExtResource( 17 )
-expand = true
-idleTexture = ExtResource( 17 )
-disabledTexture = null
-enalbed = false
-labelText = "Close stat"
-buttonType = "chat"
-
-[node name="ClickSound" parent="Menu/CloseStat" index="0"]
-stream = ExtResource( 18 )
-volume_db = 0.0
-pitch_scale = 1.0
-
 [node name="ChatBox" type="PanelContainer" parent="Menu"]
-anchor_left = 0.410156
-anchor_top = 0.329167
-anchor_right = 0.651563
-anchor_bottom = 0.628472
+anchor_left = 0.395313
+anchor_top = 0.356945
+anchor_right = 0.636719
+anchor_bottom = 0.65625
 margin_right = 309.0
 margin_bottom = 215.5
 rect_scale = Vector2( 0.5, 0.5 )
@@ -191,7 +197,7 @@ margin_bottom = 428.0
 custom_constants/separation = 3
 
 [node name="Label" type="Label" parent="Menu/ChatBox/VBoxContainer"]
-margin_right = 612.0
+margin_right = 611.0
 margin_bottom = 26.0
 custom_fonts/font = SubResource( 12 )
 custom_styles/normal = ExtResource( 12 )
@@ -200,8 +206,8 @@ align = 1
 
 [node name="PanelContainer" type="PanelContainer" parent="Menu/ChatBox/VBoxContainer"]
 margin_top = 29.0
-margin_right = 612.0
-margin_bottom = 396.0
+margin_right = 611.0
+margin_bottom = 395.0
 size_flags_horizontal = 3
 size_flags_vertical = 3
 custom_styles/panel = ExtResource( 12 )
@@ -209,24 +215,80 @@ custom_styles/panel = ExtResource( 12 )
 [node name="RichTextLabel" type="RichTextLabel" parent="Menu/ChatBox/VBoxContainer/PanelContainer"]
 margin_left = 10.0
 margin_top = 5.0
-margin_right = 602.0
-margin_bottom = 362.0
+margin_right = 601.0
+margin_bottom = 361.0
 custom_fonts/normal_font = SubResource( 10 )
 bbcode_enabled = true
-bbcode_text = "You have connected to the server"
-text = "You have connected to the server"
+bbcode_text = "Welcome to CruS Online"
+text = "Welcome to CruS Online"
 scroll_following = true
 
 [node name="LineEdit" type="LineEdit" parent="Menu/ChatBox/VBoxContainer"]
-margin_top = 399.0
-margin_right = 612.0
-margin_bottom = 425.0
+margin_top = 398.0
+margin_right = 611.0
+margin_bottom = 424.0
 theme = ExtResource( 10 )
 custom_constants/minimum_spaces = 0
 custom_fonts/font = SubResource( 11 )
 selecting_enabled = false
 deselect_on_focus_loss_enabled = false
 placeholder_text = " / to type"
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="Menu/ChatBox"]
+stream = SubResource( 13 )
+pitch_scale = 1.28
+
+[node name="Stats" type="PanelContainer" parent="Menu"]
+anchor_left = 0.396875
+anchor_top = 0.0722222
+anchor_right = 0.638281
+anchor_bottom = 0.350694
+margin_right = 309.0
+margin_bottom = 200.5
+rect_scale = Vector2( 0.5, 0.5 )
+theme = ExtResource( 11 )
+script = ExtResource( 21 )
+__meta__ = {
+"_edit_use_anchors_": true
+}
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Menu/Stats"]
+margin_left = 3.0
+margin_top = 3.0
+margin_right = 615.0
+margin_bottom = 398.0
+custom_constants/separation = 3
+
+[node name="Label" type="Label" parent="Menu/Stats/VBoxContainer"]
+margin_right = 611.0
+margin_bottom = 26.0
+custom_fonts/font = SubResource( 12 )
+custom_styles/normal = ExtResource( 12 )
+text = "Stats"
+align = 1
+
+[node name="PanelContainer" type="PanelContainer" parent="Menu/Stats/VBoxContainer"]
+margin_top = 29.0
+margin_right = 611.0
+margin_bottom = 394.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+custom_styles/panel = ExtResource( 12 )
+
+[node name="RichTextLabel" type="RichTextLabel" parent="Menu/Stats/VBoxContainer/PanelContainer"]
+margin_left = 10.0
+margin_top = 5.0
+margin_right = 601.0
+margin_bottom = 360.0
+custom_fonts/normal_font = SubResource( 10 )
+bbcode_enabled = true
+bbcode_text = "TriggeredP: Kills 800 / Deaths: 100"
+text = "TriggeredP: Kills 800 / Deaths: 100"
+scroll_following = true
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="Menu/Stats"]
+stream = SubResource( 13 )
+pitch_scale = 1.28
 
 [node name="Hint" type="PanelContainer" parent="." groups=["Hint"]]
 margin_right = 500.0
@@ -252,7 +314,9 @@ text = "Cruelty Squad Online"
 [connection signal="button_pressed" from="Menu/Disconnect" to="Menu" method="leave_server"]
 [connection signal="button_pressed" from="Menu/OpenChat" to="Menu/ChatBox" method="open_chat"]
 [connection signal="button_pressed" from="Menu/CloseChat" to="Menu/ChatBox" method="close_chat"]
+[connection signal="button_pressed" from="Menu/OpenStats" to="Menu/Stats" method="open_stats"]
+[connection signal="button_pressed" from="Menu/CloseStats" to="Menu/Stats" method="close_stats"]
 [connection signal="text_entered" from="Menu/ChatBox/VBoxContainer/LineEdit" to="Menu/ChatBox" method="_text_entered"]
 
 [editable path="Menu/CloseChat"]
-[editable path="Menu/CloseStat"]
+[editable path="Menu/CloseStats"]

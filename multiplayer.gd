@@ -1,8 +1,5 @@
 extends Node
 
-enum players_type {HOST,CLIENT}
-
-export (players_type) var type
 export var playerId:int = 0
 
 var player_info = {}
@@ -28,7 +25,6 @@ func host_server(port,info,recivedHostSettings):
 	var server = NetworkedMultiplayerENet.new()
 	server.create_server(port,16)
 	get_tree().set_network_peer(server)
-	type = players_type.HOST
 	playerId = 1
 	
 	print(hostSettings)
@@ -48,7 +44,6 @@ func join_to_server(ip,port,info):
 	var client = NetworkedMultiplayerENet.new()
 	client.create_client(ip,port)
 	get_tree().set_network_peer(client)
-	type = players_type.CLIENT
 	playerId = get_tree().get_network_unique_id()
 	
 	print("Client try to connect")
@@ -56,6 +51,7 @@ func join_to_server(ip,port,info):
 func _disconnected(id):
 	if player_info[id] != null:
 		Players.get_node(str(id)).queue_free()
+		Global.UI.notify(player_info[id].nickname + " disconnected", Color(1, 0, 0))
 		player_info.erase(id)
 		print("Disconnected")
 
@@ -90,7 +86,11 @@ puppet func client_connect_init(recivedHostSettings,recivedPlayerInfo):
 	
 	dataLoaded = true
 	rpc("host_add_player", my_info)
+	rpc("connect_notify",my_info.nickname)
 	print("[CLIENT]: Player connected")
+
+remote func connect_notify(nickname):
+	Global.UI.notify(nickname + " connected", Color(1, 0, 0))
 
 master func host_add_player(info):
 	var id = get_tree().get_rpc_sender_id()
@@ -112,3 +112,4 @@ master func host_remove_player():
 puppet func sync_players(info):
 	player_info = info
 	Players.load_players()
+

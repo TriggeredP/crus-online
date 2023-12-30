@@ -53,6 +53,8 @@ var first_col = true
 var isClientOnly = false
 var holdId = 0
 
+var playerIgnoreId = 0
+
 remote func _sync_vars(recDisabled,recUsable,recGrill_health,recSphere_collision,recDamager,recHeld):
 	disabled = recDisabled
 	usable = recUsable
@@ -253,8 +255,10 @@ func _physics_process(delta):
 					rpc("_create_blood_decal",collision.collider,new_blood_decal.global_transform.origin,new_blood_decal.transform.basis)
 			if Vector2(velocity.x, velocity.z).length() > 5 and (gun_rotation or glob.implants.arm_implant.throw_bonus > 0):
 				if collision.collider.has_method("damage"):
-					damager = false
-					collision.collider.damage(100, collision.normal, collision.position, global_transform.origin)
+					if collision.collider.client.name != str(playerIgnoreId):
+						damager = false
+						print(collision.collider.client.name,"/",playerIgnoreId)
+						collision.collider.damage(100, collision.normal, collision.position, global_transform.origin)
 			elif sounds and abs(velocity.length()) > 2 and Global.fps > 30:
 				var current_sound = 0
 				impact_sound[current_sound].pitch_scale += rand_range( - 0.1, 0.1)

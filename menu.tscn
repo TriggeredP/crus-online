@@ -1,4 +1,4 @@
-[gd_scene load_steps=26 format=2]
+[gd_scene load_steps=32 format=2]
 
 [ext_resource path="res://Menu/menu_theme.tres" type="Theme" id=1]
 [ext_resource path="res://Textures/Misc/mainguy_clothes.png" type="Texture" id=2]
@@ -6,6 +6,10 @@
 [ext_resource path="res://Textures/NPC/Enemy_Nude.png" type="Texture" id=4]
 [ext_resource path="res://Sfx/UI/UI_grunt.wav" type="AudioStream" id=5]
 [ext_resource path="res://Textures/NPC/Enemy_Worker.png" type="Texture" id=6]
+[ext_resource path="res://Textures/Menu/Handler/1.png" type="Texture" id=7]
+[ext_resource path="res://Textures/Menu/Handler/3.png" type="Texture" id=8]
+[ext_resource path="res://Textures/Menu/Handler/4.png" type="Texture" id=9]
+[ext_resource path="res://Textures/Menu/Handler/2.png" type="Texture" id=10]
 [ext_resource path="res://Textures/Menu/return_normal.png" type="Texture" id=12]
 [ext_resource path="res://Textures/NPC/cultist_civilian.png" type="Texture" id=15]
 [ext_resource path="res://Textures/NPC/bosssguy_clothes.png" type="Texture" id=16]
@@ -28,18 +32,24 @@ var port = 8080
 
 var playerInfo = {
 	\"nickname\": \"MT Foxtrot\",
-	\"skinPath\": \"res://Textures/Misc/mainguy_clothes.png\"
+	\"color\": \"ff00ff\",
+	\"image\": \"null\",
+	\"skinPath\": \"res://Textures/Misc/mainguy_clothes.png\",
+	\"kills\": 0,
+	\"deaths\": 0
 }
 
 var hostSettings = {
 	\"gamemode\": \"Cruelty\",
-	\"map\": \"multiplayer_test_map.tscn\",
+	\"map\": \"bonesquad_museum.tscn\",
 	\"bannedImplants\": []
 }
 
 onready var IpEdit = $CenterContainer/TabContainer/Main/VBoxContainer/IpPort/IpEdit
 onready var PortEdit = $CenterContainer/TabContainer/Main/VBoxContainer/IpPort/PortEdit
-onready var NicknameEdit = $CenterContainer/TabContainer/Main/VBoxContainer/Nickname/NicknameEdit
+
+onready var NicknameEdit = $CenterContainer/TabContainer/Player/VBoxContainer/Nickname/NicknameEdit
+onready var NicknameColor = $CenterContainer/TabContainer/Player/VBoxContainer/Color/ColorRect
 
 func _physics_process(delta):
 	if Global.menu.in_game:
@@ -50,10 +60,13 @@ func _physics_process(delta):
 func get_data():
 	ip = IpEdit.text
 	port = int(PortEdit.text)
+	
+	playerInfo.color = NicknameColor.color.to_html(false)
+	
 	if NicknameEdit.text == \"\":
-		playerInfo[\"nickname\"] = \"Mt Foxtrot\"
+		playerInfo.nickname = \"Mt Foxtrot\"
 	else:
-		playerInfo[\"nickname\"] = NicknameEdit.text
+		playerInfo.nickname = NicknameEdit.text
 
 func host():
 	get_data()
@@ -93,6 +106,50 @@ func set_gamemode_label(string):
 	$VBoxContainer/Gamemode/GamemodeLabel.text = string
 "
 
+[sub_resource type="GDScript" id=16]
+script/source = "extends HBoxContainer
+
+func r_change(text):
+	if int(text) > 255: text = \"255\"
+	if int(text) < 0: text = \"0\"
+	
+	$Red.text = str(int(text))
+	$ColorRect.color.r8 = int(int(text))
+
+func g_change(text):
+	if int(text) > 255: text = \"255\"
+	if int(text) < 0: text = \"0\"
+	
+	$Green.text = str(int(text))
+	$ColorRect.color.g8 = int(int(text))
+
+func b_change(text):
+	if int(text) > 255: text = \"255\"
+	if int(text) < 0: text = \"0\"
+	
+	$Blue.text = str(int(text))
+	$ColorRect.color.b8 = int(int(text))
+
+func focus_exited():
+	r_change($Red.text)
+	g_change($Green.text)
+	b_change($Blue.text)
+"
+
+[sub_resource type="GDScript" id=15]
+script/source = "extends HBoxContainer
+
+export (Array,Array) var playerNameImage
+
+func _ready():
+	for image in playerNameImage:
+		$ItemList.add_item(image[0])
+
+func _skin_selected(index):
+	$TextureRect.texture = playerNameImage[index][2]
+	get_tree().get_nodes_in_group(\"MultiplayerMenu\")[0].playerInfo[\"image\"] = playerNameImage[index][1]
+"
+
 [sub_resource type="GDScript" id=2]
 script/source = "extends HBoxContainer
 
@@ -111,14 +168,13 @@ func _skin_selected(index):
 script/source = "extends PanelContainer
 
 var gamemodesList = [
-	[\"Cruelty\",\"The mode without any special goals, kill each other until you get bored, is the standard mode for playing Deathmatch and CO-OP maps\"],
-	[\"Sex\",\"??? SEXO ???\"]
+	[\"Cruelty\",\"Gamemode without any special goals, kill each other until you get bored, is the standard mode for playing Deathmatch and CO-OP maps\"]
 ]
 
 var mapsList = [
-	\"multiplayer_test_map.tscn\",
+	\"bonesquad_museum.tscn\",
 	\"Construct_Blam.tscn\",
-	\"bonesquad_museum.tscn\"
+	\"edenrat.tscn\"
 ]
 
 func _ready():
@@ -229,16 +285,15 @@ volume_db = 0.0
 pitch_scale = 1.0
 
 [node name="CenterContainer" type="CenterContainer" parent="."]
-visible = false
 margin_left = 229.0
 margin_right = 1280.0
 margin_bottom = 720.0
 
 [node name="TabContainer" type="TabContainer" parent="CenterContainer"]
-margin_left = 518.0
-margin_top = 337.0
-margin_right = 532.0
-margin_bottom = 383.0
+margin_left = 195.0
+margin_top = 87.0
+margin_right = 856.0
+margin_bottom = 632.0
 
 [node name="Main" type="PanelContainer" parent="CenterContainer/TabContainer"]
 anchor_right = 1.0
@@ -258,7 +313,6 @@ margin_bottom = 496.0
 size_flags_horizontal = 3
 size_flags_vertical = 3
 custom_constants/separation = 5
-alignment = 1
 
 [node name="Label" type="Label" parent="CenterContainer/TabContainer/Main/VBoxContainer"]
 margin_right = 641.0
@@ -372,26 +426,49 @@ size_flags_horizontal = 3
 text = "PLACEHOLDER"
 align = 2
 
-[node name="ClientSettings" type="Label" parent="CenterContainer/TabContainer/Main/VBoxContainer"]
+[node name="UPNP" type="Label" parent="CenterContainer/TabContainer/Main/VBoxContainer"]
 margin_top = 165.0
 margin_right = 641.0
 margin_bottom = 191.0
+text = "UPNP"
+align = 1
+
+[node name="Player" type="PanelContainer" parent="CenterContainer/TabContainer"]
+visible = false
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_left = 7.0
+margin_top = 39.0
+margin_right = -7.0
+margin_bottom = -7.0
+rect_min_size = Vector2( 647, 499 )
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/TabContainer/Player"]
+margin_left = 3.0
+margin_top = 3.0
+margin_right = 644.0
+margin_bottom = 496.0
+custom_constants/separation = 5
+
+[node name="ClientSettings" type="Label" parent="CenterContainer/TabContainer/Player/VBoxContainer"]
+margin_right = 641.0
+margin_bottom = 26.0
 text = "Player settings"
 align = 1
 
-[node name="Nickname" type="HBoxContainer" parent="CenterContainer/TabContainer/Main/VBoxContainer"]
-margin_top = 196.0
+[node name="Nickname" type="HBoxContainer" parent="CenterContainer/TabContainer/Player/VBoxContainer"]
+margin_top = 31.0
 margin_right = 641.0
-margin_bottom = 232.0
+margin_bottom = 67.0
 custom_constants/separation = 5
 
-[node name="Label3" type="Label" parent="CenterContainer/TabContainer/Main/VBoxContainer/Nickname"]
+[node name="Label3" type="Label" parent="CenterContainer/TabContainer/Player/VBoxContainer/Nickname"]
 margin_top = 5.0
 margin_right = 74.0
 margin_bottom = 31.0
 text = "Name:"
 
-[node name="NicknameEdit" type="LineEdit" parent="CenterContainer/TabContainer/Main/VBoxContainer/Nickname"]
+[node name="NicknameEdit" type="LineEdit" parent="CenterContainer/TabContainer/Player/VBoxContainer/Nickname"]
 margin_left = 79.0
 margin_right = 641.0
 margin_bottom = 36.0
@@ -403,21 +480,119 @@ align = 1
 max_length = 15
 placeholder_text = "MT Foxtrot"
 
-[node name="Skin" type="HBoxContainer" parent="CenterContainer/TabContainer/Main/VBoxContainer"]
-margin_top = 237.0
+[node name="Color" type="HBoxContainer" parent="CenterContainer/TabContainer/Player/VBoxContainer"]
+margin_top = 72.0
 margin_right = 641.0
-margin_bottom = 493.0
+margin_bottom = 136.0
+custom_constants/separation = 5
+script = SubResource( 16 )
+
+[node name="Label3" type="Label" parent="CenterContainer/TabContainer/Player/VBoxContainer/Color"]
+margin_top = 19.0
+margin_right = 164.0
+margin_bottom = 45.0
+text = "Name Color:"
+
+[node name="Red" type="LineEdit" parent="CenterContainer/TabContainer/Player/VBoxContainer/Color"]
+margin_left = 169.0
+margin_top = 14.0
+margin_right = 300.0
+margin_bottom = 50.0
+rect_min_size = Vector2( 0, 36 )
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme = ExtResource( 24 )
+custom_constants/minimum_spaces = 0
+text = "255"
+align = 1
+max_length = 3
+middle_mouse_paste_enabled = false
+placeholder_text = "255"
+
+[node name="Green" type="LineEdit" parent="CenterContainer/TabContainer/Player/VBoxContainer/Color"]
+margin_left = 305.0
+margin_top = 14.0
+margin_right = 436.0
+margin_bottom = 50.0
+rect_min_size = Vector2( 0, 36 )
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme = ExtResource( 24 )
+custom_constants/minimum_spaces = 0
+text = "0"
+align = 1
+max_length = 3
+middle_mouse_paste_enabled = false
+placeholder_text = "255"
+
+[node name="Blue" type="LineEdit" parent="CenterContainer/TabContainer/Player/VBoxContainer/Color"]
+margin_left = 441.0
+margin_top = 14.0
+margin_right = 572.0
+margin_bottom = 50.0
+rect_min_size = Vector2( 0, 36 )
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme = ExtResource( 24 )
+custom_constants/minimum_spaces = 0
+text = "0"
+align = 1
+max_length = 3
+middle_mouse_paste_enabled = false
+placeholder_text = "255"
+
+[node name="ColorRect" type="ColorRect" parent="CenterContainer/TabContainer/Player/VBoxContainer/Color"]
+margin_left = 577.0
+margin_right = 641.0
+margin_bottom = 64.0
+rect_min_size = Vector2( 64, 64 )
+color = Color( 1, 0, 0, 1 )
+
+[node name="Image" type="HBoxContainer" parent="CenterContainer/TabContainer/Player/VBoxContainer"]
+margin_top = 141.0
+margin_right = 641.0
+margin_bottom = 205.0
+custom_constants/separation = 5
+script = SubResource( 15 )
+playerNameImage = [ [ "None", "null", ExtResource( 12 ) ], [ "Handler (1)", "res://Textures/Menu/Handler/1.png", ExtResource( 7 ) ], [ "Handler (2)", "res://Textures/Menu/Handler/2.png", ExtResource( 10 ) ], [ "Handler (3)", "res://Textures/Menu/Handler/3.png", ExtResource( 8 ) ], [ "Handler (4)", "res://Textures/Menu/Handler/4.png", ExtResource( 9 ) ] ]
+
+[node name="Label3" type="Label" parent="CenterContainer/TabContainer/Player/VBoxContainer/Image"]
+margin_top = 19.0
+margin_right = 164.0
+margin_bottom = 45.0
+text = "Name image:"
+
+[node name="ItemList" type="ItemList" parent="CenterContainer/TabContainer/Player/VBoxContainer/Image"]
+margin_left = 169.0
+margin_right = 572.0
+margin_bottom = 64.0
+rect_pivot_offset = Vector2( -843, 287 )
+size_flags_horizontal = 3
+allow_reselect = true
+
+[node name="TextureRect" type="TextureRect" parent="CenterContainer/TabContainer/Player/VBoxContainer/Image"]
+margin_left = 577.0
+margin_right = 641.0
+margin_bottom = 64.0
+rect_min_size = Vector2( 64, 64 )
+texture = ExtResource( 12 )
+expand = true
+
+[node name="Skin" type="HBoxContainer" parent="CenterContainer/TabContainer/Player/VBoxContainer"]
+margin_top = 210.0
+margin_right = 641.0
+margin_bottom = 466.0
 custom_constants/separation = 5
 script = SubResource( 2 )
-playerSkins = [ [ "Default", "res://Textures/Misc/mainguy_clothes.png", ExtResource( 2 ) ], [ "Worker", "res://Textures/NPC/Enemy_Worker.png", ExtResource( 6 ) ], [ "Nude (19.99$)", "res://Textures/NPC/Enemy_Nude.png", ExtResource( 4 ) ], [ "Cultist", "res://Textures/NPC/cultist_civilian.png", ExtResource( 15 ) ], [ "Boss guy", "res://Textures/NPC/bosssguy_clothes.png", ExtResource( 16 ) ], [ "Assassin", "res://Textures/NPC/Enemy_Assassin.png", ExtResource( 20 ) ], [ "Assassin (Alt)", "res://Textures/NPC/Enemy_Assassin_Alt.png", ExtResource( 18 ) ], [ "Civilian", "res://Textures/NPC/Enemy_Civilian2.png", ExtResource( 17 ) ], [ "Cop", "res://Textures/NPC/Enemy_Cop1.png", ExtResource( 23 ) ], [ "Kevin", "res://Textures/NPC/Enemy_Kevin.png", ExtResource( 22 ) ], [ "CEO", "res://Textures/NPC/Objective_CEO.png", ExtResource( 21 ) ], [ "Elsa", "res://Textures/NPC/Elsa.png", ExtResource( 19 ) ] ]
+playerSkins = [ [ "Default", "res://Textures/Misc/mainguy_clothes.png", ExtResource( 2 ) ], [ "Worker", "res://Textures/NPC/Enemy_Worker.png", ExtResource( 6 ) ], [ "Nude (FREE???)", "res://Textures/NPC/Enemy_Nude.png", ExtResource( 4 ) ], [ "Cultist", "res://Textures/NPC/cultist_civilian.png", ExtResource( 15 ) ], [ "Boss guy", "res://Textures/NPC/bosssguy_clothes.png", ExtResource( 16 ) ], [ "Assassin", "res://Textures/NPC/Enemy_Assassin.png", ExtResource( 20 ) ], [ "Assassin (Alt)", "res://Textures/NPC/Enemy_Assassin_Alt.png", ExtResource( 18 ) ], [ "Civilian", "res://Textures/NPC/Enemy_Civilian2.png", ExtResource( 17 ) ], [ "Cop", "res://Textures/NPC/Enemy_Cop1.png", ExtResource( 23 ) ], [ "Kevin", "res://Textures/NPC/Enemy_Kevin.png", ExtResource( 22 ) ], [ "CEO", "res://Textures/NPC/Objective_CEO.png", ExtResource( 21 ) ], [ "Elsa", "res://Textures/NPC/Elsa.png", ExtResource( 19 ) ] ]
 
-[node name="Label3" type="Label" parent="CenterContainer/TabContainer/Main/VBoxContainer/Skin"]
+[node name="Label3" type="Label" parent="CenterContainer/TabContainer/Player/VBoxContainer/Skin"]
 margin_top = 115.0
 margin_right = 74.0
 margin_bottom = 141.0
 text = "Skin:"
 
-[node name="ItemList" type="ItemList" parent="CenterContainer/TabContainer/Main/VBoxContainer/Skin"]
+[node name="ItemList" type="ItemList" parent="CenterContainer/TabContainer/Player/VBoxContainer/Skin"]
 margin_left = 79.0
 margin_right = 380.0
 margin_bottom = 256.0
@@ -425,13 +600,13 @@ rect_pivot_offset = Vector2( -843, 287 )
 size_flags_horizontal = 3
 allow_reselect = true
 
-[node name="TextureRect" type="TextureRect" parent="CenterContainer/TabContainer/Main/VBoxContainer/Skin"]
+[node name="TextureRect" type="TextureRect" parent="CenterContainer/TabContainer/Player/VBoxContainer/Skin"]
 margin_left = 385.0
 margin_right = 641.0
 margin_bottom = 256.0
 texture = ExtResource( 2 )
 
-[node name="Game Settings" type="PanelContainer" parent="CenterContainer/TabContainer"]
+[node name="Game" type="PanelContainer" parent="CenterContainer/TabContainer"]
 visible = false
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -444,27 +619,27 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 script = SubResource( 11 )
 
-[node name="HBoxContainer" type="HBoxContainer" parent="CenterContainer/TabContainer/Game Settings"]
+[node name="HBoxContainer" type="HBoxContainer" parent="CenterContainer/TabContainer/Game"]
 margin_left = 3.0
 margin_top = 3.0
 margin_right = 644.0
 margin_bottom = 496.0
 alignment = 1
 
-[node name="LevelController" type="VBoxContainer" parent="CenterContainer/TabContainer/Game Settings/HBoxContainer"]
+[node name="LevelController" type="VBoxContainer" parent="CenterContainer/TabContainer/Game/HBoxContainer"]
 margin_right = 305.0
 margin_bottom = 493.0
 size_flags_horizontal = 3
 size_flags_vertical = 3
 alignment = 2
 
-[node name="GamemodeLabel" type="Label" parent="CenterContainer/TabContainer/Game Settings/HBoxContainer/LevelController"]
+[node name="GamemodeLabel" type="Label" parent="CenterContainer/TabContainer/Game/HBoxContainer/LevelController"]
 margin_right = 305.0
 margin_bottom = 26.0
 text = "Gamemodes:"
 align = 1
 
-[node name="GamemodeList" type="ItemList" parent="CenterContainer/TabContainer/Game Settings/HBoxContainer/LevelController"]
+[node name="GamemodeList" type="ItemList" parent="CenterContainer/TabContainer/Game/HBoxContainer/LevelController"]
 margin_top = 26.0
 margin_right = 305.0
 margin_bottom = 246.0
@@ -472,14 +647,14 @@ rect_pivot_offset = Vector2( -843, 287 )
 size_flags_vertical = 3
 allow_reselect = true
 
-[node name="MapLabel" type="Label" parent="CenterContainer/TabContainer/Game Settings/HBoxContainer/LevelController"]
+[node name="MapLabel" type="Label" parent="CenterContainer/TabContainer/Game/HBoxContainer/LevelController"]
 margin_top = 246.0
 margin_right = 305.0
 margin_bottom = 272.0
 text = "Maps:"
 align = 1
 
-[node name="MapList" type="ItemList" parent="CenterContainer/TabContainer/Game Settings/HBoxContainer/LevelController"]
+[node name="MapList" type="ItemList" parent="CenterContainer/TabContainer/Game/HBoxContainer/LevelController"]
 margin_top = 272.0
 margin_right = 305.0
 margin_bottom = 493.0
@@ -487,21 +662,21 @@ rect_pivot_offset = Vector2( -843, 287 )
 size_flags_vertical = 3
 allow_reselect = true
 
-[node name="Label" type="Label" parent="CenterContainer/TabContainer/Game Settings/HBoxContainer"]
+[node name="Label" type="Label" parent="CenterContainer/TabContainer/Game/HBoxContainer"]
 margin_left = 305.0
 margin_top = 233.0
 margin_right = 335.0
 margin_bottom = 259.0
 text = "  "
 
-[node name="GamemodeDescription" type="VBoxContainer" parent="CenterContainer/TabContainer/Game Settings/HBoxContainer"]
+[node name="GamemodeDescription" type="VBoxContainer" parent="CenterContainer/TabContainer/Game/HBoxContainer"]
 margin_left = 335.0
 margin_right = 641.0
 margin_bottom = 493.0
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="MapLabel" type="Label" parent="CenterContainer/TabContainer/Game Settings/HBoxContainer/GamemodeDescription"]
+[node name="MapLabel" type="Label" parent="CenterContainer/TabContainer/Game/HBoxContainer/GamemodeDescription"]
 margin_right = 306.0
 margin_bottom = 493.0
 size_flags_horizontal = 3
@@ -608,40 +783,20 @@ stream = SubResource( 14 )
 [node name="Unequip" type="AudioStreamPlayer" parent="CenterContainer/TabContainer/Implants"]
 stream = ExtResource( 26 )
 
-[node name="Credits" type="PanelContainer" parent="CenterContainer/TabContainer"]
-visible = false
-anchor_right = 1.0
-anchor_bottom = 1.0
-margin_left = 7.0
-margin_top = 39.0
-margin_right = -7.0
-margin_bottom = -7.0
-rect_min_size = Vector2( 647, 499 )
-
-[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/TabContainer/Credits"]
-margin_left = 3.0
-margin_top = 3.0
-margin_right = 644.0
-margin_bottom = 496.0
-
-[node name="Label" type="Label" parent="CenterContainer/TabContainer/Credits/VBoxContainer"]
-margin_right = 641.0
-margin_bottom = 171.0
-text = "Cruelty Squad Online
-Created by TriggeredP
-
-Special thanks:
-
-DX - Made cool player animations"
-align = 1
-
 [connection signal="button_pressed" from="Menu" to="." method="enable_menu"]
 [connection signal="button_pressed" from="ExitMenu" to="." method="disable_menu"]
 [connection signal="pressed" from="CenterContainer/TabContainer/Main/VBoxContainer/IpPort/JoinButton" to="." method="join"]
 [connection signal="pressed" from="CenterContainer/TabContainer/Main/VBoxContainer/IpPort/HostButton" to="." method="host"]
-[connection signal="item_selected" from="CenterContainer/TabContainer/Main/VBoxContainer/Skin/ItemList" to="CenterContainer/TabContainer/Main/VBoxContainer/Skin" method="_skin_selected"]
-[connection signal="item_selected" from="CenterContainer/TabContainer/Game Settings/HBoxContainer/LevelController/GamemodeList" to="CenterContainer/TabContainer/Game Settings" method="_gamemode_select"]
-[connection signal="item_selected" from="CenterContainer/TabContainer/Game Settings/HBoxContainer/LevelController/MapList" to="CenterContainer/TabContainer/Game Settings" method="_map_select"]
+[connection signal="focus_exited" from="CenterContainer/TabContainer/Player/VBoxContainer/Color/Red" to="CenterContainer/TabContainer/Player/VBoxContainer/Color" method="focus_exited"]
+[connection signal="text_entered" from="CenterContainer/TabContainer/Player/VBoxContainer/Color/Red" to="CenterContainer/TabContainer/Player/VBoxContainer/Color" method="r_change"]
+[connection signal="focus_exited" from="CenterContainer/TabContainer/Player/VBoxContainer/Color/Green" to="CenterContainer/TabContainer/Player/VBoxContainer/Color" method="focus_exited"]
+[connection signal="text_entered" from="CenterContainer/TabContainer/Player/VBoxContainer/Color/Green" to="CenterContainer/TabContainer/Player/VBoxContainer/Color" method="g_change"]
+[connection signal="focus_exited" from="CenterContainer/TabContainer/Player/VBoxContainer/Color/Blue" to="CenterContainer/TabContainer/Player/VBoxContainer/Color" method="focus_exited"]
+[connection signal="text_entered" from="CenterContainer/TabContainer/Player/VBoxContainer/Color/Blue" to="CenterContainer/TabContainer/Player/VBoxContainer/Color" method="b_change"]
+[connection signal="item_selected" from="CenterContainer/TabContainer/Player/VBoxContainer/Image/ItemList" to="CenterContainer/TabContainer/Player/VBoxContainer/Image" method="_skin_selected"]
+[connection signal="item_selected" from="CenterContainer/TabContainer/Player/VBoxContainer/Skin/ItemList" to="CenterContainer/TabContainer/Player/VBoxContainer/Skin" method="_skin_selected"]
+[connection signal="item_selected" from="CenterContainer/TabContainer/Game/HBoxContainer/LevelController/GamemodeList" to="CenterContainer/TabContainer/Game" method="_gamemode_select"]
+[connection signal="item_selected" from="CenterContainer/TabContainer/Game/HBoxContainer/LevelController/MapList" to="CenterContainer/TabContainer/Game" method="_map_select"]
 [connection signal="item_selected" from="CenterContainer/TabContainer/Implants/HBoxContainer/ImplantsController/AllowedImplantsList" to="CenterContainer/TabContainer/Implants" method="toggle_implant"]
 [connection signal="pressed" from="CenterContainer/TabContainer/Implants/HBoxContainer/VBoxContainer/Button3" to="CenterContainer/TabContainer/Implants" method="ban_all"]
 [connection signal="pressed" from="CenterContainer/TabContainer/Implants/HBoxContainer/VBoxContainer/Button4" to="CenterContainer/TabContainer/Implants" method="allow_all"]

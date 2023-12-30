@@ -1,4 +1,4 @@
-[gd_scene load_steps=177 format=2]
+[gd_scene load_steps=178 format=2]
 
 [ext_resource path="res://Textures/skybox3.png" type="Texture" id=1]
 [ext_resource path="res://Maps/textures/base/Stone_wall_2.png" type="Texture" id=2]
@@ -19,6 +19,7 @@
 [ext_resource path="res://Textures/Particles/shine.png" type="Texture" id=17]
 [ext_resource path="res://MOD_CONTENT/CruS Online/maps_stuff/WeaponSpawner.tscn" type="PackedScene" id=18]
 [ext_resource path="res://Scripts/Message_Area.gd" type="Script" id=19]
+[ext_resource path="res://Entities/Enemies/E_Civilian.tscn" type="PackedScene" id=20]
 
 [sub_resource type="NavigationMesh" id=1]
 
@@ -1475,5 +1476,8 @@ shape = SubResource( 398 )
 [node name="AnimationPlayer" type="AnimationPlayer" parent="basement_blades2"]
 autoplay = "rotation"
 anims/rotation = SubResource( 399 )
+
+[node name="Civilian" parent="." instance=ExtResource( 20 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 10.3238, 3.08748, 18.1721 )
 
 [connection signal="body_entered" from="Message_Area" to="Message_Area" method="_on_Message_Area_body_entered"]

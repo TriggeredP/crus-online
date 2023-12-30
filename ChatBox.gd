@@ -18,26 +18,24 @@ func _physics_process(delta):
 	lineEdit.get_font("font").size = sizeRatio
 	labelText.get_font("font").size = sizeRatio
 
-remote func send_message(message, author, img = null, color = null):
+remote func send_message(message, author, img = "null", color = "ff0000"):
 	var rawText = '\n'
 	
-	if img != null:
+	if img != "null":
 		rawText = rawText + '[img=32]' + img + '[/img] '
 	
-	if color != null:
-		rawText = rawText + '[color=' + color + ']'
+	if color != "ff0000":
+		rawText = rawText + '[color=#' + color + ']'
 	
 	rawText = rawText + author + ': ' + message
 	
-	print("message recived")
-	print(message,author,img,color)
 	textBox.bbcode_text = textBox.bbcode_text + rawText
-	print(rawText)
-	print(textBox.bbcode_text)
+	$AudioStreamPlayer.play()
+	Global.UI.notify(author + " send a message", Color(1, 0, 0))
 
 func _text_entered(new_text):
-	rpc_unreliable("send_message",new_text,parent.my_info.nickname)
-	send_message(new_text,parent.my_info.nickname)
+	rpc_unreliable("send_message",new_text,parent.my_info.nickname,parent.my_info.image,parent.my_info.color)
+	send_message(new_text,parent.my_info.nickname,parent.my_info.image,parent.my_info.color)
 	lineEdit.text = ""
 
 func open_chat(type):

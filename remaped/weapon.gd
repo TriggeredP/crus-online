@@ -194,11 +194,11 @@ onready var stealthMaterial = preload("res://Materials/seethrough.tres")
 
 var inMenu = false
 
-remote func _create_drop_weapon(recivedTransform,recivedHoldPos,implantThrowBonus,recivedCurrentWeapon,recivedAmmo,playerVelocity,recivdeRandName):
+remote func _create_drop_weapon(recivedTransform,recivedHoldPos,implantThrowBonus,recivedCurrentWeapon,recivedAmmo,playerVelocity,recivdeRandName,playerIgnoreId):
 	var new_weapon_drop = weapon_drop.instance()
 	new_weapon_drop.set_name(new_weapon_drop.name + "#" + str(recivdeRandName))
 	get_tree().get_nodes_in_group("Sync")[0].add_child(new_weapon_drop)
-	new_weapon_drop.global_transform.origin = recivedTransform
+	new_weapon_drop.global_transform.origin = recivedTransform - (recivedTransform - recivedHoldPos).normalized()
 	new_weapon_drop.gun.MESH[new_weapon_drop.gun.current_weapon].hide()
 	new_weapon_drop.gun.current_weapon = recivedCurrentWeapon
 	new_weapon_drop.gun.ammo = recivedAmmo
@@ -206,6 +206,7 @@ remote func _create_drop_weapon(recivedTransform,recivedHoldPos,implantThrowBonu
 	new_weapon_drop.velocity -= (20 + implantThrowBonus) * (recivedTransform - recivedHoldPos).normalized()
 	new_weapon_drop.velocity += playerVelocity
 	new_weapon_drop.gun.MESH[recivedCurrentWeapon].show()
+	new_weapon_drop.playerIgnoreId = playerIgnoreId
 	
 	new_weapon_drop.set_meta("syncData",{
 		"assetPath": "res://Entities/Objects/Gun_Pickup.tscn",
@@ -213,7 +214,8 @@ remote func _create_drop_weapon(recivedTransform,recivedHoldPos,implantThrowBonu
 			"global_transform",
 			"velocity",
 			"gun.current_weapon",
-			"gun.ammo"
+			"gun.ammo",
+			"playerIgnoreId"
 		]
 	})
 
@@ -663,7 +665,7 @@ func _process(delta)->void :
 			var new_weapon_drop = weapon_drop.instance()
 			new_weapon_drop.set_name(new_weapon_drop.name + "#" + str(randName))
 			get_tree().get_nodes_in_group("Sync")[0].add_child(new_weapon_drop)
-			new_weapon_drop.global_transform.origin = global_transform.origin
+			new_weapon_drop.global_transform.origin = global_transform.origin - (global_transform.origin - hold_pos.global_transform.origin).normalized()
 			new_weapon_drop.gun.MESH[new_weapon_drop.gun.current_weapon].hide()
 			new_weapon_drop.gun.current_weapon = current_weapon
 			new_weapon_drop.gun.ammo = magazine_ammo[current_weapon]
@@ -671,6 +673,7 @@ func _process(delta)->void :
 			new_weapon_drop.velocity -= (20 + glob.implants.arm_implant.throw_bonus) * (global_transform.origin - hold_pos.global_transform.origin).normalized()
 			new_weapon_drop.velocity += glob.player.player_velocity
 			new_weapon_drop.gun.MESH[current_weapon].show()
+			new_weapon_drop.playerIgnoreId = get_tree().get_network_unique_id()
 			
 			new_weapon_drop.set_meta("syncData",{
 				"assetPath": "res://Entities/Objects/Gun_Pickup.tscn",
@@ -678,11 +681,12 @@ func _process(delta)->void :
 					"global_transform",
 					"velocity",
 					"gun.current_weapon",
-					"gun.ammo"
+					"gun.ammo",
+					"playerIgnoreId"
 				]
 			})
 			
-			rpc("_create_drop_weapon",global_transform.origin,hold_pos.global_transform.origin,glob.implants.arm_implant.throw_bonus,current_weapon,magazine_ammo[current_weapon],glob.player.player_velocity,randName)
+			rpc("_create_drop_weapon",global_transform.origin,hold_pos.global_transform.origin,glob.implants.arm_implant.throw_bonus,current_weapon,magazine_ammo[current_weapon],glob.player.player_velocity,randName,get_tree().get_network_unique_id())
 			if weapon1 == current_weapon:
 				weapon1 = null
 			if weapon2 == current_weapon:
