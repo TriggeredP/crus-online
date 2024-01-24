@@ -150,13 +150,13 @@ var playerWalkSound
 const deathMessages = {
 	"general":[
 		"%s was killed by god",
-		"%s didn't want to live too much",
+		"%s didn't want to live",
 		"%s just lose 500$",
 		"%s decided to start from scratch"
 	],
 	"killedByPlayer":[
 		"%s was killed by %s",
-		"%s decided to give his life to %s",
+		"%s give his life to %s",
 		"%s was distracted by %s"
 	]
 }
