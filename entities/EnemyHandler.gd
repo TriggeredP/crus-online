@@ -117,7 +117,7 @@ var fireaudio:AudioStreamPlayer3D
 
 puppet func _spawn_gib_client(gib, damage, collision_n, collision_p, gibType, gibName):
 	var new_gib = self[gibType][gib].instance()
-	new_gib.set_name(new_gib.name + "#" + str(gibName))
+	new_gib.set_name(gibName)
 		
 	new_gib.set_meta("syncData",{
 		"assetPath": self[gibType][gib].resource_path,
@@ -429,7 +429,7 @@ master func spawn_gib(gib, count, damage, collision_n, collision_p, gibType = "G
 			elif "body" in new_gib:
 				new_gib.body.velocity = (damage + rand_range(0, 10)) * - collision_n
 		
-			rpc("_spawn_gib_client", gib, damage, collision_n, collision_p, gibType, newGibName)
+			rpc("_spawn_gib_client", gib, damage, collision_n, collision_p, gibType, new_gib.name)
 
 master func remove_weapon():
 	if is_network_master():
