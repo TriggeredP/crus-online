@@ -128,6 +128,40 @@ puppet func _spawn_gib_client(gib, damage, collision_n, collision_p, gibType, gi
 		
 	get_tree().get_nodes_in_group("Sync")[0].add_child(new_gib)
 
+puppet func _die_client():
+	if not dead:
+		for particle in all_particles:
+			particle.queue_free()
+		body.set_dead()
+		
+		colliders.get_node("Head/CollisionShape").disabled = true
+		colliders.get_node("Torso/CollisionShape").disabled = true
+		colliders.get_node("Legs/CollisionShape").disabled = true
+		if not poison_death:
+			if not immortal and edible:
+				dead_body.set_collision_layer_bit(8, 1)
+			colliders.get_node("Dead_Body/CollisionShape").disabled = false
+			colliders.get_node("Dead_Head/CollisionShape").disabled = false
+		body.set_collision_layer_bit(4, false)
+		dead = true
+		if objective:
+			$Body / Objective_Indicator.hide()
+			glob.remove_objective()
+		if not civilian:
+			glob.enemy_count -= 1
+		else :
+			glob.civ_count -= 1
+		if poison_death:
+			poisontimer.start()
+		if not civilian and not creature:
+			glob.player.local_money += 10
+
+puppet func _hide_npc_client():
+	gib_sfx.play()
+	skeleton.hide()
+	colliders.get_node("Dead_Head/CollisionShape").disabled = true
+	colliders.get_node("Dead_Body/CollisionShape").disabled = true
+
 ################################################################################
 
 func cleanup():
@@ -321,6 +355,7 @@ master func piercing_damage(damage, collision_n, collision_p):
 			colliders.get_node("Dead_Head/CollisionShape").disabled = true
 			colliders.get_node("Dead_Body/CollisionShape").disabled = true
 			deathtimer.start()
+			rpc("_hide_npc_client")
 	else:
 		rpc_id(0,"piercing_damage",damage, collision_n, collision_p)
 
@@ -388,6 +423,7 @@ master func damage(damage, collision_n, collision_p, shooter_pos):
 			colliders.get_node("Dead_Head/CollisionShape").disabled = true
 			colliders.get_node("Dead_Body/CollisionShape").disabled = true
 			deathtimer.start()
+			rpc("_hide_npc_client")
 	else:
 		rpc_id(0,"damage",damage, collision_n, collision_p, shooter_pos)
 
@@ -506,6 +542,7 @@ func die(damage, collision_n, collision_p):
 				poisontimer.start()
 			if not civilian and not creature:
 				glob.player.local_money += 10
+			rpc("_die_client")
 
 func poison_timeout():
 	if is_network_master():

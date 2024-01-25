@@ -33,7 +33,7 @@ func host_server(port,info,recivedHostSettings):
 	
 	Global.menu.hide()
 	Global.menu.set_process_input(false)
-	Global.goto_scene("res://MOD_CONTENT/CruS Online/maps/" + hostSettings.map)
+	Global.goto_scene(hostSettings.map)
 	Menu.set_process_input(true)
 	
 	dataLoaded = true
@@ -81,7 +81,7 @@ puppet func client_connect_init(recivedHostSettings,recivedPlayerInfo):
 	
 	Global.menu.hide()
 	Global.menu.set_process_input(false)
-	Global.goto_scene("res://MOD_CONTENT/CruS Online/maps/" + hostSettings.map)
+	Global.goto_scene(hostSettings.map)
 	Menu.set_process_input(true)
 	
 	dataLoaded = true

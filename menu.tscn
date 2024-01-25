@@ -1,4 +1,4 @@
-[gd_scene load_steps=32 format=2]
+[gd_scene load_steps=33 format=2]
 
 [ext_resource path="res://Menu/menu_theme.tres" type="Theme" id=1]
 [ext_resource path="res://Textures/Misc/mainguy_clothes.png" type="Texture" id=2]
@@ -41,7 +41,7 @@ var playerInfo = {
 
 var hostSettings = {
 	\"gamemode\": \"Cruelty\",
-	\"map\": \"bonesquad_museum.tscn\",
+	\"map\": \"res://MOD_CONTENT/CruS Online/maps/bonesquad_museum.tscn\",
 	\"bannedImplants\": []
 }
 
@@ -164,6 +164,26 @@ func _skin_selected(index):
 	get_tree().get_nodes_in_group(\"MultiplayerMenu\")[0].playerInfo[\"skinPath\"] = playerSkins[index][1]
 "
 
+[sub_resource type="GDScript" id=17]
+script/source = "extends PanelContainer
+
+var mapsList = [
+	\"res://Levels/Level1.tscn\",
+]
+
+var mapsName = [
+	\"Pharmakokinetiks\"
+]
+
+func _ready():
+	for map in mapsList:
+		$HBoxContainer/LevelController/MapList.add_item(map)
+
+func _map_select(index):
+	get_parent().get_node(\"Main\").set_map_label(mapsList[index])
+	get_tree().get_nodes_in_group(\"MultiplayerMenu\")[0].hostSettings[\"map\"] = mapsList[index]
+"
+
 [sub_resource type="GDScript" id=11]
 script/source = "extends PanelContainer
 
@@ -172,16 +192,24 @@ var gamemodesList = [
 ]
 
 var mapsList = [
-	\"bonesquad_museum.tscn\",
-	\"Construct_Blam.tscn\",
-	\"edenrat.tscn\"
+	\"res://MOD_CONTENT/CruS Online/maps/bonesquad_museum.tscn\",
+	\"res://MOD_CONTENT/CruS Online/maps/Construct_Blam.tscn\",
+	\"res://MOD_CONTENT/CruS Online/maps/edenrat.tscn\",
+	\"res://MOD_CONTENT/CruS Online/maps/multiplayer_test_map.tscn\"
+]
+
+var mapsName = [
+	\"Bonequad museum\",
+	\"Construct\",
+	\"Edenrat\",
+	\"Test map\"
 ]
 
 func _ready():
 	for gamemode in gamemodesList:
 		$HBoxContainer/LevelController/GamemodeList.add_item(gamemode[0])
 	
-	for map in mapsList:
+	for map in mapsName:
 		$HBoxContainer/LevelController/MapList.add_item(map)
 	
 	$HBoxContainer/LevelController/GamemodeList.select(0)
@@ -285,16 +313,15 @@ volume_db = 0.0
 pitch_scale = 1.0
 
 [node name="CenterContainer" type="CenterContainer" parent="."]
-visible = false
 margin_left = 229.0
 margin_right = 1280.0
 margin_bottom = 720.0
 
 [node name="TabContainer" type="TabContainer" parent="CenterContainer"]
-margin_left = 518.0
-margin_top = 337.0
-margin_right = 532.0
-margin_bottom = 383.0
+margin_left = 195.0
+margin_top = 87.0
+margin_right = 856.0
+margin_bottom = 632.0
 
 [node name="Main" type="PanelContainer" parent="CenterContainer/TabContainer"]
 visible = false
@@ -608,7 +635,47 @@ margin_right = 641.0
 margin_bottom = 256.0
 texture = ExtResource( 2 )
 
-[node name="Game" type="PanelContainer" parent="CenterContainer/TabContainer"]
+[node name="CO-OP" type="PanelContainer" parent="CenterContainer/TabContainer"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_left = 7.0
+margin_top = 39.0
+margin_right = -7.0
+margin_bottom = -7.0
+rect_min_size = Vector2( 647, 499 )
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = SubResource( 17 )
+
+[node name="HBoxContainer" type="HBoxContainer" parent="CenterContainer/TabContainer/CO-OP"]
+margin_left = 3.0
+margin_top = 3.0
+margin_right = 644.0
+margin_bottom = 496.0
+alignment = 1
+
+[node name="LevelController" type="VBoxContainer" parent="CenterContainer/TabContainer/CO-OP/HBoxContainer"]
+margin_right = 641.0
+margin_bottom = 493.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+alignment = 2
+
+[node name="MapLabel" type="Label" parent="CenterContainer/TabContainer/CO-OP/HBoxContainer/LevelController"]
+margin_right = 641.0
+margin_bottom = 26.0
+text = "Maps:"
+align = 1
+
+[node name="MapList" type="ItemList" parent="CenterContainer/TabContainer/CO-OP/HBoxContainer/LevelController"]
+margin_top = 26.0
+margin_right = 641.0
+margin_bottom = 493.0
+rect_pivot_offset = Vector2( -843, 287 )
+size_flags_vertical = 3
+allow_reselect = true
+
+[node name="DM" type="PanelContainer" parent="CenterContainer/TabContainer"]
 visible = false
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -621,27 +688,27 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 script = SubResource( 11 )
 
-[node name="HBoxContainer" type="HBoxContainer" parent="CenterContainer/TabContainer/Game"]
+[node name="HBoxContainer" type="HBoxContainer" parent="CenterContainer/TabContainer/DM"]
 margin_left = 3.0
 margin_top = 3.0
 margin_right = 644.0
 margin_bottom = 496.0
 alignment = 1
 
-[node name="LevelController" type="VBoxContainer" parent="CenterContainer/TabContainer/Game/HBoxContainer"]
+[node name="LevelController" type="VBoxContainer" parent="CenterContainer/TabContainer/DM/HBoxContainer"]
 margin_right = 305.0
 margin_bottom = 493.0
 size_flags_horizontal = 3
 size_flags_vertical = 3
 alignment = 2
 
-[node name="GamemodeLabel" type="Label" parent="CenterContainer/TabContainer/Game/HBoxContainer/LevelController"]
+[node name="GamemodeLabel" type="Label" parent="CenterContainer/TabContainer/DM/HBoxContainer/LevelController"]
 margin_right = 305.0
 margin_bottom = 26.0
 text = "Gamemodes:"
 align = 1
 
-[node name="GamemodeList" type="ItemList" parent="CenterContainer/TabContainer/Game/HBoxContainer/LevelController"]
+[node name="GamemodeList" type="ItemList" parent="CenterContainer/TabContainer/DM/HBoxContainer/LevelController"]
 margin_top = 26.0
 margin_right = 305.0
 margin_bottom = 246.0
@@ -649,14 +716,14 @@ rect_pivot_offset = Vector2( -843, 287 )
 size_flags_vertical = 3
 allow_reselect = true
 
-[node name="MapLabel" type="Label" parent="CenterContainer/TabContainer/Game/HBoxContainer/LevelController"]
+[node name="MapLabel" type="Label" parent="CenterContainer/TabContainer/DM/HBoxContainer/LevelController"]
 margin_top = 246.0
 margin_right = 305.0
 margin_bottom = 272.0
 text = "Maps:"
 align = 1
 
-[node name="MapList" type="ItemList" parent="CenterContainer/TabContainer/Game/HBoxContainer/LevelController"]
+[node name="MapList" type="ItemList" parent="CenterContainer/TabContainer/DM/HBoxContainer/LevelController"]
 margin_top = 272.0
 margin_right = 305.0
 margin_bottom = 493.0
@@ -664,21 +731,21 @@ rect_pivot_offset = Vector2( -843, 287 )
 size_flags_vertical = 3
 allow_reselect = true
 
-[node name="Label" type="Label" parent="CenterContainer/TabContainer/Game/HBoxContainer"]
+[node name="Label" type="Label" parent="CenterContainer/TabContainer/DM/HBoxContainer"]
 margin_left = 305.0
 margin_top = 233.0
 margin_right = 335.0
 margin_bottom = 259.0
 text = "  "
 
-[node name="GamemodeDescription" type="VBoxContainer" parent="CenterContainer/TabContainer/Game/HBoxContainer"]
+[node name="GamemodeDescription" type="VBoxContainer" parent="CenterContainer/TabContainer/DM/HBoxContainer"]
 margin_left = 335.0
 margin_right = 641.0
 margin_bottom = 493.0
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="MapLabel" type="Label" parent="CenterContainer/TabContainer/Game/HBoxContainer/GamemodeDescription"]
+[node name="MapLabel" type="Label" parent="CenterContainer/TabContainer/DM/HBoxContainer/GamemodeDescription"]
 margin_right = 306.0
 margin_bottom = 493.0
 size_flags_horizontal = 3
@@ -690,6 +757,7 @@ align = 1
 autowrap = true
 
 [node name="Implants" type="PanelContainer" parent="CenterContainer/TabContainer"]
+visible = false
 anchor_right = 1.0
 anchor_bottom = 1.0
 margin_left = 7.0
@@ -796,8 +864,9 @@ stream = ExtResource( 26 )
 [connection signal="text_entered" from="CenterContainer/TabContainer/Player/VBoxContainer/Color/Blue" to="CenterContainer/TabContainer/Player/VBoxContainer/Color" method="b_change"]
 [connection signal="item_selected" from="CenterContainer/TabContainer/Player/VBoxContainer/Image/ItemList" to="CenterContainer/TabContainer/Player/VBoxContainer/Image" method="_skin_selected"]
 [connection signal="item_selected" from="CenterContainer/TabContainer/Player/VBoxContainer/Skin/ItemList" to="CenterContainer/TabContainer/Player/VBoxContainer/Skin" method="_skin_selected"]
-[connection signal="item_selected" from="CenterContainer/TabContainer/Game/HBoxContainer/LevelController/GamemodeList" to="CenterContainer/TabContainer/Game" method="_gamemode_select"]
-[connection signal="item_selected" from="CenterContainer/TabContainer/Game/HBoxContainer/LevelController/MapList" to="CenterContainer/TabContainer/Game" method="_map_select"]
+[connection signal="item_selected" from="CenterContainer/TabContainer/CO-OP/HBoxContainer/LevelController/MapList" to="CenterContainer/TabContainer/CO-OP" method="_map_select"]
+[connection signal="item_selected" from="CenterContainer/TabContainer/DM/HBoxContainer/LevelController/GamemodeList" to="CenterContainer/TabContainer/DM" method="_gamemode_select"]
+[connection signal="item_selected" from="CenterContainer/TabContainer/DM/HBoxContainer/LevelController/MapList" to="CenterContainer/TabContainer/DM" method="_map_select"]
 [connection signal="item_selected" from="CenterContainer/TabContainer/Implants/HBoxContainer/ImplantsController/AllowedImplantsList" to="CenterContainer/TabContainer/Implants" method="toggle_implant"]
 [connection signal="pressed" from="CenterContainer/TabContainer/Implants/HBoxContainer/VBoxContainer/Button3" to="CenterContainer/TabContainer/Implants" method="ban_all"]
 [connection signal="pressed" from="CenterContainer/TabContainer/Implants/HBoxContainer/VBoxContainer/Button4" to="CenterContainer/TabContainer/Implants" method="allow_all"]

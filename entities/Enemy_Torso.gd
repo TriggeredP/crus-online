@@ -20,6 +20,33 @@ export  var type = 0
 
 onready var head_gib = preload("res://Entities/Physics_Objects/Head_Gib.tscn")
 
+# Multiplayer stuff
+################################################################################
+
+puppet func _spawn_gib_client(collision_n, collision_p, gibName):
+	var new_gib = head_gib.instance()
+	new_gib.set_name(gibName)
+		
+	new_gib.set_meta("syncData",{
+		"assetPath": head_gib.resource_path,
+		"syncProperties": [
+			"global_transform"
+		]
+	})
+		
+	get_tree().get_nodes_in_group("Sync")[0].add_child(new_gib)
+
+puppet func _client_damage():
+	for child in get_children():
+		child.hide()
+	hide()
+	if is_instance_valid(head_mesh):
+		head_mesh.hide()
+	$CollisionShape.disabled = true
+	gibflag = true
+
+################################################################################
+
 func _ready():
 	set_physics_process(false)
 	set_process(false)
@@ -109,10 +136,18 @@ master func damage(damage, collision_n, collision_p, shooter_pos):
 			deadhead.already_dead()
 			soul.die(damage, collision_n, collision_p)
 			if not gibflag and gibbable:
+				randomize()
+				var newGibName = int(rand_range(0,1000000))
+				
 				var new_head_gib = head_gib.instance()
-				soul.add_child(new_head_gib)
+				
+				new_head_gib.set_name(new_head_gib.name + "#" + str(newGibName))
+				
+				get_tree().get_nodes_in_group("Sync")[0].add_child(new_head_gib)
 				new_head_gib.global_transform.origin = global_transform.origin
 				new_head_gib.damage(damage, collision_n, collision_p, shooter_pos)
+				
+				rpc("_spawn_gib_client", collision_n, collision_p, new_head_gib.name)
 			for child in get_children():
 				child.hide()
 			hide()
@@ -120,8 +155,9 @@ master func damage(damage, collision_n, collision_p, shooter_pos):
 				head_mesh.hide()
 			$CollisionShape.disabled = true
 			gibflag = true
+			rpc("_client_damage")
 	else:
-		rpc_id(0,"damage",damage, collision_n, collision_p, shooter_pos)
+		rpc_id(0,"damage", damage, collision_n, collision_p, shooter_pos)
 
 func player_use():
 	if get_collision_layer_bit(8):
@@ -139,24 +175,33 @@ func remove_weapon():
 	soul.remove_weapon()
 
 func piercing_damage(damage, collision_n, collision_p, shooter_pos):
-	soul.piercing_damage(damage * damage_multiplier, collision_n, collision_p)
-	if head:
-		head_health = - 1
-	if head_health < 0 and headoff == false:
-		deadhead.already_dead()
-		soul.die(damage, collision_n, collision_p)
-		if not gibflag:
-			var new_head_gib = head_gib.instance()
-			soul.add_child(new_head_gib)
-			new_head_gib.global_transform.origin = global_transform.origin
-			new_head_gib.damage(damage, collision_n, collision_p, shooter_pos)
-		for child in get_children():
-			child.hide()
-		hide()
-		if is_instance_valid(head_mesh):
-			head_mesh.hide()
-		$CollisionShape.disabled = true
-		gibflag = true
+	if is_network_master():
+		soul.piercing_damage(damage * damage_multiplier, collision_n, collision_p)
+		if head:
+			head_health = - 1
+		if head_health < 0 and headoff == false:
+			deadhead.already_dead()
+			soul.die(damage, collision_n, collision_p)
+			if not gibflag:
+				randomize()
+				var newGibName = int(rand_range(0,1000000))
+				
+				var new_head_gib = head_gib.instance()
+				new_head_gib.set_name(new_head_gib.name + "#" + str(newGibName))
+				get_tree().get_nodes_in_group("Sync")[0].add_child(new_head_gib)
+				
+				new_head_gib.global_transform.origin = global_transform.origin
+				new_head_gib.damage(damage, collision_n, collision_p, shooter_pos)
+				
+				rpc("_spawn_gib_client", collision_n, collision_p, new_head_gib.name)
+			for child in get_children():
+				child.hide()
+			hide()
+			if is_instance_valid(head_mesh):
+				head_mesh.hide()
+			$CollisionShape.disabled = true
+			gibflag = true
+			rpc("_client_damage")
 
 func already_dead():
 	headoff = true
