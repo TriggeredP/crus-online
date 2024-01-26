@@ -4,9 +4,18 @@ export var playerId:int = 0
 
 var player_info = {}
 
-var my_info = {}
+var my_info = {
+	"nickname": "MT Foxtrot",
+	"color": "ff00ff",
+	"image": "null",
+	"skinPath": "res://Textures/Misc/mainguy_clothes.png"
+}
 
-var hostSettings = {}
+var hostSettings = {
+	"gamemode": "Cruelty",
+	"map": "res://Levels/Level1.tscn",
+	"bannedImplants": []
+}
 
 var dataLoaded = false
 
@@ -16,12 +25,15 @@ onready var Menu = $Menu
 onready var Hint = $Hint
 
 func _ready():
+	if not load_data():
+		save_data()
+	
 	get_tree().connect("network_peer_connected", self, "_connected")
 	get_tree().connect("network_peer_disconnected", self, "_disconnected")
 
-func host_server(port,info,recivedHostSettings): 
-	my_info = info
-	hostSettings = recivedHostSettings
+func host_server(port, recivedHostSettings = null):
+	if recivedHostSettings != null:
+		hostSettings = recivedHostSettings
 	var server = NetworkedMultiplayerENet.new()
 	server.create_server(port,16)
 	get_tree().set_network_peer(server)
@@ -33,14 +45,13 @@ func host_server(port,info,recivedHostSettings):
 	
 	Global.menu.hide()
 	Global.menu.set_process_input(false)
-	Global.goto_scene(hostSettings.map)
+	goto_scene_host(hostSettings.map)
 	Menu.set_process_input(true)
 	
 	dataLoaded = true
 	print("Server hosted")
 
-func join_to_server(ip,port,info):
-	my_info = info
+func join_to_server(ip,port):
 	var client = NetworkedMultiplayerENet.new()
 	client.create_client(ip,port)
 	get_tree().set_network_peer(client)
@@ -81,7 +92,7 @@ puppet func client_connect_init(recivedHostSettings,recivedPlayerInfo):
 	
 	Global.menu.hide()
 	Global.menu.set_process_input(false)
-	Global.goto_scene(hostSettings.map)
+	goto_scene_client(hostSettings.map)
 	Menu.set_process_input(true)
 	
 	dataLoaded = true
@@ -113,3 +124,45 @@ puppet func sync_players(info):
 	player_info = info
 	Players.load_players()
 
+func goto_scene_host(scene):
+	Global.goto_scene(scene)
+	rpc("goto_scene_client",scene)
+	print("[HOST]: goto to scene [" + scene + "]")
+
+puppet func goto_scene_client(scene):
+	Global.goto_scene(scene)
+	print("[CLIENT]: goto to scene [" + scene + "]")
+
+func save_data():
+	var dir = Directory.new()
+	if not dir.dir_exists("user://mod_config/"):
+		dir.make_dir("user://mod_config/")
+	
+	var mod_config = File.new()
+	mod_config.open("user://mod_config/CruSOnline.save", File.WRITE)
+	mod_config.store_line(to_json(my_info))
+	mod_config.close()
+	
+	print("[CruS Online]: Saved")
+
+func load_data() -> bool:
+	var dir = Directory.new()
+	if not dir.dir_exists("user://mod_config/"):
+		dir.make_dir("user://mod_config/")
+
+	var file = File.new()
+	if file.file_exists("user://mod_config/CruSOnline.save"):
+		file.open("user://mod_config/CruSOnline.save", File.READ)
+		var data = parse_json(file.get_as_text())
+		file.close()
+		if typeof(data) == TYPE_DICTIONARY:
+			my_info = data
+			
+			print("[CruS Online]: Loaded")
+			return true
+		else:
+			printerr("[CruS Online]: Corrupted data!")
+			return false
+	else:
+		printerr("[CruS Online]: No saved data!")
+		return false

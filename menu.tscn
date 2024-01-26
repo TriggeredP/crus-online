@@ -34,9 +34,7 @@ var playerInfo = {
 	\"nickname\": \"MT Foxtrot\",
 	\"color\": \"ff00ff\",
 	\"image\": \"null\",
-	\"skinPath\": \"res://Textures/Misc/mainguy_clothes.png\",
-	\"kills\": 0,
-	\"deaths\": 0
+	\"skinPath\": \"res://Textures/Misc/mainguy_clothes.png\"
 }
 
 var hostSettings = {
@@ -50,6 +48,11 @@ onready var PortEdit = $CenterContainer/TabContainer/Main/VBoxContainer/IpPort/P
 
 onready var NicknameEdit = $CenterContainer/TabContainer/Player/VBoxContainer/Nickname/NicknameEdit
 onready var NicknameColor = $CenterContainer/TabContainer/Player/VBoxContainer/Color/ColorRect
+
+onready var Multiplayer = get_tree().get_nodes_in_group(\"Multiplayer\")[0]
+
+func _ready():
+	playerInfo = Multiplayer.my_info
 
 func _physics_process(delta):
 	if Global.menu.in_game:
@@ -74,11 +77,18 @@ func host():
 	for implant in $CenterContainer/TabContainer/Implants.bannedImplants:
 		hostSettings[\"bannedImplants\"].append(implant)
 	
-	get_tree().get_nodes_in_group(\"Multiplayer\")[0].host_server(port,playerInfo,hostSettings)
+	Multiplayer.my_info = playerInfo
+	Multiplayer.save_data()
+	
+	Multiplayer.host_server(port,hostSettings)
 
 func join():
 	get_data()
-	get_tree().get_nodes_in_group(\"Multiplayer\")[0].join_to_server(ip,port,playerInfo)
+	
+	Multiplayer.my_info = playerInfo
+	Multiplayer.save_data()
+	
+	Multiplayer.join_to_server(ip,port)
 
 func enable_menu(type):
 	if not $CenterContainer/TabContainer/Implants.updated:
@@ -168,15 +178,15 @@ func _skin_selected(index):
 script/source = "extends PanelContainer
 
 var mapsList = [
-	\"res://Levels/Level1.tscn\",
+	\"res://MOD_CONTENT/CruS Online/maps/crus_online_lobby.tscn\",
 ]
 
 var mapsName = [
-	\"Pharmakokinetiks\"
+	\"Coop\"
 ]
 
 func _ready():
-	for map in mapsList:
+	for map in mapsName:
 		$HBoxContainer/LevelController/MapList.add_item(map)
 
 func _map_select(index):
@@ -324,7 +334,6 @@ margin_right = 856.0
 margin_bottom = 632.0
 
 [node name="Main" type="PanelContainer" parent="CenterContainer/TabContainer"]
-visible = false
 anchor_right = 1.0
 anchor_bottom = 1.0
 margin_left = 7.0
@@ -636,6 +645,7 @@ margin_bottom = 256.0
 texture = ExtResource( 2 )
 
 [node name="CO-OP" type="PanelContainer" parent="CenterContainer/TabContainer"]
+visible = false
 anchor_right = 1.0
 anchor_bottom = 1.0
 margin_left = 7.0

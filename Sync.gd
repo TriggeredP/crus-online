@@ -7,14 +7,6 @@ extends Node
 #		syncProperties: []
 #	}
 
-var npcList = [
-	
-]
-
-master func has_npc(npc):
-	if npcList.has(npc):
-		print("ok")
-
 master func sync_nodes():
 	for child in get_children():
 		if child.has_meta("syncData"):

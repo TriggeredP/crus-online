@@ -20,5 +20,5 @@ func load_players():
 			player.singleton = parent
 			add_child(player)
 			parent.player_info[key]["puppet"] = player
-			player.global_transform.origin = Vector3(0,-1000,0)
+			player.global_transform.origin = Vector3(-1000,-1000,-1000)
 	print(parent.player_info)
