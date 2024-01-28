@@ -813,7 +813,7 @@ func _on_Mission_Start_Pressed(m:int, button_id:TextureButton):
 	#Global.goto_scene(Global.LEVELS[Global.CURRENT_LEVEL])
 	
 	hostSettings.map = Global.LEVELS[Global.CURRENT_LEVEL]
-	Multiplayer.host_server(80,hostSettings)
+	Multiplayer.host_server(8080,hostSettings)
 
 func _on_Level_Pressed(m:int, button_id:TextureButton):
 	
@@ -1315,7 +1315,7 @@ func _on_Retry_Button_Pressed(m:int, b:TextureButton):
 	#Global.goto_scene(Global.LEVELS[Global.CURRENT_LEVEL])
 	
 	hostSettings.map = Global.LEVELS[Global.CURRENT_LEVEL]
-	Multiplayer.host_server(80,hostSettings)
+	Multiplayer.host_server(8080,hostSettings)
 
 
 func _on_Key_List_item_activated(index):

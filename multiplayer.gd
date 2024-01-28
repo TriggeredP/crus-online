@@ -4,6 +4,8 @@ export var playerId:int = 0
 
 var player_info = {}
 
+enum {PRIVATE,LAN,PUNCH_THROUTH}
+
 var my_info = {
 	"nickname": "MT Foxtrot",
 	"color": "ff00ff",
@@ -19,6 +21,10 @@ var hostSettings = {
 
 var dataLoaded = false
 
+onready var Steam = $Steam
+
+onready var HolePuncher = $HolePuncher
+
 onready var Sync = $Sync
 onready var Players = $Players
 onready var Menu = $Menu
@@ -28,8 +34,28 @@ func _ready():
 	if not load_data():
 		save_data()
 	
+	HolePuncher.rendevouz_address = "194.87.74.129"
+	HolePuncher.rendevouz_port = "25507"
+	HolePuncher.port_cascade_range = 20
+	HolePuncher.response_window = 10
+	
 	get_tree().connect("network_peer_connected", self, "_connected")
 	get_tree().connect("network_peer_disconnected", self, "_disconnected")
+
+func host_server_pt():
+	var code = str(int(rand_range(0,10000000000000000)))
+	print(code)
+	
+	HolePuncher.start_traversal(code,true,"host")
+	var result = yield(HolePuncher, 'hole_punched')
+	
+	print(result)
+
+func join_to_server_pt(gameCode):
+	HolePuncher.start_traversal(gameCode,false,"client")
+	var result = yield(HolePuncher, 'hole_punched')
+	
+	print(result)
 
 func host_server(port, recivedHostSettings = null):
 	if recivedHostSettings != null:

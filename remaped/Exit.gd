@@ -47,6 +47,6 @@ puppet func send_player_count(exitCount,hostCount):
 master func check_exit(show = false):
 	var players = len(get_tree().get_nodes_in_group("Multiplayer")[0].player_info)
 	if playersCount == players:
-		get_tree().get_nodes_in_group("Multiplayer")[0].goto_scene_host("res://Levels/Level2.tscn")
+		get_tree().get_nodes_in_group("Multiplayer")[0].goto_scene_host("res://MOD_CONTENT/CruS Online/maps/crus_online_lobby.tscn")
 	elif show:
 		Global.UI.notify(str(playersCount) + "/" + str(players) + " need to exit", Color(1, 0, 0))

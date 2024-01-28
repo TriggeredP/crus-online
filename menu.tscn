@@ -1,4 +1,4 @@
-[gd_scene load_steps=33 format=2]
+[gd_scene load_steps=36 format=2]
 
 [ext_resource path="res://Menu/menu_theme.tres" type="Theme" id=1]
 [ext_resource path="res://Textures/Misc/mainguy_clothes.png" type="Texture" id=2]
@@ -110,11 +110,39 @@ func disable_menu(type):
 script/source = "extends PanelContainer
 
 func set_map_label(string):
-	$VBoxContainer/Map/MapLabel.text = string
+	#$VBoxContainer/Map/MapLabel.text = string
+	pass
 
 func set_gamemode_label(string):
-	$VBoxContainer/Gamemode/GamemodeLabel.text = string
+	#$VBoxContainer/Gamemode/GamemodeLabel.text = string
+	pass
 "
+
+[sub_resource type="GDScript" id=20]
+script/source = "extends HBoxContainer
+
+var Multiplayer
+
+func _ready():
+	Multiplayer = get_tree().get_nodes_in_group(\"Multiplayer\")[0]
+
+func host_button_pressed():
+	Multiplayer.host_server_pt()
+
+func join_button_pressed():
+	Multiplayer.join_to_server_pt($Code.text)
+"
+
+[sub_resource type="StyleBoxEmpty" id=17]
+
+[sub_resource type="GDScript" id=19]
+script/source = "extends TabContainer
+
+func set_tab(index):
+	current_tab = index
+"
+
+[sub_resource type="StyleBoxEmpty" id=18]
 
 [sub_resource type="GDScript" id=16]
 script/source = "extends HBoxContainer
@@ -172,26 +200,6 @@ func _ready():
 func _skin_selected(index):
 	$TextureRect.texture = playerSkins[index][2]
 	get_tree().get_nodes_in_group(\"MultiplayerMenu\")[0].playerInfo[\"skinPath\"] = playerSkins[index][1]
-"
-
-[sub_resource type="GDScript" id=17]
-script/source = "extends PanelContainer
-
-var mapsList = [
-	\"res://MOD_CONTENT/CruS Online/maps/crus_online_lobby.tscn\",
-]
-
-var mapsName = [
-	\"Coop\"
-]
-
-func _ready():
-	for map in mapsName:
-		$HBoxContainer/LevelController/MapList.add_item(map)
-
-func _map_select(index):
-	get_parent().get_node(\"Main\").set_map_label(mapsList[index])
-	get_tree().get_nodes_in_group(\"MultiplayerMenu\")[0].hostSettings[\"map\"] = mapsList[index]
 "
 
 [sub_resource type="GDScript" id=11]
@@ -355,7 +363,7 @@ custom_constants/separation = 5
 [node name="Label" type="Label" parent="CenterContainer/TabContainer/Main/VBoxContainer"]
 margin_right = 641.0
 margin_bottom = 26.0
-text = "Cruelty Squad Online"
+text = "Main menu"
 align = 1
 
 [node name="IpPort" type="HBoxContainer" parent="CenterContainer/TabContainer/Main/VBoxContainer"]
@@ -365,7 +373,7 @@ margin_bottom = 67.0
 alignment = 1
 
 [node name="IpEdit" type="LineEdit" parent="CenterContainer/TabContainer/Main/VBoxContainer/IpPort"]
-margin_right = 249.0
+margin_right = 354.0
 margin_bottom = 36.0
 rect_min_size = Vector2( 249, 36 )
 size_flags_horizontal = 3
@@ -376,16 +384,16 @@ max_length = 15
 placeholder_text = "127.0.0.1"
 
 [node name="Label2" type="Label" parent="CenterContainer/TabContainer/Main/VBoxContainer/IpPort"]
-margin_left = 249.0
+margin_left = 354.0
 margin_top = 5.0
-margin_right = 263.0
+margin_right = 368.0
 margin_bottom = 31.0
 text = ":"
 align = 1
 
 [node name="PortEdit" type="LineEdit" parent="CenterContainer/TabContainer/Main/VBoxContainer/IpPort"]
-margin_left = 263.0
-margin_right = 431.0
+margin_left = 368.0
+margin_right = 536.0
 margin_bottom = 36.0
 theme = ExtResource( 24 )
 text = "8080"
@@ -394,82 +402,330 @@ max_length = 4
 placeholder_text = "8080"
 
 [node name="Label4" type="Label" parent="CenterContainer/TabContainer/Main/VBoxContainer/IpPort"]
-margin_left = 431.0
-margin_top = 5.0
-margin_right = 446.0
-margin_bottom = 31.0
-text = " "
-
-[node name="JoinButton" type="Button" parent="CenterContainer/TabContainer/Main/VBoxContainer/IpPort"]
-margin_left = 446.0
-margin_right = 536.0
-margin_bottom = 36.0
-text = " Join "
-
-[node name="Label3" type="Label" parent="CenterContainer/TabContainer/Main/VBoxContainer/IpPort"]
 margin_left = 536.0
 margin_top = 5.0
 margin_right = 551.0
 margin_bottom = 31.0
 text = " "
 
-[node name="HostButton" type="Button" parent="CenterContainer/TabContainer/Main/VBoxContainer/IpPort"]
+[node name="JoinButton" type="Button" parent="CenterContainer/TabContainer/Main/VBoxContainer/IpPort"]
 margin_left = 551.0
 margin_right = 641.0
 margin_bottom = 36.0
-text = " Host "
+text = " Join "
 
-[node name="Host info" type="Label" parent="CenterContainer/TabContainer/Main/VBoxContainer"]
+[node name="PunchThrouth" type="HBoxContainer" parent="CenterContainer/TabContainer/Main/VBoxContainer"]
 margin_top = 72.0
 margin_right = 641.0
 margin_bottom = 98.0
-text = "Host info"
+alignment = 1
+script = SubResource( 20 )
+
+[node name="Label2" type="Label" parent="CenterContainer/TabContainer/Main/VBoxContainer/PunchThrouth"]
+margin_right = 209.0
+margin_bottom = 26.0
+text = "Punch Throuth:"
 align = 1
 
-[node name="Gamemode" type="HBoxContainer" parent="CenterContainer/TabContainer/Main/VBoxContainer"]
+[node name="Code" type="LineEdit" parent="CenterContainer/TabContainer/Main/VBoxContainer/PunchThrouth"]
+margin_left = 209.0
+margin_right = 431.0
+margin_bottom = 26.0
+size_flags_horizontal = 3
+theme = ExtResource( 24 )
+text = "8080"
+align = 1
+placeholder_text = "8080"
+
+[node name="Label4" type="Label" parent="CenterContainer/TabContainer/Main/VBoxContainer/PunchThrouth"]
+margin_left = 431.0
+margin_right = 446.0
+margin_bottom = 26.0
+text = " "
+
+[node name="JoinButton" type="Button" parent="CenterContainer/TabContainer/Main/VBoxContainer/PunchThrouth"]
+margin_left = 446.0
+margin_right = 536.0
+margin_bottom = 26.0
+text = " Join "
+
+[node name="Label5" type="Label" parent="CenterContainer/TabContainer/Main/VBoxContainer/PunchThrouth"]
+margin_left = 536.0
+margin_right = 551.0
+margin_bottom = 26.0
+text = " "
+
+[node name="HostButton" type="Button" parent="CenterContainer/TabContainer/Main/VBoxContainer/PunchThrouth"]
+margin_left = 551.0
+margin_right = 641.0
+margin_bottom = 26.0
+text = " Host "
+
+[node name="Status" type="HBoxContainer" parent="CenterContainer/TabContainer/Main/VBoxContainer"]
 margin_top = 103.0
 margin_right = 641.0
 margin_bottom = 129.0
+
+[node name="Label" type="Label" parent="CenterContainer/TabContainer/Main/VBoxContainer/Status"]
+margin_right = 104.0
+margin_bottom = 26.0
+text = "Status:"
+
+[node name="Label2" type="Label" parent="CenterContainer/TabContainer/Main/VBoxContainer/Status"]
+margin_left = 104.0
+margin_right = 641.0
+margin_bottom = 26.0
+size_flags_horizontal = 3
+text = "In lobby (Players: 3)"
+align = 2
+
+[node name="Host" type="PanelContainer" parent="CenterContainer/TabContainer"]
+visible = false
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_left = 7.0
+margin_top = 39.0
+margin_right = -7.0
+margin_bottom = -7.0
+rect_min_size = Vector2( 647, 499 )
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/TabContainer/Host"]
+margin_left = 3.0
+margin_top = 3.0
+margin_right = 644.0
+margin_bottom = 496.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
 custom_constants/separation = 5
 
-[node name="Label3" type="Label" parent="CenterContainer/TabContainer/Main/VBoxContainer/Gamemode"]
+[node name="Label" type="Label" parent="CenterContainer/TabContainer/Host/VBoxContainer"]
+margin_right = 641.0
+margin_bottom = 26.0
+text = "Host settings"
+align = 1
+
+[node name="HostMode" type="HBoxContainer" parent="CenterContainer/TabContainer/Host/VBoxContainer"]
+margin_top = 31.0
+margin_right = 641.0
+margin_bottom = 57.0
+
+[node name="Label" type="Label" parent="CenterContainer/TabContainer/Host/VBoxContainer/HostMode"]
+margin_right = 149.0
+margin_bottom = 26.0
+text = "Host mode:"
+
+[node name="OptionButton" type="OptionButton" parent="CenterContainer/TabContainer/Host/VBoxContainer/HostMode"]
+margin_left = 149.0
+margin_right = 641.0
+margin_bottom = 26.0
+size_flags_horizontal = 3
+theme = ExtResource( 24 )
+text = "Private"
+align = 1
+items = [ "Private", null, false, 0, null, "LAN", null, false, 1, null, "Punch-throuth", null, false, 2, null ]
+selected = 0
+
+[node name="Label2" type="Label" parent="CenterContainer/TabContainer/Host/VBoxContainer"]
+margin_top = 62.0
+margin_right = 641.0
+margin_bottom = 88.0
+text = "Info:"
+align = 1
+
+[node name="TabContainer" type="TabContainer" parent="CenterContainer/TabContainer/Host/VBoxContainer"]
+margin_top = 93.0
+margin_right = 641.0
+margin_bottom = 493.0
+size_flags_vertical = 3
+custom_styles/panel = SubResource( 17 )
+tabs_visible = false
+script = SubResource( 19 )
+
+[node name="Private" type="PanelContainer" parent="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer"]
+visible = false
+anchor_right = 1.0
+anchor_bottom = 1.0
+custom_styles/panel = SubResource( 18 )
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer/Private"]
+margin_right = 641.0
+margin_bottom = 400.0
+
+[node name="Label" type="Label" parent="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer/Private/VBoxContainer"]
+margin_right = 641.0
+margin_bottom = 55.0
+text = "Private settings are needed in case you are not going to play with anyone"
+autowrap = true
+
+[node name="LAN" type="PanelContainer" parent="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+custom_styles/panel = SubResource( 18 )
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer/LAN"]
+margin_right = 641.0
+margin_bottom = 400.0
+custom_constants/separation = 5
+
+[node name="Label" type="Label" parent="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer/LAN/VBoxContainer"]
+margin_right = 641.0
+margin_bottom = 113.0
+text = "LAN allows you to play with your friends over a local network. Requires port forwarding, UPnP or VPN if you want to play at a distance"
+autowrap = true
+
+[node name="Placeholder" type="Control" parent="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer/LAN/VBoxContainer"]
+margin_top = 118.0
+margin_right = 641.0
+margin_bottom = 276.0
+size_flags_vertical = 3
+
+[node name="Password" type="HBoxContainer" parent="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer/LAN/VBoxContainer"]
+margin_top = 281.0
+margin_right = 641.0
+margin_bottom = 307.0
+alignment = 1
+
+[node name="Label" type="Label" parent="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer/LAN/VBoxContainer/Password"]
 margin_right = 134.0
 margin_bottom = 26.0
-text = "Gamemode:"
+text = "Password:"
 
-[node name="GamemodeLabel" type="Label" parent="CenterContainer/TabContainer/Main/VBoxContainer/Gamemode"]
-margin_left = 139.0
+[node name="addres" type="LineEdit" parent="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer/LAN/VBoxContainer/Password"]
+margin_left = 134.0
 margin_right = 641.0
 margin_bottom = 26.0
 size_flags_horizontal = 3
-text = "PLACEHOLDER"
+theme = ExtResource( 24 )
+text = "huizalupa"
+align = 1
+secret = true
+placeholder_text = "127.0.0.1"
+
+[node name="Port" type="HBoxContainer" parent="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer/LAN/VBoxContainer"]
+margin_top = 312.0
+margin_right = 641.0
+margin_bottom = 338.0
+alignment = 1
+
+[node name="Label" type="Label" parent="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer/LAN/VBoxContainer/Port"]
+margin_right = 473.0
+margin_bottom = 26.0
+size_flags_horizontal = 3
+text = "Port:"
+
+[node name="PortEdit" type="LineEdit" parent="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer/LAN/VBoxContainer/Port"]
+margin_left = 473.0
+margin_right = 641.0
+margin_bottom = 26.0
+theme = ExtResource( 24 )
+text = "8080"
+align = 1
+max_length = 4
+placeholder_text = "8080"
+
+[node name="UPnP" type="HBoxContainer" parent="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer/LAN/VBoxContainer"]
+margin_top = 343.0
+margin_right = 641.0
+margin_bottom = 369.0
+alignment = 1
+
+[node name="Label" type="Label" parent="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer/LAN/VBoxContainer/UPnP"]
+margin_right = 491.0
+margin_bottom = 26.0
+size_flags_horizontal = 3
+text = "UPnP:"
+
+[node name="Button" type="Button" parent="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer/LAN/VBoxContainer/UPnP"]
+margin_left = 491.0
+margin_right = 641.0
+margin_bottom = 26.0
+text = " Do magic "
+
+[node name="UPnPStatus" type="HBoxContainer" parent="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer/LAN/VBoxContainer"]
+margin_top = 374.0
+margin_right = 641.0
+margin_bottom = 400.0
+alignment = 1
+
+[node name="Label" type="Label" parent="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer/LAN/VBoxContainer/UPnPStatus"]
+margin_right = 320.0
+margin_bottom = 26.0
+size_flags_horizontal = 3
+text = "UPnP status:"
+
+[node name="Label2" type="Label" parent="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer/LAN/VBoxContainer/UPnPStatus"]
+margin_left = 320.0
+margin_right = 641.0
+margin_bottom = 26.0
+size_flags_horizontal = 3
+text = "Not activated"
 align = 2
 
-[node name="Map" type="HBoxContainer" parent="CenterContainer/TabContainer/Main/VBoxContainer"]
-margin_top = 134.0
+[node name="PunchThrouth" type="PanelContainer" parent="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer"]
+visible = false
+anchor_right = 1.0
+anchor_bottom = 1.0
+custom_styles/panel = SubResource( 18 )
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer/PunchThrouth"]
 margin_right = 641.0
-margin_bottom = 160.0
+margin_bottom = 400.0
 custom_constants/separation = 5
 
-[node name="Label3" type="Label" parent="CenterContainer/TabContainer/Main/VBoxContainer/Map"]
-margin_right = 59.0
-margin_bottom = 26.0
-text = "Map:"
+[node name="Label" type="Label" parent="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer/PunchThrouth/VBoxContainer"]
+margin_right = 641.0
+margin_bottom = 142.0
+text = "Punch-Through uses a third-party server to connect with friends, suitable if you do not have the ability to forward ports, do not have UPnP, or you want our game to be displayed in the list of servers"
+autowrap = true
 
-[node name="MapLabel" type="Label" parent="CenterContainer/TabContainer/Main/VBoxContainer/Map"]
-margin_left = 64.0
+[node name="Placeholder" type="Control" parent="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer/PunchThrouth/VBoxContainer"]
+margin_top = 199.0
+margin_right = 641.0
+margin_bottom = 276.0
+size_flags_vertical = 3
+
+[node name="Password" type="HBoxContainer" parent="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer/PunchThrouth/VBoxContainer"]
+margin_top = 147.0
+margin_right = 641.0
+margin_bottom = 173.0
+alignment = 1
+
+[node name="Label" type="Label" parent="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer/PunchThrouth/VBoxContainer/Password"]
+margin_right = 134.0
+margin_bottom = 26.0
+text = "Password:"
+
+[node name="addres" type="LineEdit" parent="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer/PunchThrouth/VBoxContainer/Password"]
+margin_left = 134.0
 margin_right = 641.0
 margin_bottom = 26.0
 size_flags_horizontal = 3
-text = "PLACEHOLDER"
-align = 2
-
-[node name="UPNP" type="Label" parent="CenterContainer/TabContainer/Main/VBoxContainer"]
-margin_top = 165.0
-margin_right = 641.0
-margin_bottom = 191.0
-text = "UPNP"
+theme = ExtResource( 24 )
+text = "huizalupa"
 align = 1
+secret = true
+placeholder_text = "127.0.0.1"
+
+[node name="Server" type="HBoxContainer" parent="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer/PunchThrouth/VBoxContainer"]
+margin_top = 178.0
+margin_right = 641.0
+margin_bottom = 204.0
+alignment = 1
+
+[node name="Label" type="Label" parent="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer/PunchThrouth/VBoxContainer/Server"]
+margin_right = 104.0
+margin_bottom = 26.0
+text = "Server:"
+
+[node name="addres" type="LineEdit" parent="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer/PunchThrouth/VBoxContainer/Server"]
+margin_left = 104.0
+margin_right = 641.0
+margin_bottom = 26.0
+size_flags_horizontal = 3
+theme = ExtResource( 24 )
+text = "https://gayshit.com"
+align = 1
+placeholder_text = "127.0.0.1"
 
 [node name="Player" type="PanelContainer" parent="CenterContainer/TabContainer"]
 visible = false
@@ -643,47 +899,6 @@ margin_left = 385.0
 margin_right = 641.0
 margin_bottom = 256.0
 texture = ExtResource( 2 )
-
-[node name="CO-OP" type="PanelContainer" parent="CenterContainer/TabContainer"]
-visible = false
-anchor_right = 1.0
-anchor_bottom = 1.0
-margin_left = 7.0
-margin_top = 39.0
-margin_right = -7.0
-margin_bottom = -7.0
-rect_min_size = Vector2( 647, 499 )
-size_flags_horizontal = 3
-size_flags_vertical = 3
-script = SubResource( 17 )
-
-[node name="HBoxContainer" type="HBoxContainer" parent="CenterContainer/TabContainer/CO-OP"]
-margin_left = 3.0
-margin_top = 3.0
-margin_right = 644.0
-margin_bottom = 496.0
-alignment = 1
-
-[node name="LevelController" type="VBoxContainer" parent="CenterContainer/TabContainer/CO-OP/HBoxContainer"]
-margin_right = 641.0
-margin_bottom = 493.0
-size_flags_horizontal = 3
-size_flags_vertical = 3
-alignment = 2
-
-[node name="MapLabel" type="Label" parent="CenterContainer/TabContainer/CO-OP/HBoxContainer/LevelController"]
-margin_right = 641.0
-margin_bottom = 26.0
-text = "Maps:"
-align = 1
-
-[node name="MapList" type="ItemList" parent="CenterContainer/TabContainer/CO-OP/HBoxContainer/LevelController"]
-margin_top = 26.0
-margin_right = 641.0
-margin_bottom = 493.0
-rect_pivot_offset = Vector2( -843, 287 )
-size_flags_vertical = 3
-allow_reselect = true
 
 [node name="DM" type="PanelContainer" parent="CenterContainer/TabContainer"]
 visible = false
@@ -865,7 +1080,9 @@ stream = ExtResource( 26 )
 [connection signal="button_pressed" from="Menu" to="." method="enable_menu"]
 [connection signal="button_pressed" from="ExitMenu" to="." method="disable_menu"]
 [connection signal="pressed" from="CenterContainer/TabContainer/Main/VBoxContainer/IpPort/JoinButton" to="." method="join"]
-[connection signal="pressed" from="CenterContainer/TabContainer/Main/VBoxContainer/IpPort/HostButton" to="." method="host"]
+[connection signal="pressed" from="CenterContainer/TabContainer/Main/VBoxContainer/PunchThrouth/JoinButton" to="CenterContainer/TabContainer/Main/VBoxContainer/PunchThrouth" method="join_button_pressed"]
+[connection signal="pressed" from="CenterContainer/TabContainer/Main/VBoxContainer/PunchThrouth/HostButton" to="CenterContainer/TabContainer/Main/VBoxContainer/PunchThrouth" method="host_button_pressed"]
+[connection signal="item_selected" from="CenterContainer/TabContainer/Host/VBoxContainer/HostMode/OptionButton" to="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer" method="set_tab"]
 [connection signal="focus_exited" from="CenterContainer/TabContainer/Player/VBoxContainer/Color/Red" to="CenterContainer/TabContainer/Player/VBoxContainer/Color" method="focus_exited"]
 [connection signal="text_entered" from="CenterContainer/TabContainer/Player/VBoxContainer/Color/Red" to="CenterContainer/TabContainer/Player/VBoxContainer/Color" method="r_change"]
 [connection signal="focus_exited" from="CenterContainer/TabContainer/Player/VBoxContainer/Color/Green" to="CenterContainer/TabContainer/Player/VBoxContainer/Color" method="focus_exited"]
@@ -874,7 +1091,6 @@ stream = ExtResource( 26 )
 [connection signal="text_entered" from="CenterContainer/TabContainer/Player/VBoxContainer/Color/Blue" to="CenterContainer/TabContainer/Player/VBoxContainer/Color" method="b_change"]
 [connection signal="item_selected" from="CenterContainer/TabContainer/Player/VBoxContainer/Image/ItemList" to="CenterContainer/TabContainer/Player/VBoxContainer/Image" method="_skin_selected"]
 [connection signal="item_selected" from="CenterContainer/TabContainer/Player/VBoxContainer/Skin/ItemList" to="CenterContainer/TabContainer/Player/VBoxContainer/Skin" method="_skin_selected"]
-[connection signal="item_selected" from="CenterContainer/TabContainer/CO-OP/HBoxContainer/LevelController/MapList" to="CenterContainer/TabContainer/CO-OP" method="_map_select"]
 [connection signal="item_selected" from="CenterContainer/TabContainer/DM/HBoxContainer/LevelController/GamemodeList" to="CenterContainer/TabContainer/DM" method="_gamemode_select"]
 [connection signal="item_selected" from="CenterContainer/TabContainer/DM/HBoxContainer/LevelController/MapList" to="CenterContainer/TabContainer/DM" method="_map_select"]
 [connection signal="item_selected" from="CenterContainer/TabContainer/Implants/HBoxContainer/ImplantsController/AllowedImplantsList" to="CenterContainer/TabContainer/Implants" method="toggle_implant"]
