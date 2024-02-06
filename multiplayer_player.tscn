@@ -202,7 +202,7 @@ script/source = "extends StaticBody
 onready var client = get_node(\"../../../../../../\")
 
 func _ready():
-	set_meta(\"puppet\", true)
+	set_meta(\"puppet\", -1)
 
 func damage(damage, collision_n, collision_p, shooter_pos):
 	client.do_damage(damage, collision_n, collision_p, shooter_pos)
@@ -244,7 +244,7 @@ bones/0/bound_children = [ NodePath("Chest") ]
 bones/6/bound_children = [ NodePath("RightHand") ]
 
 [node name="Head" parent="Puppet/PlayerModel/Armature/Skeleton" index="0"]
-transform = Transform( 0.97344, -0.0344655, 0.226332, 0.0167783, 0.996685, 0.0796115, -0.228325, -0.0737, 0.970791, -0.00361, 0.616405, 0.037608 )
+transform = Transform( 0.991909, -0.0244706, 0.124566, 0.0131981, 0.995807, 0.0905276, -0.126259, -0.0881516, 0.988073, -0.00361, 0.616596, 0.0347556 )
 
 [node name="Head" type="StaticBody" parent="Puppet/PlayerModel/Armature/Skeleton/Head" index="1"]
 transform = Transform( 0.5, -2.32831e-10, 0, 0, 0.5, -3.72529e-09, 0, 0, 0.5, 0.00151798, 0.125857, 0.0126366 )
@@ -256,7 +256,7 @@ script = SubResource( 65 )
 shape = SubResource( 64 )
 
 [node name="RightHand" type="BoneAttachment" parent="Puppet/PlayerModel/Armature/Skeleton" index="1"]
-transform = Transform( -0.280338, -0.207002, 0.937316, -0.565029, 0.824966, 0.0131963, -0.775985, -0.525911, -0.348231, 0.179518, 0.644707, 0.0373649 )
+transform = Transform( -0.225308, -0.167867, 0.959717, -0.573689, 0.819028, 0.00857538, -0.787475, -0.548647, -0.280837, 0.184686, 0.644877, 0.0359227 )
 bone_name = "right_hand"
 
 [node name="Weapons" type="Spatial" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand"]

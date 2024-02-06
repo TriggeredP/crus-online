@@ -14,6 +14,7 @@ func load_players():
 			var player = preload("res://MOD_CONTENT/CruS Online/multiplayer_player.tscn").instance()
 			player.set_name(key)
 			player.set_network_master(key)
+			player.setup_puppet(key)
 			player.nickname = parent.player_info[key].nickname
 			player.skinPath = parent.player_info[key].skinPath
 			player.color = parent.player_info[key].color

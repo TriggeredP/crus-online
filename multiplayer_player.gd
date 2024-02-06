@@ -115,3 +115,6 @@ func do_damage(damage, collision_n, collision_p, shooter_pos):
 
 func drop_weapon():
 	rpc_id(int(self.name),"_drop_weapon")
+
+func setup_puppet(id):
+	$Puppet/PlayerModel/Armature/Skeleton/Chest/Body.set_meta("puppetId",id)

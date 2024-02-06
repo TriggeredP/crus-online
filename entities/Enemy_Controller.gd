@@ -16,16 +16,16 @@ var mutex
 
 func get_near_player(object) -> Dictionary:
 	var oldDistance = null
-	var player = null
+	var checkPlayer = null
 	
 	for selectedPlayer in get_tree().get_nodes_in_group("Player"):
 		var distance = object.global_transform.origin.distance_to(selectedPlayer.global_transform.origin)
 		if oldDistance == null or oldDistance > distance:
 			oldDistance = distance
-			player = selectedPlayer
+			checkPlayer = selectedPlayer
 	
 	return {
-		"player" : player,
+		"player" : checkPlayer,
 		"distance" : oldDistance
 	}
 
@@ -47,8 +47,10 @@ func AI():
 		for enemy in get_tree().get_nodes_in_group("enemies"):
 			var nearest_player = get_near_player(enemy)
 			
+			player = nearest_player.player
+			
 			mutex.lock()
-			if nearest_player.player == null:
+			if player == null:
 				return 
 			if nearest_player.distance > glob.draw_distance + 10:
 				return 
@@ -57,8 +59,7 @@ func AI():
 			if Global.every_20:
 				enemy.player_distance = nearest_player.distance
 				enemy.stealthed = glob.implants.torso_implant.stealth and enemy.player_distance > 20
-			
-			enemy.height_difference = nearest_player.player.global_transform.origin.y > enemy.global_transform.origin.y and abs(nearest_player.player.global_transform.origin.y - enemy.global_transform.origin.y) > 21
+			enemy.height_difference = player.global_transform.origin.y > enemy.global_transform.origin.y and abs(player.global_transform.origin.y - enemy.global_transform.origin.y) > 21
 			enemy.anim_counter += 1
 			enemy.time += 1
 			if enemy.muzzleflash:
@@ -69,8 +70,6 @@ func AI():
 				return 
 			elif enemy.player_distance > 50 and not Global.every_2:
 				delta *= 2
-			
-			
 			if Global.every_55:
 				if randi() % 2 == 1:
 					enemy.shoot_mode = true
@@ -78,17 +77,16 @@ func AI():
 					enemy.shoot_mode = false
 			if enemy.move_speed == 0:
 				if enemy.player_spotted and not enemy.dead and not enemy.tranq:
-					enemy.rotate_towards = lerp(enemy.rotate_towards, nearest_player.player.global_transform.origin, 6 * delta)
+					enemy.rotate_towards = lerp(enemy.rotate_towards, player.global_transform.origin, 6 * delta)
 					enemy.look_at(enemy.rotate_towards, Vector3.UP)
 					enemy.rotation.x = 0
 				enemy.shoot_mode = true
 			if not enemy.player_spotted and not enemy.dead and not enemy.tranq:
 				enemy.wait_for_player(delta)
 			if Global.every_5:
-				enemy.heading = - Vector3(nearest_player.player.global_transform.origin.x, 0, nearest_player.player.global_transform.origin.z).direction_to(Vector3(enemy.global_transform.origin.x, 0, enemy.global_transform.origin.z))
-				
+				enemy.heading = - Vector3(player.global_transform.origin.x, 0, player.global_transform.origin.z).direction_to(Vector3(enemy.global_transform.origin.x, 0, enemy.global_transform.origin.z))
 				enemy.line_of_sight = enemy.global_transform.origin.direction_to(enemy.forward_helper.global_transform.origin).dot(enemy.heading)
-				enemy.heading_y = (nearest_player.player.global_transform.origin - enemy.global_transform.origin).normalized()
+				enemy.heading_y = (player.global_transform.origin - enemy.global_transform.origin).normalized()
 				enemy.line_of_sight_y = enemy.transform.basis.xform(Vector3.UP).dot(enemy.heading_y)
 			if Global.every_20 and enemy.player_distance < 30:
 				if enemy.velocity_ray.is_colliding():
@@ -111,8 +109,6 @@ func AI():
 							collider.piercing_damage(200, normal, point, enemy.global_transform.origin)
 			enemy.velocity.y -= enemy.gravity * enemy.delta
 			if not enemy.dead and not enemy.tranq:
-				
-		
 				if enemy.player_spotted:
 					enemy.player_spotted()
 				enemy.track_player(delta)

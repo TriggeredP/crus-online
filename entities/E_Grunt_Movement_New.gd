@@ -100,6 +100,12 @@ func get_near_player(object) -> Dictionary:
 		"distance" : oldDistance
 	}
 
+puppet func set_in_sight(value):
+	Global.player.UI.set_in_sight(value)
+
+puppet func set_psychosis(value):
+	Global.player.set_psychosis(value)
+
 ################################################################################
 
 func _ready()->void :
@@ -176,6 +182,10 @@ func _ready()->void :
 	nearby = soul.new_alert_sphere.get_overlapping_bodies()
 	move()
 
+puppet func hide_muzzleflash(hideFlash):
+	if hideFlash:
+		muzzleflash.hide()
+
 func _physics_process(delta)->void :
 	if is_network_master():
 		var nearest_player = get_near_player(self)
@@ -202,6 +212,7 @@ func _physics_process(delta)->void :
 		time += 1
 		if muzzleflash:
 			muzzleflash.hide()
+			rpc("hide_muzzleflash", true)
 		if player_distance > ai_distance:
 			return 
 		if player_distance > 50 and Global.every_2:
@@ -344,13 +355,19 @@ func track_player(delta)->void :
 		player_ray.look_at(player.aim_point.global_transform.origin, Vector3.UP)
 		if player_ray.is_colliding() and not dead and not tranq:
 			var collider = player_ray.get_collider()
-			if collider == player or collider.has_meta("puppet"):
+			if collider == player or collider.has_meta("puppetId"):
 				sight_potential = true
-			if (collider == player or collider.has_meta("puppet")) and line_of_sight > 0 and not height_difference and line_of_sight_y < 0.8 and not stealthed:
+			if (collider == player or collider.has_meta("puppetId")) and line_of_sight > 0 and not height_difference and line_of_sight_y < 0.8 and not stealthed:
 				if not civ_killer:
-					glob.player.UI.set_in_sight(true)
+					if collider.has_meta("puppetId"):
+						rpc_id(collider.get_meta("puppetId"),"set_in_sight", true)
+					else:
+						Global.player.UI.set_in_sight(true)
 				if soul.psychosis_inducer:
-					glob.player.set_psychosis(true)
+					if collider.has_meta("puppetId"):
+						rpc_id(collider.get_meta("puppetId"),"set_psychosis", true)
+					else:
+						Global.player.set_psychosis(true)
 				spot_time -= delta
 				if spot_time < 0:
 					in_sight = true
@@ -360,7 +377,7 @@ func track_player(delta)->void :
 						if is_instance_valid(knocksound):
 							$Knocksound.queue_free()
 					rotation_helper.look_at(player.global_transform.origin + Vector3(0, 2, 0), Vector3.UP)
-			elif collider != player:
+			elif not (collider == player or collider.has_meta("puppet")):
 				in_sight = false
 				sight_potential = false
 		if not in_sight and player_spotted:
