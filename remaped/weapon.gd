@@ -2453,13 +2453,15 @@ func align_up(node_basis, normal)->Basis:
 
 
 func AI_shoot()->void :
-	if current_weapon == null or disabled:
-		return 
-	if magazine_ammo[current_weapon] > 0 and reload_timer.is_stopped():
-		if not player:
-			recoil = 0
-			glob.action_lerp_value += 1
-		shoot()
+	if is_network_master():
+		if current_weapon == null or disabled:
+			return 
+		if magazine_ammo[current_weapon] > 0 and reload_timer.is_stopped():
+			if not player:
+				recoil = 0
+				glob.action_lerp_value += 1
+			shoot()
+
 func alt_fire()->void :
 	if player:
 		

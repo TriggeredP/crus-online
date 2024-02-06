@@ -1,4 +1,4 @@
-[gd_scene load_steps=104 format=2]
+[gd_scene load_steps=105 format=2]
 
 [ext_resource path="res://MOD_CONTENT/CruS Online/multiplayer_player.gd" type="Script" id=1]
 [ext_resource path="res://MOD_CONTENT/CruS Online/player_model/player_model.tscn" type="PackedScene" id=2]
@@ -71,6 +71,12 @@
 [ext_resource path="res://Sfx/wood01.wav" type="AudioStream" id=72]
 [ext_resource path="res://Sfx/Player/kick.wav" type="AudioStream" id=73]
 [ext_resource path="res://Sfx/Player/kickgrunt.wav" type="AudioStream" id=74]
+
+[sub_resource type="GDScript" id=66]
+script/source = "extends Spatial
+
+onready var aim_point = $AimPoint
+"
 
 [sub_resource type="DynamicFontData" id=33]
 font_path = "res://Fonts/Envy Code R.ttf"
@@ -195,6 +201,9 @@ script/source = "extends StaticBody
 
 onready var client = get_node(\"../../../../../../\")
 
+func _ready():
+	set_meta(\"puppet\", true)
+
 func damage(damage, collision_n, collision_p, shooter_pos):
 	client.do_damage(damage, collision_n, collision_p, shooter_pos)
 "
@@ -215,6 +224,10 @@ audio_stream = ExtResource( 74 )
 script = ExtResource( 1 )
 
 [node name="Puppet" type="Spatial" parent="." groups=["Player"]]
+script = SubResource( 66 )
+
+[node name="AimPoint" type="Position3D" parent="Puppet"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.16905, 0 )
 
 [node name="Nickname" type="Label3D" parent="Puppet"]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.88065, 0 )
@@ -231,7 +244,7 @@ bones/0/bound_children = [ NodePath("Chest") ]
 bones/6/bound_children = [ NodePath("RightHand") ]
 
 [node name="Head" parent="Puppet/PlayerModel/Armature/Skeleton" index="0"]
-transform = Transform( 0.985983, -0.0283995, 0.16441, 0.0143176, 0.996174, 0.0862116, -0.166229, -0.0826497, 0.982617, -0.00361, 0.616525, 0.0358664 )
+transform = Transform( 0.97344, -0.0344655, 0.226332, 0.0167783, 0.996685, 0.0796115, -0.228325, -0.0737, 0.970791, -0.00361, 0.616405, 0.037608 )
 
 [node name="Head" type="StaticBody" parent="Puppet/PlayerModel/Armature/Skeleton/Head" index="1"]
 transform = Transform( 0.5, -2.32831e-10, 0, 0, 0.5, -3.72529e-09, 0, 0, 0.5, 0.00151798, 0.125857, 0.0126366 )
@@ -243,7 +256,7 @@ script = SubResource( 65 )
 shape = SubResource( 64 )
 
 [node name="RightHand" type="BoneAttachment" parent="Puppet/PlayerModel/Armature/Skeleton" index="1"]
-transform = Transform( -0.246885, -0.183217, 0.951567, -0.570271, 0.821394, 0.0101939, -0.783479, -0.540134, -0.307273, 0.182689, 0.644811, 0.0364407 )
+transform = Transform( -0.280338, -0.207002, 0.937316, -0.565029, 0.824966, 0.0131963, -0.775985, -0.525911, -0.348231, 0.179518, 0.644707, 0.0373649 )
 bone_name = "right_hand"
 
 [node name="Weapons" type="Spatial" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand"]
@@ -439,7 +452,7 @@ bone_name = "abdomen"
 
 [node name="Body" type="StaticBody" parent="Puppet/PlayerModel/Armature/Skeleton/Chest"]
 transform = Transform( 1, 1.16415e-10, 1.86265e-09, -1.16415e-10, 1, 1.49012e-08, 1.86265e-09, -1.49012e-08, 1, -0.000848833, -0.206449, -0.0201347 )
-collision_layer = 4
+collision_layer = 6
 collision_mask = 0
 script = SubResource( 59 )
 

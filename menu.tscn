@@ -104,6 +104,10 @@ func disable_menu(type):
 	$ExitMenu/ClickSound.play()
 	$Menu.button_enable()
 	$ExitMenu.button_disable()
+
+
+func hoin():
+	pass # Replace with function body.
 "
 
 [sub_resource type="GDScript" id=12]
@@ -373,7 +377,7 @@ margin_bottom = 67.0
 alignment = 1
 
 [node name="IpEdit" type="LineEdit" parent="CenterContainer/TabContainer/Main/VBoxContainer/IpPort"]
-margin_right = 354.0
+margin_right = 249.0
 margin_bottom = 36.0
 rect_min_size = Vector2( 249, 36 )
 size_flags_horizontal = 3
@@ -384,16 +388,16 @@ max_length = 15
 placeholder_text = "127.0.0.1"
 
 [node name="Label2" type="Label" parent="CenterContainer/TabContainer/Main/VBoxContainer/IpPort"]
-margin_left = 354.0
+margin_left = 249.0
 margin_top = 5.0
-margin_right = 368.0
+margin_right = 263.0
 margin_bottom = 31.0
 text = ":"
 align = 1
 
 [node name="PortEdit" type="LineEdit" parent="CenterContainer/TabContainer/Main/VBoxContainer/IpPort"]
-margin_left = 368.0
-margin_right = 536.0
+margin_left = 263.0
+margin_right = 431.0
 margin_bottom = 36.0
 theme = ExtResource( 24 )
 text = "8080"
@@ -402,17 +406,30 @@ max_length = 4
 placeholder_text = "8080"
 
 [node name="Label4" type="Label" parent="CenterContainer/TabContainer/Main/VBoxContainer/IpPort"]
+margin_left = 431.0
+margin_top = 5.0
+margin_right = 446.0
+margin_bottom = 31.0
+text = " "
+
+[node name="JoinButton" type="Button" parent="CenterContainer/TabContainer/Main/VBoxContainer/IpPort"]
+margin_left = 446.0
+margin_right = 536.0
+margin_bottom = 36.0
+text = " Join "
+
+[node name="Label5" type="Label" parent="CenterContainer/TabContainer/Main/VBoxContainer/IpPort"]
 margin_left = 536.0
 margin_top = 5.0
 margin_right = 551.0
 margin_bottom = 31.0
 text = " "
 
-[node name="JoinButton" type="Button" parent="CenterContainer/TabContainer/Main/VBoxContainer/IpPort"]
+[node name="JoinButton2" type="Button" parent="CenterContainer/TabContainer/Main/VBoxContainer/IpPort"]
 margin_left = 551.0
 margin_right = 641.0
 margin_bottom = 36.0
-text = " Join "
+text = " Host "
 
 [node name="PunchThrouth" type="HBoxContainer" parent="CenterContainer/TabContainer/Main/VBoxContainer"]
 margin_top = 72.0
@@ -542,7 +559,6 @@ tabs_visible = false
 script = SubResource( 19 )
 
 [node name="Private" type="PanelContainer" parent="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer"]
-visible = false
 anchor_right = 1.0
 anchor_bottom = 1.0
 custom_styles/panel = SubResource( 18 )
@@ -558,6 +574,7 @@ text = "Private settings are needed in case you are not going to play with anyon
 autowrap = true
 
 [node name="LAN" type="PanelContainer" parent="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer"]
+visible = false
 anchor_right = 1.0
 anchor_bottom = 1.0
 custom_styles/panel = SubResource( 18 )
@@ -1080,6 +1097,7 @@ stream = ExtResource( 26 )
 [connection signal="button_pressed" from="Menu" to="." method="enable_menu"]
 [connection signal="button_pressed" from="ExitMenu" to="." method="disable_menu"]
 [connection signal="pressed" from="CenterContainer/TabContainer/Main/VBoxContainer/IpPort/JoinButton" to="." method="join"]
+[connection signal="pressed" from="CenterContainer/TabContainer/Main/VBoxContainer/IpPort/JoinButton2" to="." method="host"]
 [connection signal="pressed" from="CenterContainer/TabContainer/Main/VBoxContainer/PunchThrouth/JoinButton" to="CenterContainer/TabContainer/Main/VBoxContainer/PunchThrouth" method="join_button_pressed"]
 [connection signal="pressed" from="CenterContainer/TabContainer/Main/VBoxContainer/PunchThrouth/HostButton" to="CenterContainer/TabContainer/Main/VBoxContainer/PunchThrouth" method="host_button_pressed"]
 [connection signal="item_selected" from="CenterContainer/TabContainer/Host/VBoxContainer/HostMode/OptionButton" to="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer" method="set_tab"]
