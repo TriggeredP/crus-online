@@ -21,7 +21,7 @@
 [ext_resource path="res://Textures/Menu/exit_menu_normal.png" type="Texture" id=19]
 [ext_resource path="res://Sfx/NPCs/night_creep_pain_1.wav" type="AudioStream" id=20]
 [ext_resource path="res://MOD_CONTENT/CruS Online/Stats.gd" type="Script" id=21]
-[ext_resource path="res://MOD_CONTENT/CruS Online/holepunch_node.gd" type="Script" id=22]
+[ext_resource path="res://addons/rabidholepuncher/RabidHolePuncher.tscn" type="PackedScene" id=22]
 
 [sub_resource type="DynamicFont" id=12]
 use_filter = true
@@ -70,8 +70,10 @@ font_data = SubResource( 7 )
 [node name="Multiplayer" type="Node" groups=["Multiplayer"]]
 script = ExtResource( 1 )
 
-[node name="HolePuncher" type="Node" parent="."]
-script = ExtResource( 22 )
+[node name="HolePuncher" parent="." instance=ExtResource( 22 )]
+relay_server_address = "194.87.74.129"
+relay_server_port = 25507
+debug = true
 
 [node name="Sync" type="Node" parent="." groups=["Sync"]]
 script = ExtResource( 2 )

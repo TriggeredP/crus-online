@@ -50,16 +50,23 @@ func _ready():
 	audio_player.unit_db = 4
 	audio_player.max_db = 4
 	audio_player.pitch_scale = 0.6
+	
+	if not is_network_master():
+		rpc("_get_transform")
+
+master func _get_transform():
+	rset_unreliable("global_transform", global_transform)
 
 func _physics_process(delta):
 	if is_network_master():
-		rset("global_transform", global_transform)
 		if not open and not stop:
 			rotation.y += rotation_speed * delta
 			rotation_counter += rad2deg(rotation_speed * delta)
+			rset_unreliable("global_transform", global_transform)
 		if open and not stop:
 			rotation.y -= rotation_speed * delta
 			rotation_counter += rad2deg(rotation_speed * delta)
+			rset_unreliable("global_transform", global_transform)
 		if rotation_counter > 90:
 			rotation_counter = 0
 			stop = true
@@ -70,9 +77,9 @@ func get_type():
 master func player_use():
 	if Global.soul_intact:
 		if is_network_master():
-			use()
+			door_use()
 		else:
-			rpc("use")
+			rpc("door_use")
 	elif Global.hope_discarded:
 		Global.player.UI.notify("It hurts.", Color(1, 0, 0))
 		Global.player.UI.notify("It hurts.", Color(1, 0, 0))
@@ -81,6 +88,6 @@ master func player_use():
 	else :
 		Global.player.UI.notify("Feels like something is missing. It won't budge.", Color(0.9, 0.9, 1))
 
-master func use():
+master func door_use():
 	stop = not stop
 	open = not open

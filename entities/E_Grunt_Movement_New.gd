@@ -471,7 +471,7 @@ func find_path(delta)->void :
 					anim_player.play("Run", - 1, anim_speed)
 					rpc("set_animation", "Run", anim_speed)
 				else :
-					rpc("set_animation", "Idle")
+					rpc("set_animation", "Idle", 1)
 				if is_instance_valid(movement_sound):
 					if fmod(time, 5) == 0:
 						movement_sound.pitch_scale = clamp(sin(time * 0.3) + 0.7, 0.5, 2)

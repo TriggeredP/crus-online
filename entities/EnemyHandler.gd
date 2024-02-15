@@ -473,17 +473,20 @@ master func remove_weapon():
 			if weapon.disabled:
 				return 
 			weapon.disabled = true
-			var boneattachment = skeleton.get_node_or_null("Armature/Skeleton/BoneAttachment")
-			if boneattachment:
-				boneattachment.hide()
-			var new_weapon_drop = weapon_drop.instance()
-			get_parent().add_child(new_weapon_drop)
-			new_weapon_drop.global_transform.origin = body.global_transform.origin + Vector3(0, 2, 0)
-			new_weapon_drop.velocity = - (new_weapon_drop.global_transform.origin - glob.player.global_transform.origin).normalized() * 10
-			new_weapon_drop.gun.MESH[new_weapon_drop.gun.current_weapon].hide()
-			new_weapon_drop.gun.current_weapon = weapon.current_weapon
-			new_weapon_drop.gun.ammo = weapon.MAX_MAG_AMMO[weapon.current_weapon]
-			new_weapon_drop.gun.MESH[weapon.current_weapon].show()
+			
+			# TODO: Синхронизировать оружие (1)
+			
+#			var boneattachment = skeleton.get_node_or_null("Armature/Skeleton/BoneAttachment")
+#			if boneattachment:
+#				boneattachment.hide()
+#			var new_weapon_drop = weapon_drop.instance()
+#			get_parent().add_child(new_weapon_drop)
+#			new_weapon_drop.global_transform.origin = body.global_transform.origin + Vector3(0, 2, 0)
+#			new_weapon_drop.velocity = - (new_weapon_drop.global_transform.origin - glob.player.global_transform.origin).normalized() * 10
+#			new_weapon_drop.gun.MESH[new_weapon_drop.gun.current_weapon].hide()
+#			new_weapon_drop.gun.current_weapon = weapon.current_weapon
+#			new_weapon_drop.gun.ammo = weapon.MAX_MAG_AMMO[weapon.current_weapon]
+#			new_weapon_drop.gun.MESH[weapon.current_weapon].show()
 	else:
 		rpc_id(0,"remove_weapon")
 	
@@ -510,13 +513,16 @@ func die(damage, collision_n, collision_p):
 			if not civilian and "current_weapon" in weapon:
 				if "disabled" in weapon:
 					if not weapon.disabled:
-						var new_weapon_drop = weapon_drop.instance()
-						get_parent().add_child(new_weapon_drop)
-						new_weapon_drop.global_transform.origin = body.global_transform.origin + Vector3(0, 1, 0)
-						new_weapon_drop.gun.MESH[new_weapon_drop.gun.current_weapon].hide()
-						new_weapon_drop.gun.current_weapon = weapon.current_weapon
-						new_weapon_drop.gun.ammo = weapon.MAX_MAG_AMMO[weapon.current_weapon]
-						new_weapon_drop.gun.MESH[weapon.current_weapon].show()
+						pass
+						# TODO: Синхронизировать оружие (2)
+						
+#						var new_weapon_drop = weapon_drop.instance()
+#						get_parent().add_child(new_weapon_drop)
+#						new_weapon_drop.global_transform.origin = body.global_transform.origin + Vector3(0, 1, 0)
+#						new_weapon_drop.gun.MESH[new_weapon_drop.gun.current_weapon].hide()
+#						new_weapon_drop.gun.current_weapon = weapon.current_weapon
+#						new_weapon_drop.gun.ammo = weapon.MAX_MAG_AMMO[weapon.current_weapon]
+#						new_weapon_drop.gun.MESH[weapon.current_weapon].show()
 			for particle in all_particles:
 				particle.queue_free()
 			body.set_dead()

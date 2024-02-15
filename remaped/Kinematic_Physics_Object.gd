@@ -46,6 +46,8 @@ var distance
 var glob
 var first_col = true
 
+var change_transform = true
+
 # 3===D
 
 ################################################################################
@@ -110,18 +112,19 @@ func syncUpdate():
 		gun.syncUpdate()
 
 func _ready():
-	if get_tree().network_peer != null:
-		rset_config("holdId",MultiplayerAPI.RPC_MODE_REMOTE)
-		rset_config("disabled",MultiplayerAPI.RPC_MODE_REMOTE)
-		rset_config("usable",MultiplayerAPI.RPC_MODE_REMOTE)
-		rset_config("grill_health",MultiplayerAPI.RPC_MODE_REMOTE)
-		rset_config("damager",MultiplayerAPI.RPC_MODE_REMOTE)
-		rset_config("held",MultiplayerAPI.RPC_MODE_REMOTE)
-		rset_config("grill",MultiplayerAPI.RPC_MODE_REMOTE)
-		rset_config("velocity",MultiplayerAPI.RPC_MODE_REMOTE)
-		rset_config("stay_active",MultiplayerAPI.RPC_MODE_REMOTE)
-		rset_config("finished",MultiplayerAPI.RPC_MODE_REMOTE)
+	rset_config("holdId",MultiplayerAPI.RPC_MODE_REMOTE)
+	rset_config("disabled",MultiplayerAPI.RPC_MODE_REMOTE)
+	rset_config("usable",MultiplayerAPI.RPC_MODE_REMOTE)
+	rset_config("grill_health",MultiplayerAPI.RPC_MODE_REMOTE)
+	rset_config("damager",MultiplayerAPI.RPC_MODE_REMOTE)
+	rset_config("held",MultiplayerAPI.RPC_MODE_REMOTE)
+	rset_config("grill",MultiplayerAPI.RPC_MODE_REMOTE)
+	rset_config("velocity",MultiplayerAPI.RPC_MODE_REMOTE)
+	rset_config("stay_active",MultiplayerAPI.RPC_MODE_REMOTE)
+	rset_config("finished",MultiplayerAPI.RPC_MODE_REMOTE)
 	
+	rset_config("global_transform",MultiplayerAPI.RPC_MODE_REMOTE)
+
 	glob = Global
 	set_process(false)
 	if particle:
@@ -149,11 +152,15 @@ func _ready():
 		yield (get_tree(), "idle_frame")
 		angular_velocity = Vector2(velocity.x, velocity.z).length()
 	
-	if get_tree().network_peer != null and not is_network_master() and not isClientOnly:
+	if not is_network_master():
 		axis_lock_motion_x = true
 		axis_lock_motion_y = true
 		axis_lock_motion_z = true
+		
+		rpc("_get_transform")
 
+master func _get_transform():
+	rset_unreliable("global_transform", global_transform)
 
 func _physics_process(delta):
 	if disabled:
@@ -163,22 +170,26 @@ func _physics_process(delta):
 
 	t += 1
 	
-	var net = get_tree().network_peer
-	
-	if isClientOnly:
-		net = null
-	
 	if held and get_tree().get_network_unique_id() == holdId:
 		self.global_transform.origin = Global.player.weapon.hold_pos.global_transform.origin
-		var err = rpc_unreliable("_set_transform",global_transform)
-		print(err)
-	elif net != null and is_network_master():
-		rpc_unreliable("_set_transform",global_transform)
+		rset_unreliable("global_transform", global_transform)
+	elif is_network_master() and change_transform:
+		rset_unreliable("global_transform", global_transform)
 
-	if get_tree().network_peer == null or is_network_master() or isClientOnly:
-		if Global.fps < 30 and not player_head:
-			if global_transform.origin.distance_to(glob.player.global_transform.origin) > 20:
-				return 
+	if is_network_master():
+		
+		if fmod(t, 300) == 0 and (velocity.x < 0.01 and velocity.y < 0.01):
+			rset_unreliable("global_transform", global_transform)
+			change_transform = false
+		elif fmod(t, 1200) == 0:
+			rset_unreliable("global_transform", global_transform)
+		
+		if velocity.x > 0.05 or velocity.y > 0.05:
+			change_transform = true
+		
+#		if Global.fps < 30 and not player_head:
+#			if global_transform.origin.distance_to(glob.player.global_transform.origin) > 20:
+#				return 
 
 		if not stay_active and not gun_rotation or global_transform.origin.distance_to(glob.player.global_transform.origin) > 30:
 			if fmod(t, 2) == 0:
@@ -195,22 +206,19 @@ func _physics_process(delta):
 			var new_healing = grill_healing_item.instance()
 			add_child(new_healing)
 			new_healing.global_transform.origin = global_transform.origin
-			if net != null:
-				rpc("_grill",new_healing.global_transform.origin)
+			rpc("_grill",new_healing.global_transform.origin)
 		
 		if collidable:
 			if Vector2(velocity.x, velocity.z).length() > 5:
 				set_collision_layer_bit(0, 0)
 				set_collision_mask_bit(2, 1)
 				set_collision_mask_bit(3, 1)
-				if net != null:
-					rpc("_set_collision",0,1)
+				rpc("_set_collision",0,1)
 			elif not held:
 				set_collision_layer_bit(0, 1)
 				set_collision_mask_bit(2, 0)
 				set_collision_mask_bit(3, 0)
-				if net != null:
-					rpc("_set_collision",1,0)
+				rpc("_set_collision",1,0)
 		
 		if player_head:
 			rot_towards = lerp(rot_towards, global_transform.origin - velocity, 5 * delta)
@@ -223,8 +231,6 @@ func _physics_process(delta):
 			gravity = 22
 
 		if finished:
-			if net != null:
-				rpc("_sync_vars",disabled,usable,grill_health,sphere_collision.disabled,damager,held)
 			return 
 		
 		if gun_rotation:
@@ -251,8 +257,7 @@ func _physics_process(delta):
 				get_tree().get_nodes_in_group("Sync")[0].add_child(new_blood_decal)
 				new_blood_decal.global_transform.origin = collision.position
 				new_blood_decal.transform.basis = align_up(new_blood_decal.transform.basis, collision.normal)
-				if net != null:
-					rpc("_create_blood_decal",collision.collider,new_blood_decal.global_transform.origin,new_blood_decal.transform.basis)
+				rpc("_create_blood_decal",collision.collider,new_blood_decal.global_transform.origin,new_blood_decal.transform.basis)
 			if Vector2(velocity.x, velocity.z).length() > 5 and (gun_rotation or glob.implants.arm_implant.throw_bonus > 0):
 				if collision.collider.has_method("damage"):
 					if collision.collider.client.name != str(playerIgnoreId):
@@ -269,9 +274,8 @@ func _physics_process(delta):
 				var new_gas_cloud = gas_cloud.instance()
 				get_parent().add_child(new_gas_cloud)
 				new_gas_cloud.global_transform.origin = global_transform.origin
-				if net != null:
-					rpc("_spawn_fake_gas",new_gas_cloud.global_transform.origin)
-					rpc("_remove")
+				rpc("_spawn_fake_gas",new_gas_cloud.global_transform.origin)
+				rpc("_remove")
 				queue_free()
 			velocity = velocity.bounce(collision.normal) * 0.6
 			angular_velocity = Vector2(velocity.x, velocity.z).length()
@@ -283,9 +287,6 @@ func _physics_process(delta):
 				particle_node.emitting = false
 				particle_node.hide()
 		velocity.y -= gravity * delta
-		
-	if net != null:
-		rpc("_sync_vars",disabled,usable,grill_health,sphere_collision.disabled,damager,held)
 
 func align_up(node_basis, normal)->Basis:
 	var result = Basis()

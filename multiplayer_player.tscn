@@ -244,7 +244,7 @@ bones/0/bound_children = [ NodePath("Chest") ]
 bones/6/bound_children = [ NodePath("RightHand") ]
 
 [node name="Head" parent="Puppet/PlayerModel/Armature/Skeleton" index="0"]
-transform = Transform( 0.991909, -0.0244706, 0.124566, 0.0131981, 0.995807, 0.0905276, -0.126259, -0.0881516, 0.988073, -0.00361, 0.616596, 0.0347556 )
+transform = Transform( 0.984369, -0.0293086, 0.173657, 0.0146291, 0.996255, 0.0852166, -0.175505, -0.0813446, 0.981112, -0.00361, 0.616508, 0.0361252 )
 
 [node name="Head" type="StaticBody" parent="Puppet/PlayerModel/Armature/Skeleton/Head" index="1"]
 transform = Transform( 0.5, -2.32831e-10, 0, 0, 0.5, -3.72529e-09, 0, 0, 0.5, 0.00151798, 0.125857, 0.0126366 )
@@ -256,7 +256,7 @@ script = SubResource( 65 )
 shape = SubResource( 64 )
 
 [node name="RightHand" type="BoneAttachment" parent="Puppet/PlayerModel/Armature/Skeleton" index="1"]
-transform = Transform( -0.225308, -0.167867, 0.959717, -0.573689, 0.819028, 0.00857538, -0.787475, -0.548647, -0.280837, 0.184686, 0.644877, 0.0359227 )
+transform = Transform( -0.251886, -0.186773, 0.949562, -0.569482, 0.821935, 0.0106044, -0.78246, -0.538088, -0.313398, 0.182221, 0.644796, 0.0365694 )
 bone_name = "right_hand"
 
 [node name="Weapons" type="Spatial" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand"]

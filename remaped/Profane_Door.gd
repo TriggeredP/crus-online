@@ -53,13 +53,14 @@ func _ready():
 
 func _physics_process(delta):
 	if is_network_master():
-		rset("global_transform", global_transform)
 		if not open and not stop:
 			rotation.y += rotation_speed * delta
 			rotation_counter += rad2deg(rotation_speed * delta)
+			rset_unreliable("global_transform", global_transform)
 		if open and not stop:
 			rotation.y -= rotation_speed * delta
 			rotation_counter += rad2deg(rotation_speed * delta)
+			rset_unreliable("global_transform", global_transform)
 		if rotation_counter > 90:
 			rotation_counter = 0
 			stop = true
@@ -70,13 +71,13 @@ func get_type():
 master func player_use():
 	if Global.husk_mode:
 		if is_network_master():
-			use()
+			door_use()
 		else:
-			rpc("use")
-	else :
+			rpc("door_use")
+	else:
 		Global.player.UI.notify("It repulses you.", Color(0.5, 0.5, 0))
 		Global.player.player_velocity -= (global_transform.origin - Global.player.global_transform.origin).normalized() * 5
 
-master func use():
+master func door_use():
 	stop = not stop
 	open = not open

@@ -33,31 +33,38 @@ onready var Hint = $Hint
 func _ready():
 	if not load_data():
 		save_data()
-	
-	HolePuncher.rendevouz_address = "194.87.74.129"
-	HolePuncher.rendevouz_port = "25507"
-	HolePuncher.port_cascade_range = 20
-	HolePuncher.response_window = 10
-	
+
+	HolePuncher.connect("holepunch_success", self, "_on_holepunch_success")
+	HolePuncher.connect("holepunch_progress_update", self, "_on_holepunch_progress_update")
+	HolePuncher.connect("holepunch_failure", self, "_on_holepunch_failure")
+
+
 	get_tree().connect("network_peer_connected", self, "_connected")
 	get_tree().connect("network_peer_disconnected", self, "_disconnected")
 
+func _on_holepunch_success(self_port, host_ip, host_port):
+	print(self_port, host_ip, host_port)
+
+func _on_holepunch_progress_update(type, session_name, player_names):
+	if HolePuncher.is_host():
+		HolePuncher.start_session()
+	print(type, session_name, player_names)
+
+func _on_holepunch_failure(error):
+	print(error)
+
 func host_server_pt():
-	var code = str(int(rand_range(0,10000000000000000)))
+	var code = str(int(rand_range(0,1000000000)))
 	print(code)
 	
-	HolePuncher.start_traversal(code,true,"host")
-	var result = yield(HolePuncher, 'hole_punched')
-	
-	print(result)
+	HolePuncher.create_session(code, "host", 2, "12345")
 
 func join_to_server_pt(gameCode):
-	HolePuncher.start_traversal(gameCode,false,"client")
-	var result = yield(HolePuncher, 'hole_punched')
-	
-	print(result)
+	HolePuncher.join_session(gameCode, "client", 2, "12345")
 
 func host_server(port, recivedHostSettings = null):
+	save_data()
+	
 	if recivedHostSettings != null:
 		hostSettings = recivedHostSettings
 	var server = NetworkedMultiplayerENet.new()
@@ -78,6 +85,8 @@ func host_server(port, recivedHostSettings = null):
 	print("Server hosted")
 
 func join_to_server(ip,port):
+	save_data()
+	
 	var client = NetworkedMultiplayerENet.new()
 	client.create_client(ip,port)
 	get_tree().set_network_peer(client)
@@ -109,16 +118,16 @@ func _connected(id):
 
 master func connect_init():
 	var id = get_tree().get_rpc_sender_id()
-	rpc_id(id,"client_connect_init",hostSettings,player_info)
+	rpc_id(id,"client_connect_init", hostSettings, player_info, Global.CURRENT_LEVEL)
 	print("[HOST]: Client Connect Init")
 
-puppet func client_connect_init(recivedHostSettings,recivedPlayerInfo):
+puppet func client_connect_init(recivedHostSettings,recivedPlayerInfo, level):
 	hostSettings = recivedHostSettings
 	player_info = recivedPlayerInfo
 	
 	Global.menu.hide()
 	Global.menu.set_process_input(false)
-	goto_scene_client(hostSettings.map)
+	goto_scene_client(hostSettings.map, level)
 	Menu.set_process_input(true)
 	
 	dataLoaded = true
@@ -152,10 +161,11 @@ puppet func sync_players(info):
 
 func goto_scene_host(scene):
 	Global.goto_scene(scene)
-	rpc("goto_scene_client",scene)
+	rpc("goto_scene_client", scene, Global.CURRENT_LEVEL)
 	print("[HOST]: goto to scene [" + scene + "]")
 
-puppet func goto_scene_client(scene):
+puppet func goto_scene_client(scene, level):
+	Global.CURRENT_LEVEL = level
 	Global.goto_scene(scene)
 	print("[CLIENT]: goto to scene [" + scene + "]")
 

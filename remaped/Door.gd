@@ -52,17 +52,22 @@ func _ready():
 	audio_player.pitch_scale = 0.6
 	
 	if not is_network_master():
+		rpc("_get_transform")
 		rpc("check_removed")
+
+master func _get_transform():
+	rset_unreliable("global_transform", global_transform)
 
 func _physics_process(delta):
 	if is_network_master():
-		rset("global_transform", global_transform)
 		if not open and not stop:
 			rotation.y += rotation_speed * delta
 			rotation_counter += rad2deg(rotation_speed * delta)
+			rset_unreliable("global_transform", global_transform)
 		if open and not stop:
 			rotation.y -= rotation_speed * delta
 			rotation_counter += rad2deg(rotation_speed * delta)
+			rset_unreliable("global_transform", global_transform)
 		if rotation_counter > 90:
 			rotation_counter = 0
 			stop = true

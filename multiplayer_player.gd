@@ -15,6 +15,8 @@ var skinPath = "res://Textures/Misc/mainguy_clothes.png"
 var nickname = "MT Foxtrot"
 var color = "ff0000"
 
+var transform_lerp : Transform
+
 onready var animTree = $Puppet/PlayerModel/AnimTree
 
 remote func _do_damage(damage, collision_n, collision_p, shooter_pos, damagerId):
@@ -31,9 +33,7 @@ remote func _set_death(death):
 		animTree.set("parameters/DEATH1/active", false)
 		animTree.active = true
 
-remote func _update_puppet(pos,weaponId,playerIsDead,playerOnFloor,playerMovement,playerAim,playerKick,playerCrouch):
-	$Puppet.global_transform = pos
-	
+remote func _update_puppet(weaponId,playerIsDead,playerOnFloor,playerMovement,playerAim,playerKick,playerCrouch):
 	jumpBlend = lerp(jumpBlend,abs(floor(playerOnFloor) - 1),0.1)
 	movementBlend[0] = lerp(movementBlend[0],playerMovement[0],0.1)
 	movementBlend[1] = lerp(movementBlend[1],playerMovement[1],0.1)
@@ -78,6 +78,8 @@ func _ready():
 	$Puppet/PlayerModel/Armature/Skeleton/Torso_Mesh.material_override = skinMaterial
 	$Puppet/Nickname.text = nickname
 	$Puppet/Nickname.modulate = Color(color)
+	
+	rset_config("transform_lerp", MultiplayerAPI.RPC_MODE_REMOTE)
 
 func play_death_sound():
 	$Puppet/PlayerModel/SFX/IED1.play()
@@ -96,10 +98,14 @@ func play_explosion_sound():
 func _process(delta):
 	if $Puppet/PlayerModel/SFX/IED_alert.playing:
 		$Puppet/PlayerModel/SFX/IED_alert.pitch_scale += 0.025
-	
+
+	global_transform = global_transform.interpolate_with(transform_lerp, delta * 15.0)
+
+func _physics_process(delta):
 	if is_network_master():
-		rpc_unreliable("_update_puppet",
-			Global.player.global_transform,
+		rset_unreliable("transform_lerp", Global.player.global_transform)
+		
+		rpc("_update_puppet",
 			Global.player.weapon.current_weapon,
 			Global.player.dead,
 			Global.player.is_on_floor(),

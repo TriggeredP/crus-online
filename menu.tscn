@@ -335,15 +335,16 @@ volume_db = 0.0
 pitch_scale = 1.0
 
 [node name="CenterContainer" type="CenterContainer" parent="."]
+visible = false
 margin_left = 229.0
 margin_right = 1280.0
 margin_bottom = 720.0
 
 [node name="TabContainer" type="TabContainer" parent="CenterContainer"]
-margin_left = 195.0
-margin_top = 87.0
-margin_right = 856.0
-margin_bottom = 632.0
+margin_left = 518.0
+margin_top = 337.0
+margin_right = 532.0
+margin_bottom = 383.0
 
 [node name="Main" type="PanelContainer" parent="CenterContainer/TabContainer"]
 anchor_right = 1.0
