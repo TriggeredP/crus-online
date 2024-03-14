@@ -6,6 +6,23 @@ var hostSettings = {
 	"bannedImplants": []
 }
 
+func multiplayer_exit():
+	visible = true
+	in_game = false
+	menu[START].show()
+	hide_buttons(menu[START], 2, 4)
+	
+	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+
+func multiplayer_enter():
+	visible = false
+	in_game = true
+	menu[START].hide()
+	#hide_buttons(menu[START], 2, 4)
+	$Hover_Panel.hide()
+	
+	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+
 enum {UP, RIGHT, DOWN, LEFT}
 enum {KEY_FORWARD, KEY_LEFT, KEY_RIGHT, KEY_BACK, KEY_SHOOT, KEY_JUMP, KEY_CROUCH, KEY_RELOAD, KEY_ZOOM, KEY_USE, KEY_KICK, KEY_LEAN_LEFT, KEY_LEAN_RIGHT, KEY_WEAPON1, KEY_WEAPON2, KEY_LAST_WEAPON, KEY_TERTIARY, KEY_THROW_WEAPON, KEY_SUICIDE, KEY_STOCKS}
 enum {START, LEVEL_SELECT, WEAPON_SELECT, IN_GAME, LEVEL_END, SETTINGS, CHARACTER, STOCKS}
@@ -798,22 +815,22 @@ func _on_Return_Button_Pressed(m:int, button_id:TextureButton):
 		$Level_Info_Grid / HBoxContainer / Description_Scroll / Description.speech_break = true
 
 func _on_Mission_Start_Pressed(m:int, button_id:TextureButton):
-	Global.STOCKS.save_stocks("user://stocks.save")
-	goto_menu(m, START, button_id)
-	toggle_menu()
-	show_buttons(menu[START], 2, 4)
-	$Hover_Panel.hide()
-	in_game = true
-	if weapon_1 <= 3 and weapon_2 <= 3:
-		Global.stock_mode = true
-	else :
-		Global.stock_mode = false
-	print(Global.stock_mode)
-	$Level_Info_Grid / HBoxContainer / Description_Scroll / Description.speech_break = true
-	#Global.goto_scene(Global.LEVELS[Global.CURRENT_LEVEL])
-	
-	hostSettings.map = Global.LEVELS[Global.CURRENT_LEVEL]
-	Multiplayer.host_server(8080,hostSettings)
+	if Multiplayer.game_init(Global.LEVELS[Global.CURRENT_LEVEL]):
+		Global.STOCKS.save_stocks("user://stocks.save")
+		goto_menu(m, START, button_id)
+		toggle_menu()
+		show_buttons(menu[START], 2, 4)
+		$Hover_Panel.hide()
+		in_game = true
+		if weapon_1 <= 3 and weapon_2 <= 3:
+			Global.stock_mode = true
+		else :
+			Global.stock_mode = false
+		print(Global.stock_mode)
+		$Level_Info_Grid / HBoxContainer / Description_Scroll / Description.speech_break = true
+		#Global.goto_scene(Global.LEVELS[Global.CURRENT_LEVEL])
+		
+		#Multiplayer.host_server(8080,hostSettings)
 
 func _on_Level_Pressed(m:int, button_id:TextureButton):
 	
@@ -1196,9 +1213,8 @@ func toggle_menu():
 		else :
 			Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 		if (in_game):
-			get_tree().paused = not get_tree().paused
-	
-
+			#get_tree().paused = not get_tree().paused
+			pass
 
 func _on_Master_Volume_value_changed(value):
 	AudioServer.set_bus_volume_db(AudioServer.get_bus_index("Master"), value)
@@ -1251,11 +1267,10 @@ func _on_Exit_Menu_Pressed(m:int, b:Button):
 	Global.goto_scene("res://MOD_CONTENT/CruS Online/maps/crus_online_lobby.tscn")
 	in_game = false
 	menu[START].show()
-	get_tree().paused = false
+	#get_tree().paused = false
 	active_element.hide()
 	active_element.go()
 	hide_buttons(menu[START], 2, 4)
-
 
 func _on_Exit_Level_Select_Pressed(m:int, b:Button):
 	$Hover_Panel.hide()
@@ -1270,7 +1285,7 @@ func _on_Exit_Level_Select_Pressed(m:int, b:Button):
 	Global.goto_scene("res://MOD_CONTENT/CruS Online/maps/crus_online_lobby.tscn")
 	in_game = false
 	menu[START].show()
-	get_tree().paused = false
+	#get_tree().paused = false
 	if active_element:
 		active_element.hide()
 		active_element.go()
@@ -1291,31 +1306,33 @@ func _on_qb():
 	_on_Quit_Button_Pressed(START, menu[START].get_child(0))
 
 func _on_Retry_Button_Pressed(m:int, b:TextureButton):
-	Global.STOCKS.save_stocks("user://stocks.save")
-	$Hover_Panel.hide()
-	get_node("Soul_Rended").hide()
-	if active_element == $Level_End_Grid:
-		active_element.hide()
-		active_element = null
-		if ( not Global.objective_complete and not Global.player.died) or Global.objective_complete:
-			if Global.CURRENT_LEVEL < Global.L_PUNISHMENT:
-				Global.CURRENT_LEVEL -= 1
-		else :
-			get_tree().paused = true
-	menu[START].show()
-	Global.objective_complete = false
-	Global.objectives = 0
-	toggle_menu()
-	
-	for w in range(Global.CURRENT_WEAPONS.size()):
-		if w == weapon_1 or w == weapon_2:
-			Global.CURRENT_WEAPONS[w] = true
-		else :
-			Global.CURRENT_WEAPONS[w] = false
-	#Global.goto_scene(Global.LEVELS[Global.CURRENT_LEVEL])
-	
-	hostSettings.map = Global.LEVELS[Global.CURRENT_LEVEL]
-	Multiplayer.host_server(8080,hostSettings)
+	if Multiplayer.game_init(Global.LEVELS[Global.CURRENT_LEVEL]):
+		Global.STOCKS.save_stocks("user://stocks.save")
+		$Hover_Panel.hide()
+		get_node("Soul_Rended").hide()
+		if active_element == $Level_End_Grid:
+			active_element.hide()
+			active_element = null
+			if ( not Global.objective_complete and not Global.player.died) or Global.objective_complete:
+				if Global.CURRENT_LEVEL < Global.L_PUNISHMENT:
+					Global.CURRENT_LEVEL -= 1
+			else :
+				#get_tree().paused = true
+				pass
+		menu[START].show()
+		Global.objective_complete = false
+		Global.objectives = 0
+		toggle_menu()
+		
+		for w in range(Global.CURRENT_WEAPONS.size()):
+			if w == weapon_1 or w == weapon_2:
+				Global.CURRENT_WEAPONS[w] = true
+			else :
+				Global.CURRENT_WEAPONS[w] = false
+		#Global.goto_scene(Global.LEVELS[Global.CURRENT_LEVEL])
+		
+		hostSettings.map = Global.LEVELS[Global.CURRENT_LEVEL]
+		#Multiplayer.host_server(8080,hostSettings)
 
 
 func _on_Key_List_item_activated(index):

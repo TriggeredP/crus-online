@@ -1,4 +1,4 @@
-[gd_scene load_steps=36 format=2]
+[gd_scene load_steps=33 format=2]
 
 [ext_resource path="res://Menu/menu_theme.tres" type="Theme" id=1]
 [ext_resource path="res://Textures/Misc/mainguy_clothes.png" type="Texture" id=2]
@@ -10,6 +10,7 @@
 [ext_resource path="res://Textures/Menu/Handler/3.png" type="Texture" id=8]
 [ext_resource path="res://Textures/Menu/Handler/4.png" type="Texture" id=9]
 [ext_resource path="res://Textures/Menu/Handler/2.png" type="Texture" id=10]
+[ext_resource path="res://MOD_CONTENT/CruS Online/redpanel.tres" type="StyleBox" id=11]
 [ext_resource path="res://Textures/Menu/return_normal.png" type="Texture" id=12]
 [ext_resource path="res://Textures/NPC/cultist_civilian.png" type="Texture" id=15]
 [ext_resource path="res://Textures/NPC/bosssguy_clothes.png" type="Texture" id=16]
@@ -113,40 +114,33 @@ func hoin():
 [sub_resource type="GDScript" id=12]
 script/source = "extends PanelContainer
 
-func set_map_label(string):
-	#$VBoxContainer/Map/MapLabel.text = string
-	pass
-
-func set_gamemode_label(string):
-	#$VBoxContainer/Gamemode/GamemodeLabel.text = string
-	pass
-"
-
-[sub_resource type="GDScript" id=20]
-script/source = "extends HBoxContainer
-
-var Multiplayer
+onready var playersList = $VBoxContainer/PlayersList/PlayersListLabel
+onready var status = $VBoxContainer/Status/StatusLabel
 
 func _ready():
-	Multiplayer = get_tree().get_nodes_in_group(\"Multiplayer\")[0]
+	playersList.clear()
+	
+	get_tree().get_nodes_in_group(\"Multiplayer\")[0].connect(\"status_update\", self, \"update_status\")
+	get_tree().get_nodes_in_group(\"Multiplayer\")[0].connect(\"players_update\", self, \"update_players_info\")
 
-func host_button_pressed():
-	Multiplayer.host_server_pt()
+func update_status(new_status):
+	status.text = new_status
 
-func join_button_pressed():
-	Multiplayer.join_to_server_pt($Code.text)
+func update_players_info(info):
+	var playerNumber = 1
+	playersList.clear()
+	
+	for player in info:
+		print(info[player])
+		playersList.text += str(playerNumber) + \": \" + info[player].nickname
+		
+		if player == 1:
+			playersList.text += \" (host)\\n\"
+		else:
+			playersList.text += \"\\n\"
+		
+		playerNumber += 1
 "
-
-[sub_resource type="StyleBoxEmpty" id=17]
-
-[sub_resource type="GDScript" id=19]
-script/source = "extends TabContainer
-
-func set_tab(index):
-	current_tab = index
-"
-
-[sub_resource type="StyleBoxEmpty" id=18]
 
 [sub_resource type="GDScript" id=16]
 script/source = "extends HBoxContainer
@@ -335,16 +329,15 @@ volume_db = 0.0
 pitch_scale = 1.0
 
 [node name="CenterContainer" type="CenterContainer" parent="."]
-visible = false
 margin_left = 229.0
 margin_right = 1280.0
 margin_bottom = 720.0
 
 [node name="TabContainer" type="TabContainer" parent="CenterContainer"]
-margin_left = 518.0
-margin_top = 337.0
-margin_right = 532.0
-margin_bottom = 383.0
+margin_left = 195.0
+margin_top = 87.0
+margin_right = 856.0
+margin_bottom = 632.0
 
 [node name="Main" type="PanelContainer" parent="CenterContainer/TabContainer"]
 anchor_right = 1.0
@@ -432,70 +425,40 @@ margin_right = 641.0
 margin_bottom = 36.0
 text = " Host "
 
-[node name="PunchThrouth" type="HBoxContainer" parent="CenterContainer/TabContainer/Main/VBoxContainer"]
+[node name="Status" type="HBoxContainer" parent="CenterContainer/TabContainer/Main/VBoxContainer"]
 margin_top = 72.0
 margin_right = 641.0
 margin_bottom = 98.0
-alignment = 1
-script = SubResource( 20 )
-
-[node name="Label2" type="Label" parent="CenterContainer/TabContainer/Main/VBoxContainer/PunchThrouth"]
-margin_right = 209.0
-margin_bottom = 26.0
-text = "Punch Throuth:"
-align = 1
-
-[node name="Code" type="LineEdit" parent="CenterContainer/TabContainer/Main/VBoxContainer/PunchThrouth"]
-margin_left = 209.0
-margin_right = 431.0
-margin_bottom = 26.0
-size_flags_horizontal = 3
-theme = ExtResource( 24 )
-text = "8080"
-align = 1
-placeholder_text = "8080"
-
-[node name="Label4" type="Label" parent="CenterContainer/TabContainer/Main/VBoxContainer/PunchThrouth"]
-margin_left = 431.0
-margin_right = 446.0
-margin_bottom = 26.0
-text = " "
-
-[node name="JoinButton" type="Button" parent="CenterContainer/TabContainer/Main/VBoxContainer/PunchThrouth"]
-margin_left = 446.0
-margin_right = 536.0
-margin_bottom = 26.0
-text = " Join "
-
-[node name="Label5" type="Label" parent="CenterContainer/TabContainer/Main/VBoxContainer/PunchThrouth"]
-margin_left = 536.0
-margin_right = 551.0
-margin_bottom = 26.0
-text = " "
-
-[node name="HostButton" type="Button" parent="CenterContainer/TabContainer/Main/VBoxContainer/PunchThrouth"]
-margin_left = 551.0
-margin_right = 641.0
-margin_bottom = 26.0
-text = " Host "
-
-[node name="Status" type="HBoxContainer" parent="CenterContainer/TabContainer/Main/VBoxContainer"]
-margin_top = 103.0
-margin_right = 641.0
-margin_bottom = 129.0
 
 [node name="Label" type="Label" parent="CenterContainer/TabContainer/Main/VBoxContainer/Status"]
 margin_right = 104.0
 margin_bottom = 26.0
 text = "Status:"
 
-[node name="Label2" type="Label" parent="CenterContainer/TabContainer/Main/VBoxContainer/Status"]
+[node name="StatusLabel" type="Label" parent="CenterContainer/TabContainer/Main/VBoxContainer/Status"]
 margin_left = 104.0
 margin_right = 641.0
 margin_bottom = 26.0
 size_flags_horizontal = 3
-text = "In lobby (Players: 3)"
+text = "Offline"
 align = 2
+
+[node name="PlayersList" type="PanelContainer" parent="CenterContainer/TabContainer/Main/VBoxContainer"]
+margin_top = 103.0
+margin_right = 641.0
+margin_bottom = 493.0
+size_flags_vertical = 3
+custom_styles/panel = ExtResource( 11 )
+
+[node name="PlayersListLabel" type="RichTextLabel" parent="CenterContainer/TabContainer/Main/VBoxContainer/PlayersList"]
+margin_left = 10.0
+margin_top = 5.0
+margin_right = 631.0
+margin_bottom = 385.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+text = "1: TriggeredP (Host)
+2: Xuesos"
 
 [node name="Host" type="PanelContainer" parent="CenterContainer/TabContainer"]
 visible = false
@@ -522,93 +485,18 @@ margin_bottom = 26.0
 text = "Host settings"
 align = 1
 
-[node name="HostMode" type="HBoxContainer" parent="CenterContainer/TabContainer/Host/VBoxContainer"]
+[node name="Password" type="HBoxContainer" parent="CenterContainer/TabContainer/Host/VBoxContainer"]
 margin_top = 31.0
 margin_right = 641.0
 margin_bottom = 57.0
-
-[node name="Label" type="Label" parent="CenterContainer/TabContainer/Host/VBoxContainer/HostMode"]
-margin_right = 149.0
-margin_bottom = 26.0
-text = "Host mode:"
-
-[node name="OptionButton" type="OptionButton" parent="CenterContainer/TabContainer/Host/VBoxContainer/HostMode"]
-margin_left = 149.0
-margin_right = 641.0
-margin_bottom = 26.0
-size_flags_horizontal = 3
-theme = ExtResource( 24 )
-text = "Private"
-align = 1
-items = [ "Private", null, false, 0, null, "LAN", null, false, 1, null, "Punch-throuth", null, false, 2, null ]
-selected = 0
-
-[node name="Label2" type="Label" parent="CenterContainer/TabContainer/Host/VBoxContainer"]
-margin_top = 62.0
-margin_right = 641.0
-margin_bottom = 88.0
-text = "Info:"
-align = 1
-
-[node name="TabContainer" type="TabContainer" parent="CenterContainer/TabContainer/Host/VBoxContainer"]
-margin_top = 93.0
-margin_right = 641.0
-margin_bottom = 493.0
-size_flags_vertical = 3
-custom_styles/panel = SubResource( 17 )
-tabs_visible = false
-script = SubResource( 19 )
-
-[node name="Private" type="PanelContainer" parent="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer"]
-anchor_right = 1.0
-anchor_bottom = 1.0
-custom_styles/panel = SubResource( 18 )
-
-[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer/Private"]
-margin_right = 641.0
-margin_bottom = 400.0
-
-[node name="Label" type="Label" parent="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer/Private/VBoxContainer"]
-margin_right = 641.0
-margin_bottom = 55.0
-text = "Private settings are needed in case you are not going to play with anyone"
-autowrap = true
-
-[node name="LAN" type="PanelContainer" parent="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer"]
-visible = false
-anchor_right = 1.0
-anchor_bottom = 1.0
-custom_styles/panel = SubResource( 18 )
-
-[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer/LAN"]
-margin_right = 641.0
-margin_bottom = 400.0
-custom_constants/separation = 5
-
-[node name="Label" type="Label" parent="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer/LAN/VBoxContainer"]
-margin_right = 641.0
-margin_bottom = 113.0
-text = "LAN allows you to play with your friends over a local network. Requires port forwarding, UPnP or VPN if you want to play at a distance"
-autowrap = true
-
-[node name="Placeholder" type="Control" parent="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer/LAN/VBoxContainer"]
-margin_top = 118.0
-margin_right = 641.0
-margin_bottom = 276.0
-size_flags_vertical = 3
-
-[node name="Password" type="HBoxContainer" parent="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer/LAN/VBoxContainer"]
-margin_top = 281.0
-margin_right = 641.0
-margin_bottom = 307.0
 alignment = 1
 
-[node name="Label" type="Label" parent="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer/LAN/VBoxContainer/Password"]
+[node name="Label" type="Label" parent="CenterContainer/TabContainer/Host/VBoxContainer/Password"]
 margin_right = 134.0
 margin_bottom = 26.0
 text = "Password:"
 
-[node name="addres" type="LineEdit" parent="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer/LAN/VBoxContainer/Password"]
+[node name="addres" type="LineEdit" parent="CenterContainer/TabContainer/Host/VBoxContainer/Password"]
 margin_left = 134.0
 margin_right = 641.0
 margin_bottom = 26.0
@@ -617,21 +505,21 @@ theme = ExtResource( 24 )
 text = "huizalupa"
 align = 1
 secret = true
-placeholder_text = "127.0.0.1"
+placeholder_text = "123456"
 
-[node name="Port" type="HBoxContainer" parent="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer/LAN/VBoxContainer"]
-margin_top = 312.0
+[node name="Port" type="HBoxContainer" parent="CenterContainer/TabContainer/Host/VBoxContainer"]
+margin_top = 62.0
 margin_right = 641.0
-margin_bottom = 338.0
+margin_bottom = 88.0
 alignment = 1
 
-[node name="Label" type="Label" parent="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer/LAN/VBoxContainer/Port"]
+[node name="Label" type="Label" parent="CenterContainer/TabContainer/Host/VBoxContainer/Port"]
 margin_right = 473.0
 margin_bottom = 26.0
 size_flags_horizontal = 3
 text = "Port:"
 
-[node name="PortEdit" type="LineEdit" parent="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer/LAN/VBoxContainer/Port"]
+[node name="PortEdit" type="LineEdit" parent="CenterContainer/TabContainer/Host/VBoxContainer/Port"]
 margin_left = 473.0
 margin_right = 641.0
 margin_bottom = 26.0
@@ -641,109 +529,43 @@ align = 1
 max_length = 4
 placeholder_text = "8080"
 
-[node name="UPnP" type="HBoxContainer" parent="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer/LAN/VBoxContainer"]
-margin_top = 343.0
+[node name="UPnP" type="HBoxContainer" parent="CenterContainer/TabContainer/Host/VBoxContainer"]
+margin_top = 93.0
 margin_right = 641.0
-margin_bottom = 369.0
+margin_bottom = 119.0
 alignment = 1
 
-[node name="Label" type="Label" parent="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer/LAN/VBoxContainer/UPnP"]
+[node name="Label" type="Label" parent="CenterContainer/TabContainer/Host/VBoxContainer/UPnP"]
 margin_right = 491.0
 margin_bottom = 26.0
 size_flags_horizontal = 3
 text = "UPnP:"
 
-[node name="Button" type="Button" parent="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer/LAN/VBoxContainer/UPnP"]
+[node name="Button" type="Button" parent="CenterContainer/TabContainer/Host/VBoxContainer/UPnP"]
 margin_left = 491.0
 margin_right = 641.0
 margin_bottom = 26.0
 text = " Do magic "
 
-[node name="UPnPStatus" type="HBoxContainer" parent="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer/LAN/VBoxContainer"]
-margin_top = 374.0
+[node name="UPnPStatus" type="HBoxContainer" parent="CenterContainer/TabContainer/Host/VBoxContainer"]
+margin_top = 124.0
 margin_right = 641.0
-margin_bottom = 400.0
+margin_bottom = 150.0
 alignment = 1
 
-[node name="Label" type="Label" parent="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer/LAN/VBoxContainer/UPnPStatus"]
+[node name="Label" type="Label" parent="CenterContainer/TabContainer/Host/VBoxContainer/UPnPStatus"]
 margin_right = 320.0
 margin_bottom = 26.0
 size_flags_horizontal = 3
 text = "UPnP status:"
 
-[node name="Label2" type="Label" parent="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer/LAN/VBoxContainer/UPnPStatus"]
+[node name="Label2" type="Label" parent="CenterContainer/TabContainer/Host/VBoxContainer/UPnPStatus"]
 margin_left = 320.0
 margin_right = 641.0
 margin_bottom = 26.0
 size_flags_horizontal = 3
 text = "Not activated"
 align = 2
-
-[node name="PunchThrouth" type="PanelContainer" parent="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer"]
-visible = false
-anchor_right = 1.0
-anchor_bottom = 1.0
-custom_styles/panel = SubResource( 18 )
-
-[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer/PunchThrouth"]
-margin_right = 641.0
-margin_bottom = 400.0
-custom_constants/separation = 5
-
-[node name="Label" type="Label" parent="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer/PunchThrouth/VBoxContainer"]
-margin_right = 641.0
-margin_bottom = 142.0
-text = "Punch-Through uses a third-party server to connect with friends, suitable if you do not have the ability to forward ports, do not have UPnP, or you want our game to be displayed in the list of servers"
-autowrap = true
-
-[node name="Placeholder" type="Control" parent="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer/PunchThrouth/VBoxContainer"]
-margin_top = 199.0
-margin_right = 641.0
-margin_bottom = 276.0
-size_flags_vertical = 3
-
-[node name="Password" type="HBoxContainer" parent="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer/PunchThrouth/VBoxContainer"]
-margin_top = 147.0
-margin_right = 641.0
-margin_bottom = 173.0
-alignment = 1
-
-[node name="Label" type="Label" parent="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer/PunchThrouth/VBoxContainer/Password"]
-margin_right = 134.0
-margin_bottom = 26.0
-text = "Password:"
-
-[node name="addres" type="LineEdit" parent="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer/PunchThrouth/VBoxContainer/Password"]
-margin_left = 134.0
-margin_right = 641.0
-margin_bottom = 26.0
-size_flags_horizontal = 3
-theme = ExtResource( 24 )
-text = "huizalupa"
-align = 1
-secret = true
-placeholder_text = "127.0.0.1"
-
-[node name="Server" type="HBoxContainer" parent="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer/PunchThrouth/VBoxContainer"]
-margin_top = 178.0
-margin_right = 641.0
-margin_bottom = 204.0
-alignment = 1
-
-[node name="Label" type="Label" parent="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer/PunchThrouth/VBoxContainer/Server"]
-margin_right = 104.0
-margin_bottom = 26.0
-text = "Server:"
-
-[node name="addres" type="LineEdit" parent="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer/PunchThrouth/VBoxContainer/Server"]
-margin_left = 104.0
-margin_right = 641.0
-margin_bottom = 26.0
-size_flags_horizontal = 3
-theme = ExtResource( 24 )
-text = "https://gayshit.com"
-align = 1
-placeholder_text = "127.0.0.1"
 
 [node name="Player" type="PanelContainer" parent="CenterContainer/TabContainer"]
 visible = false
@@ -1099,9 +921,6 @@ stream = ExtResource( 26 )
 [connection signal="button_pressed" from="ExitMenu" to="." method="disable_menu"]
 [connection signal="pressed" from="CenterContainer/TabContainer/Main/VBoxContainer/IpPort/JoinButton" to="." method="join"]
 [connection signal="pressed" from="CenterContainer/TabContainer/Main/VBoxContainer/IpPort/JoinButton2" to="." method="host"]
-[connection signal="pressed" from="CenterContainer/TabContainer/Main/VBoxContainer/PunchThrouth/JoinButton" to="CenterContainer/TabContainer/Main/VBoxContainer/PunchThrouth" method="join_button_pressed"]
-[connection signal="pressed" from="CenterContainer/TabContainer/Main/VBoxContainer/PunchThrouth/HostButton" to="CenterContainer/TabContainer/Main/VBoxContainer/PunchThrouth" method="host_button_pressed"]
-[connection signal="item_selected" from="CenterContainer/TabContainer/Host/VBoxContainer/HostMode/OptionButton" to="CenterContainer/TabContainer/Host/VBoxContainer/TabContainer" method="set_tab"]
 [connection signal="focus_exited" from="CenterContainer/TabContainer/Player/VBoxContainer/Color/Red" to="CenterContainer/TabContainer/Player/VBoxContainer/Color" method="focus_exited"]
 [connection signal="text_entered" from="CenterContainer/TabContainer/Player/VBoxContainer/Color/Red" to="CenterContainer/TabContainer/Player/VBoxContainer/Color" method="r_change"]
 [connection signal="focus_exited" from="CenterContainer/TabContainer/Player/VBoxContainer/Color/Green" to="CenterContainer/TabContainer/Player/VBoxContainer/Color" method="focus_exited"]

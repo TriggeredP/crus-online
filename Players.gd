@@ -23,3 +23,7 @@ func load_players():
 			parent.player_info[key]["puppet"] = player
 			player.global_transform.origin = Vector3(-1000,-1000,-1000)
 	print(parent.player_info)
+
+func remove_players():
+	for child in get_children():
+		child.queue_free()

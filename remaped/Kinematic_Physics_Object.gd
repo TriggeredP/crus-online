@@ -52,7 +52,6 @@ var change_transform = true
 
 ################################################################################
 
-var isClientOnly = false
 var holdId = 0
 
 var playerIgnoreId = 0

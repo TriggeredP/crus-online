@@ -1,10 +1,6 @@
 extends Node
 
-export var playerId:int = 0
-
 var player_info = {}
-
-enum {PRIVATE,LAN,PUNCH_THROUTH}
 
 var my_info = {
 	"nickname": "MT Foxtrot",
@@ -21,46 +17,32 @@ var hostSettings = {
 
 var dataLoaded = false
 
-onready var Steam = $Steam
-
-onready var HolePuncher = $HolePuncher
-
 onready var Sync = $Sync
 onready var Players = $Players
 onready var Menu = $Menu
 onready var Hint = $Hint
 
+signal status_update(status)
+signal players_update(data)
+
+#signal host_tick
+#
+#var is_ticking = false
+#var tick = 0
+#
+#func _physics_process(delta):
+#	if is_ticking and tick % 2 == 0:
+#		print("host tick")
+#		emit_signal("host_tick")
+#		tick = 0
+#	tick += 1
+
 func _ready():
 	if not load_data():
 		save_data()
 
-	HolePuncher.connect("holepunch_success", self, "_on_holepunch_success")
-	HolePuncher.connect("holepunch_progress_update", self, "_on_holepunch_progress_update")
-	HolePuncher.connect("holepunch_failure", self, "_on_holepunch_failure")
-
-
 	get_tree().connect("network_peer_connected", self, "_connected")
 	get_tree().connect("network_peer_disconnected", self, "_disconnected")
-
-func _on_holepunch_success(self_port, host_ip, host_port):
-	print(self_port, host_ip, host_port)
-
-func _on_holepunch_progress_update(type, session_name, player_names):
-	if HolePuncher.is_host():
-		HolePuncher.start_session()
-	print(type, session_name, player_names)
-
-func _on_holepunch_failure(error):
-	print(error)
-
-func host_server_pt():
-	var code = str(int(rand_range(0,1000000000)))
-	print(code)
-	
-	HolePuncher.create_session(code, "host", 2, "12345")
-
-func join_to_server_pt(gameCode):
-	HolePuncher.join_session(gameCode, "client", 2, "12345")
 
 func host_server(port, recivedHostSettings = null):
 	save_data()
@@ -70,16 +52,13 @@ func host_server(port, recivedHostSettings = null):
 	var server = NetworkedMultiplayerENet.new()
 	server.create_server(port,16)
 	get_tree().set_network_peer(server)
-	playerId = 1
 	
 	print(hostSettings)
 	
 	player_info[1] = my_info
 	
-	Global.menu.hide()
-	Global.menu.set_process_input(false)
-	goto_scene_host(hostSettings.map)
-	Menu.set_process_input(true)
+	emit_signal("players_update", player_info)
+	emit_signal("status_update", "Hosting server")
 	
 	dataLoaded = true
 	print("Server hosted")
@@ -90,14 +69,11 @@ func join_to_server(ip,port):
 	var client = NetworkedMultiplayerENet.new()
 	client.create_client(ip,port)
 	get_tree().set_network_peer(client)
-	playerId = get_tree().get_network_unique_id()
 	
 	print("Client try to connect")
 
 func _disconnected(id):
 	if player_info[id] != null:
-		Players.get_node(str(id)).queue_free()
-		Global.UI.notify(player_info[id].nickname + " disconnected", Color(1, 0, 0))
 		player_info.erase(id)
 		print("Disconnected")
 
@@ -125,14 +101,11 @@ puppet func client_connect_init(recivedHostSettings,recivedPlayerInfo, level):
 	hostSettings = recivedHostSettings
 	player_info = recivedPlayerInfo
 	
-	Global.menu.hide()
-	Global.menu.set_process_input(false)
-	goto_scene_client(hostSettings.map, level)
-	Menu.set_process_input(true)
-	
 	dataLoaded = true
 	rpc("host_add_player", my_info)
-	rpc("connect_notify",my_info.nickname)
+
+	emit_signal("status_update", "Connected to server")
+	
 	print("[CLIENT]: Player connected")
 
 remote func connect_notify(nickname):
@@ -145,8 +118,11 @@ master func host_add_player(info):
 		player_info[id] = info
 		rpc("sync_players",player_info)
 		print("[HOST]: Sync player info")
-		Sync.sync_nodes()
-		Players.load_players()
+		
+		emit_signal("players_update", player_info)
+		
+#		Sync.sync_nodes()
+#		Players.load_players()
 
 master func host_remove_player():
 	var id = get_tree().get_rpc_sender_id()
@@ -157,17 +133,72 @@ master func host_remove_player():
 
 puppet func sync_players(info):
 	player_info = info
-	Players.load_players()
+	emit_signal("players_update", player_info)
+	print("[CLIENT]: Player info synced")
+
+################################################################################
+
+func goto_menu_host():
+	Global.menu.multiplayer_exit()
+	get_tree().network_peer.refuse_new_connections = false
+	Global.CURRENT_LEVEL = 0
+	Global.goto_scene("res://MOD_CONTENT/CruS Online/maps/crus_online_lobby.tscn")
+	rpc("goto_menu_client")
+	print("[HOST]: Goto to menu")
+	
+	Players.remove_players()
+
+puppet func goto_menu_client():
+	Global.menu.multiplayer_exit()
+	Global.CURRENT_LEVEL = 0
+	Global.goto_scene("res://MOD_CONTENT/CruS Online/maps/crus_online_lobby.tscn")
+	print("[CLIENT]: Goto to menu")
+	
+	Players.remove_players()
+
+################################################################################
 
 func goto_scene_host(scene):
+	disable_menu()
+	get_tree().network_peer.refuse_new_connections = true
 	Global.goto_scene(scene)
 	rpc("goto_scene_client", scene, Global.CURRENT_LEVEL)
-	print("[HOST]: goto to scene [" + scene + "]")
+	print("[HOST]: Goto to scene [" + scene + "]")
+	
+	Players.load_players()
 
 puppet func goto_scene_client(scene, level):
+	disable_menu()
 	Global.CURRENT_LEVEL = level
 	Global.goto_scene(scene)
-	print("[CLIENT]: goto to scene [" + scene + "]")
+	print("[CLIENT]: Goto to scene [" + scene + "]")
+	
+	Players.load_players()
+
+################################################################################
+
+func enable_menu():
+	Global.menu.multiplayer_exit()
+	Global.menu.set_process_input(true)
+	Menu.set_process_input(false)
+
+func disable_menu():
+	Global.menu.multiplayer_enter()
+	Global.menu.set_process_input(false)
+	Menu.set_process_input(true)
+
+################################################################################
+
+func game_init(level) -> bool:
+	if get_tree().network_peer == null:
+		host_server(25567)
+	
+	if get_tree().is_network_server():
+		goto_scene_host(level)
+		return true
+	return false
+
+################################################################################
 
 func save_data():
 	var dir = Directory.new()

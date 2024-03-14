@@ -24,16 +24,16 @@ func _input(event):
 			show_menu()
 
 func leave_server(type):
+	var parent = get_parent()
+	
 	get_tree().network_peer = null
 	
-	Global.menu.show()
-	Global.menu.set_process_input(true)
-	Global.goto_scene("res://Menu/Main_Menu.tscn")
+	parent.goto_menu_client()
+	
 	hide_menu()
 	set_process_input(false)
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	
-	var parent = get_parent()
 	parent.dataLoaded = false
 	
 	for child in parent.Sync.get_children():
