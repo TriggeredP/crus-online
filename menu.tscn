@@ -2,9 +2,7 @@
 
 [ext_resource path="res://Menu/menu_theme.tres" type="Theme" id=1]
 [ext_resource path="res://Textures/Misc/mainguy_clothes.png" type="Texture" id=2]
-[ext_resource path="res://MOD_CONTENT/CruS Online/Button.tscn" type="PackedScene" id=3]
 [ext_resource path="res://Textures/NPC/Enemy_Nude.png" type="Texture" id=4]
-[ext_resource path="res://Sfx/UI/UI_grunt.wav" type="AudioStream" id=5]
 [ext_resource path="res://Textures/NPC/Enemy_Worker.png" type="Texture" id=6]
 [ext_resource path="res://Textures/Menu/Handler/1.png" type="Texture" id=7]
 [ext_resource path="res://Textures/Menu/Handler/3.png" type="Texture" id=8]
@@ -82,6 +80,8 @@ func host():
 	Multiplayer.save_data()
 	
 	Multiplayer.host_server(port,hostSettings)
+	
+	$CenterContainer/TabContainer/Main/VBoxContainer/IpPort/Buttons.current_tab = 2
 
 func join():
 	get_data()
@@ -90,25 +90,17 @@ func join():
 	Multiplayer.save_data()
 	
 	Multiplayer.join_to_server(ip,port)
+	
+	$CenterContainer/TabContainer/Main/VBoxContainer/IpPort/Buttons.current_tab = 1
 
-func enable_menu(type):
+func enable_menu():
 	if not $CenterContainer/TabContainer/Implants.updated:
 		$CenterContainer/TabContainer/Implants.update()
 		
 	$CenterContainer.visible = true
-	$Menu/ClickSound.play()
-	$Menu.button_disable()
-	$ExitMenu.button_enable()
 
-func disable_menu(type):
+func disable_menu():
 	$CenterContainer.visible = false
-	$ExitMenu/ClickSound.play()
-	$Menu.button_enable()
-	$ExitMenu.button_disable()
-
-
-func hoin():
-	pass # Replace with function body.
 "
 
 [sub_resource type="GDScript" id=12]
@@ -140,6 +132,15 @@ func update_players_info(info):
 			playersList.text += \"\\n\"
 		
 		playerNumber += 1
+"
+
+[sub_resource type="StyleBoxEmpty" id=17]
+
+[sub_resource type="GDScript" id=18]
+script/source = "extends Label
+
+func _ready():
+	text = get_tree().get_nodes_in_group(\"Multiplayer\")[0].version
 "
 
 [sub_resource type="GDScript" id=16]
@@ -305,29 +306,6 @@ __meta__ = {
 "_edit_use_anchors_": true
 }
 
-[node name="Menu" parent="." instance=ExtResource( 3 )]
-margin_left = 100.0
-margin_top = 164.0
-margin_right = 228.0
-margin_bottom = 292.0
-
-[node name="ExitMenu" parent="." instance=ExtResource( 3 )]
-margin_left = 164.0
-margin_top = 164.0
-margin_right = 292.0
-margin_bottom = 292.0
-texture = ExtResource( 12 )
-idleTexture = ExtResource( 12 )
-disabledTexture = null
-enalbed = false
-labelText = "Return"
-buttonType = "ExitMenu"
-
-[node name="ClickSound" parent="ExitMenu" index="0"]
-stream = ExtResource( 5 )
-volume_db = 0.0
-pitch_scale = 1.0
-
 [node name="CenterContainer" type="CenterContainer" parent="."]
 margin_left = 229.0
 margin_right = 1280.0
@@ -394,10 +372,10 @@ margin_left = 263.0
 margin_right = 431.0
 margin_bottom = 36.0
 theme = ExtResource( 24 )
-text = "8080"
+text = "25567"
 align = 1
-max_length = 4
-placeholder_text = "8080"
+max_length = 5
+placeholder_text = "25567"
 
 [node name="Label4" type="Label" parent="CenterContainer/TabContainer/Main/VBoxContainer/IpPort"]
 margin_left = 431.0
@@ -406,24 +384,47 @@ margin_right = 446.0
 margin_bottom = 31.0
 text = " "
 
-[node name="JoinButton" type="Button" parent="CenterContainer/TabContainer/Main/VBoxContainer/IpPort"]
-margin_left = 446.0
-margin_right = 536.0
+[node name="Buttons" type="TabContainer" parent="CenterContainer/TabContainer/Main/VBoxContainer/IpPort"]
+margin_left = 491.0
+margin_right = 596.0
+margin_bottom = 36.0
+size_flags_horizontal = 6
+custom_styles/panel = SubResource( 17 )
+tabs_visible = false
+
+[node name="Main" type="HBoxContainer" parent="CenterContainer/TabContainer/Main/VBoxContainer/IpPort/Buttons"]
+visible = false
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="JoinButton" type="Button" parent="CenterContainer/TabContainer/Main/VBoxContainer/IpPort/Buttons/Main"]
+margin_right = 90.0
 margin_bottom = 36.0
 text = " Join "
 
-[node name="Label5" type="Label" parent="CenterContainer/TabContainer/Main/VBoxContainer/IpPort"]
-margin_left = 536.0
+[node name="Label5" type="Label" parent="CenterContainer/TabContainer/Main/VBoxContainer/IpPort/Buttons/Main"]
+margin_left = 90.0
 margin_top = 5.0
-margin_right = 551.0
+margin_right = 105.0
 margin_bottom = 31.0
 text = " "
 
-[node name="JoinButton2" type="Button" parent="CenterContainer/TabContainer/Main/VBoxContainer/IpPort"]
-margin_left = 551.0
-margin_right = 641.0
+[node name="JoinButton2" type="Button" parent="CenterContainer/TabContainer/Main/VBoxContainer/IpPort/Buttons/Main"]
+margin_left = 105.0
+margin_right = 195.0
 margin_bottom = 36.0
 text = " Host "
+
+[node name="Leave" type="Button" parent="CenterContainer/TabContainer/Main/VBoxContainer/IpPort/Buttons"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+text = " Leave "
+
+[node name="Close" type="Button" parent="CenterContainer/TabContainer/Main/VBoxContainer/IpPort/Buttons"]
+visible = false
+anchor_right = 1.0
+anchor_bottom = 1.0
+text = " Stop "
 
 [node name="Status" type="HBoxContainer" parent="CenterContainer/TabContainer/Main/VBoxContainer"]
 margin_top = 72.0
@@ -446,7 +447,7 @@ align = 2
 [node name="PlayersList" type="PanelContainer" parent="CenterContainer/TabContainer/Main/VBoxContainer"]
 margin_top = 103.0
 margin_right = 641.0
-margin_bottom = 493.0
+margin_bottom = 462.0
 size_flags_vertical = 3
 custom_styles/panel = ExtResource( 11 )
 
@@ -454,11 +455,29 @@ custom_styles/panel = ExtResource( 11 )
 margin_left = 10.0
 margin_top = 5.0
 margin_right = 631.0
-margin_bottom = 385.0
+margin_bottom = 354.0
 size_flags_horizontal = 3
 size_flags_vertical = 3
 text = "1: TriggeredP (Host)
 2: Xuesos"
+
+[node name="HBoxContainer" type="HBoxContainer" parent="CenterContainer/TabContainer/Main/VBoxContainer"]
+margin_top = 467.0
+margin_right = 641.0
+margin_bottom = 493.0
+
+[node name="CruSOnline" type="Label" parent="CenterContainer/TabContainer/Main/VBoxContainer/HBoxContainer"]
+margin_right = 299.0
+margin_bottom = 26.0
+text = "Cruelty Squad Online"
+
+[node name="Version" type="Label" parent="CenterContainer/TabContainer/Main/VBoxContainer/HBoxContainer"]
+margin_left = 387.0
+margin_right = 641.0
+margin_bottom = 26.0
+size_flags_horizontal = 10
+text = "Alpha 000000/0000"
+script = SubResource( 18 )
 
 [node name="Host" type="PanelContainer" parent="CenterContainer/TabContainer"]
 visible = false
@@ -917,10 +936,8 @@ stream = SubResource( 14 )
 [node name="Unequip" type="AudioStreamPlayer" parent="CenterContainer/TabContainer/Implants"]
 stream = ExtResource( 26 )
 
-[connection signal="button_pressed" from="Menu" to="." method="enable_menu"]
-[connection signal="button_pressed" from="ExitMenu" to="." method="disable_menu"]
-[connection signal="pressed" from="CenterContainer/TabContainer/Main/VBoxContainer/IpPort/JoinButton" to="." method="join"]
-[connection signal="pressed" from="CenterContainer/TabContainer/Main/VBoxContainer/IpPort/JoinButton2" to="." method="host"]
+[connection signal="pressed" from="CenterContainer/TabContainer/Main/VBoxContainer/IpPort/Buttons/Main/JoinButton" to="." method="join"]
+[connection signal="pressed" from="CenterContainer/TabContainer/Main/VBoxContainer/IpPort/Buttons/Main/JoinButton2" to="." method="host"]
 [connection signal="focus_exited" from="CenterContainer/TabContainer/Player/VBoxContainer/Color/Red" to="CenterContainer/TabContainer/Player/VBoxContainer/Color" method="focus_exited"]
 [connection signal="text_entered" from="CenterContainer/TabContainer/Player/VBoxContainer/Color/Red" to="CenterContainer/TabContainer/Player/VBoxContainer/Color" method="r_change"]
 [connection signal="focus_exited" from="CenterContainer/TabContainer/Player/VBoxContainer/Color/Green" to="CenterContainer/TabContainer/Player/VBoxContainer/Color" method="focus_exited"]
@@ -934,5 +951,3 @@ stream = ExtResource( 26 )
 [connection signal="item_selected" from="CenterContainer/TabContainer/Implants/HBoxContainer/ImplantsController/AllowedImplantsList" to="CenterContainer/TabContainer/Implants" method="toggle_implant"]
 [connection signal="pressed" from="CenterContainer/TabContainer/Implants/HBoxContainer/VBoxContainer/Button3" to="CenterContainer/TabContainer/Implants" method="ban_all"]
 [connection signal="pressed" from="CenterContainer/TabContainer/Implants/HBoxContainer/VBoxContainer/Button4" to="CenterContainer/TabContainer/Implants" method="allow_all"]
-
-[editable path="ExitMenu"]

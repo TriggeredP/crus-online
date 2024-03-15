@@ -1,5 +1,7 @@
 extends Node
 
+var version = "Alpha 160324/0120"
+
 var player_info = {}
 
 var my_info = {
@@ -45,36 +47,39 @@ func _ready():
 	get_tree().connect("network_peer_disconnected", self, "_disconnected")
 
 func host_server(port, recivedHostSettings = null):
-	save_data()
-	
-	if recivedHostSettings != null:
-		hostSettings = recivedHostSettings
-	var server = NetworkedMultiplayerENet.new()
-	server.create_server(port,16)
-	get_tree().set_network_peer(server)
-	
-	print(hostSettings)
-	
-	player_info[1] = my_info
-	
-	emit_signal("players_update", player_info)
-	emit_signal("status_update", "Hosting server")
-	
-	dataLoaded = true
-	print("Server hosted")
+	if get_tree().network_peer == null:
+		save_data()
+		
+		if recivedHostSettings != null:
+			hostSettings = recivedHostSettings
+		var server = NetworkedMultiplayerENet.new()
+		server.create_server(port,16)
+		get_tree().set_network_peer(server)
+		
+		print(hostSettings)
+		
+		player_info[1] = my_info
+		
+		emit_signal("players_update", player_info)
+		emit_signal("status_update", "Hosting server")
+		
+		dataLoaded = true
+		print("Server hosted")
 
 func join_to_server(ip,port):
-	save_data()
-	
-	var client = NetworkedMultiplayerENet.new()
-	client.create_client(ip,port)
-	get_tree().set_network_peer(client)
-	
-	print("Client try to connect")
+	if get_tree().network_peer == null:
+		save_data()
+		
+		var client = NetworkedMultiplayerENet.new()
+		client.create_client(ip,port)
+		get_tree().set_network_peer(client)
+		
+		print("Client try to connect")
 
 func _disconnected(id):
 	if player_info[id] != null:
 		player_info.erase(id)
+		emit_signal("players_update", player_info)
 		print("Disconnected")
 
 ################################################################################

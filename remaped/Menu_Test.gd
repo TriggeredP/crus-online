@@ -10,7 +10,7 @@ func multiplayer_exit():
 	visible = true
 	in_game = false
 	menu[START].show()
-	hide_buttons(menu[START], 2, 4)
+	hide_buttons(menu[START], 3, 5)
 	
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 
@@ -30,7 +30,8 @@ var confirmed = false
 var cancel = false
 enum {B_START, B_SETTINGS, B_QUIT, B_LEVEL, B_MISSION_START, 
 	B_WEAPON_1, B_WEAPON_2, B_CHARACTER, B_STOCKS, B_W_PISTOL, B_W_SMG, B_W_SHOTGUN, B_W_RL, B_W_SNIPER, B_W_AR, B_W_S_SMG, B_W_NAMBU, 
-	B_W_GAS_LAUNCHER, B_W_MG3, B_W_AUTOSHOTGUN, B_W_MAUSER, B_W_BORE, B_W_MKR, B_W_RADGUN, B_W_TRANQ, B_W_BLACKJACK, B_W_FLASHLIGHT, B_W_ZIPPY, B_W_AN94, B_W_VAG72, B_W_STEYR, B_W_CANCER, B_W_ROD, B_W_FLAMETHROWER, B_W_SKS, B_W_NAILER, B_W_SHOCK, B_W_LIGHT, B_EX_MENU, B_EX_LEVEL_SELECT, B_RETURN, B_RETRY, B_BONUS}
+	B_W_GAS_LAUNCHER, B_W_MG3, B_W_AUTOSHOTGUN, B_W_MAUSER, B_W_BORE, B_W_MKR, B_W_RADGUN, B_W_TRANQ, B_W_BLACKJACK, B_W_FLASHLIGHT, B_W_ZIPPY, B_W_AN94, B_W_VAG72, B_W_STEYR, B_W_CANCER, B_W_ROD, B_W_FLAMETHROWER, B_W_SKS, B_W_NAILER, B_W_SHOCK, B_W_LIGHT, B_EX_MENU, B_EX_LEVEL_SELECT, B_RETURN, B_RETRY, B_BONUS,
+	B_MULTIPLAYER_MENU}
 const BUTTON_TEXTURES:Array = [preload("res://Textures/Menu/start_normal.png"), 
 									preload("res://Textures/Menu/settings_normal.png"), 
 									preload("res://Textures/Menu/OS_normal.png"), 
@@ -73,6 +74,7 @@ const BUTTON_TEXTURES:Array = [preload("res://Textures/Menu/start_normal.png"),
 									preload("res://Textures/Menu/exit_level_normal.png"), 
 									preload("res://Textures/Menu/return_normal.png"), 
 									preload("res://Textures/Menu/retry_normal.png"), 
+									preload("res://Textures/Menu/retry_normal.png"),
 									preload("res://Textures/Menu/retry_normal.png")
 								]
 const WEAPON_PROFILES:Array = [preload("res://Textures/Menu/Weapon_Profiles/Pistol.png"), 
@@ -376,7 +378,7 @@ func _ready():
 
 
 	
-	menu[START].buttons = [B_START, B_SETTINGS, B_RETRY, B_EX_LEVEL_SELECT, B_EX_MENU, B_QUIT]
+	menu[START].buttons = [B_START, B_MULTIPLAYER_MENU, B_SETTINGS, B_RETRY, B_EX_LEVEL_SELECT, B_EX_MENU, B_QUIT]
 	menu[SETTINGS].buttons = [B_RETURN]
 	menu[LEVEL_SELECT].buttons = [B_RETURN, B_CHARACTER, B_STOCKS, B_WEAPON_1, B_WEAPON_2, B_MISSION_START]
 	for level in Global.LEVELS:
@@ -398,7 +400,7 @@ func _ready():
 	update_level_info()
 	
 	
-	hide_buttons(menu[START], 2, 4)
+	hide_buttons(menu[START], 3, 5)
 	set_res(Global.resolution[0], Global.resolution[1])
 	
 	
@@ -420,7 +422,10 @@ func show_buttons(m:Menu, a:int, b:int):
 	for ab in range(a, b + 1):
 		m.get_child(ab).show()
 
-
+func _on_Multiplayer_Button_Pressed(m:int, button_id:TextureButton):
+	goto_menu(m, SETTINGS, button_id)
+	
+	get_tree().get_nodes_in_group("MultiplayerMenu")[0].enable_menu()
 
 func create_buttons(m:int):
 	var level = 0
@@ -435,8 +440,9 @@ func create_buttons(m:int):
 				level_buttons.append(create_button(m, LEVEL_NAMES[level], "_on_Level_Pressed", menu[m].buttons[i]))
 				level += 1
 			
-				
-				
+			B_MULTIPLAYER_MENU:
+				create_button(m, "Cruelty Squad Online", "_on_Multiplayer_Button_Pressed", menu[m].buttons[i])
+			
 			B_SETTINGS:
 				create_button(m, "Settings", "_on_Settings_Button_Pressed", menu[m].buttons[i])
 			B_QUIT:
@@ -810,7 +816,8 @@ func _on_Return_Button_Pressed(m:int, button_id:TextureButton):
 		return 
 	go_back(m, button_id)
 	
-		
+	get_tree().get_nodes_in_group("MultiplayerMenu")[0].disable_menu()
+	
 	if menu[m] == menu[LEVEL_SELECT]:
 		$Level_Info_Grid / HBoxContainer / Description_Scroll / Description.speech_break = true
 
