@@ -1,7 +1,8 @@
-[gd_scene load_steps=33 format=2]
+[gd_scene load_steps=38 format=2]
 
 [ext_resource path="res://Menu/menu_theme.tres" type="Theme" id=1]
 [ext_resource path="res://Textures/Misc/mainguy_clothes.png" type="Texture" id=2]
+[ext_resource path="res://Textures/Menu/background_1.png" type="Texture" id=3]
 [ext_resource path="res://Textures/NPC/Enemy_Nude.png" type="Texture" id=4]
 [ext_resource path="res://Textures/NPC/Enemy_Worker.png" type="Texture" id=6]
 [ext_resource path="res://Textures/Menu/Handler/1.png" type="Texture" id=7]
@@ -52,6 +53,8 @@ onready var Multiplayer = get_tree().get_nodes_in_group(\"Multiplayer\")[0]
 
 func _ready():
 	playerInfo = Multiplayer.my_info
+	
+	Multiplayer.connect(\"connected_to_server\", self, \"_on_connected\")
 
 func _physics_process(delta):
 	if Global.menu.in_game:
@@ -80,7 +83,6 @@ func host():
 	Multiplayer.save_data()
 	
 	Multiplayer.host_server(port,hostSettings)
-	
 	$CenterContainer/TabContainer/Main/VBoxContainer/IpPort/Buttons.current_tab = 2
 
 func join():
@@ -89,8 +91,9 @@ func join():
 	Multiplayer.my_info = playerInfo
 	Multiplayer.save_data()
 	
-	Multiplayer.join_to_server(ip,port)
-	
+	Multiplayer.join_to_server(ip, port)
+
+func _on_connected():
 	$CenterContainer/TabContainer/Main/VBoxContainer/IpPort/Buttons.current_tab = 1
 
 func enable_menu():
@@ -296,9 +299,74 @@ func ban_all():
 [sub_resource type="AudioStreamRandomPitch" id=14]
 audio_stream = ExtResource( 25 )
 
+[sub_resource type="StyleBoxFlat" id=19]
+bg_color = Color( 0.15863, 0.441406, 0, 0.470588 )
+expand_margin_top = 20.0
+
+[sub_resource type="GDScript" id=21]
+script/source = "extends WindowDialog
+
+onready var Multiplayer = get_tree().get_nodes_in_group(\"Multiplayer\")[0]
+
+onready var errorLabel = $Panel/MarginContainer/RichTextLabel
+
+var errorText = [
+	\"[center]Unknow error[/center]\",
+	\"[center]Time out[/center]\",
+	\"[center]The password is incorrect[/center]\",
+	\"[center]The client and host mod versions do not match[/center]\"
+]
+
+func _ready():
+	rect_scale = Vector2(Global.resolution[0] / 1280 ,Global.resolution[1] / 720 )
+	
+	Multiplayer.connect(\"disconnected_from_server\", self, \"show_error\")
+
+func show_error(error):
+	if error != Multiplayer.errorType.PASSWORD_REQUIRE:
+		rect_scale = Vector2(Global.resolution[0] / 1280 ,Global.resolution[1] / 720 )
+		
+		errorLabel.bbcode_text = errorText[error]
+		popup_centered()
+"
+
+[sub_resource type="StyleBoxTexture" id=20]
+texture = ExtResource( 3 )
+region_rect = Rect2( 0, 0, 256, 256 )
+modulate_color = Color( 0.831373, 0.878431, 0.419608, 0.705882 )
+
+[sub_resource type="GDScript" id=22]
+script/source = "extends WindowDialog
+
+onready var Multiplayer = get_tree().get_nodes_in_group(\"Multiplayer\")[0]
+
+onready var passwordEdit = $Panel/MarginContainer/RichTextLabel/PasswordEdit
+
+func _ready():
+	rect_scale = Vector2(Global.resolution[0] / 1280 ,Global.resolution[1] / 720 )
+	
+	Multiplayer.connect(\"disconnected_from_server\", self, \"check_password\")
+
+func check_password(error):
+	if error == Multiplayer.errorType.PASSWORD_REQUIRE:
+		rect_scale = Vector2(Global.resolution[0] / 1280 ,Global.resolution[1] / 720 )
+		popup_centered()
+
+func set_password():
+	Multiplayer.password = passwordEdit.text
+	passwordEdit.text = \"\"
+	
+	Multiplayer.passwordEntered = true
+	Multiplayer.join_to_server(Multiplayer.lastConnected.ip, Multiplayer.lastConnected.port)
+
+func password_entered(text):
+	hide()
+"
+
 [node name="MultiplayerMenu" type="Control" groups=["MultiplayerMenu"]]
 anchor_right = 1.0
 anchor_bottom = 1.0
+rect_pivot_offset = Vector2( -35, -71 )
 mouse_filter = 2
 theme = ExtResource( 1 )
 script = SubResource( 3 )
@@ -385,15 +453,14 @@ margin_bottom = 31.0
 text = " "
 
 [node name="Buttons" type="TabContainer" parent="CenterContainer/TabContainer/Main/VBoxContainer/IpPort"]
-margin_left = 491.0
-margin_right = 596.0
+margin_left = 446.0
+margin_right = 641.0
 margin_bottom = 36.0
 size_flags_horizontal = 6
 custom_styles/panel = SubResource( 17 )
 tabs_visible = false
 
 [node name="Main" type="HBoxContainer" parent="CenterContainer/TabContainer/Main/VBoxContainer/IpPort/Buttons"]
-visible = false
 anchor_right = 1.0
 anchor_bottom = 1.0
 
@@ -416,6 +483,7 @@ margin_bottom = 36.0
 text = " Host "
 
 [node name="Leave" type="Button" parent="CenterContainer/TabContainer/Main/VBoxContainer/IpPort/Buttons"]
+visible = false
 anchor_right = 1.0
 anchor_bottom = 1.0
 text = " Leave "
@@ -936,6 +1004,99 @@ stream = SubResource( 14 )
 [node name="Unequip" type="AudioStreamPlayer" parent="CenterContainer/TabContainer/Implants"]
 stream = ExtResource( 26 )
 
+[node name="ErrorHandler" type="WindowDialog" parent="."]
+margin_top = 21.0
+margin_right = 388.0
+margin_bottom = 95.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme = ExtResource( 1 )
+custom_colors/title_color = Color( 1, 0, 0, 1 )
+custom_styles/panel = SubResource( 19 )
+window_title = "Cruelty Squad Online"
+script = SubResource( 21 )
+
+[node name="Panel" type="Panel" parent="ErrorHandler"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+custom_styles/panel = SubResource( 20 )
+__meta__ = {
+"_edit_use_anchors_": true
+}
+
+[node name="MarginContainer" type="MarginContainer" parent="ErrorHandler/Panel"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_left = 5.0
+margin_right = -5.0
+__meta__ = {
+"_edit_use_anchors_": true
+}
+
+[node name="RichTextLabel" type="RichTextLabel" parent="ErrorHandler/Panel/MarginContainer"]
+margin_right = 378.0
+margin_bottom = 74.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+bbcode_enabled = true
+bbcode_text = "[center]Unknow error[/center]"
+text = "Unknow error"
+fit_content_height = true
+scroll_active = false
+__meta__ = {
+"_edit_use_anchors_": true
+}
+
+[node name="PasswordInput" type="WindowDialog" parent="."]
+margin_top = 21.0
+margin_right = 388.0
+margin_bottom = 90.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme = ExtResource( 1 )
+custom_colors/title_color = Color( 1, 0, 0, 1 )
+custom_styles/panel = SubResource( 19 )
+window_title = "Cruelty Squad Online"
+script = SubResource( 22 )
+
+[node name="Panel" type="Panel" parent="PasswordInput"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+custom_styles/panel = SubResource( 20 )
+__meta__ = {
+"_edit_use_anchors_": true
+}
+
+[node name="MarginContainer" type="MarginContainer" parent="PasswordInput/Panel"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_left = 10.0
+margin_right = -10.0
+__meta__ = {
+"_edit_use_anchors_": true
+}
+
+[node name="RichTextLabel" type="VBoxContainer" parent="PasswordInput/Panel/MarginContainer"]
+margin_right = 368.0
+margin_bottom = 69.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Label" type="Label" parent="PasswordInput/Panel/MarginContainer/RichTextLabel"]
+margin_right = 368.0
+margin_bottom = 26.0
+text = "Enter Password"
+align = 1
+
+[node name="PasswordEdit" type="LineEdit" parent="PasswordInput/Panel/MarginContainer/RichTextLabel"]
+margin_top = 26.0
+margin_right = 368.0
+margin_bottom = 62.0
+rect_min_size = Vector2( 0, 36 )
+theme = ExtResource( 24 )
+align = 1
+secret = true
+
 [connection signal="pressed" from="CenterContainer/TabContainer/Main/VBoxContainer/IpPort/Buttons/Main/JoinButton" to="." method="join"]
 [connection signal="pressed" from="CenterContainer/TabContainer/Main/VBoxContainer/IpPort/Buttons/Main/JoinButton2" to="." method="host"]
 [connection signal="focus_exited" from="CenterContainer/TabContainer/Player/VBoxContainer/Color/Red" to="CenterContainer/TabContainer/Player/VBoxContainer/Color" method="focus_exited"]
@@ -951,3 +1112,5 @@ stream = ExtResource( 26 )
 [connection signal="item_selected" from="CenterContainer/TabContainer/Implants/HBoxContainer/ImplantsController/AllowedImplantsList" to="CenterContainer/TabContainer/Implants" method="toggle_implant"]
 [connection signal="pressed" from="CenterContainer/TabContainer/Implants/HBoxContainer/VBoxContainer/Button3" to="CenterContainer/TabContainer/Implants" method="ban_all"]
 [connection signal="pressed" from="CenterContainer/TabContainer/Implants/HBoxContainer/VBoxContainer/Button4" to="CenterContainer/TabContainer/Implants" method="allow_all"]
+[connection signal="popup_hide" from="PasswordInput" to="PasswordInput" method="set_password"]
+[connection signal="text_entered" from="PasswordInput/Panel/MarginContainer/RichTextLabel/PasswordEdit" to="PasswordInput" method="password_entered"]

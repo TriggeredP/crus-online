@@ -1,8 +1,10 @@
 extends Node
 
-var version = "Alpha 160324/0120"
+var version = "Alpha 280324/2240"
 
 var player_info = {}
+
+enum errorType {UNKNOW, TIME_OUT, WRONG_PASSWORD, WRONG_VERSION, PASSWORD_REQUIRE}
 
 var my_info = {
 	"nickname": "MT Foxtrot",
@@ -17,6 +19,16 @@ var hostSettings = {
 	"bannedImplants": []
 }
 
+var lastConnected = {
+	"ip": "127.0.0.1",
+	"port": "25567"
+}
+
+var password = ""
+var serverPassword = "12345678"
+
+var passwordEntered = false
+
 var dataLoaded = false
 
 onready var Sync = $Sync
@@ -26,6 +38,9 @@ onready var Hint = $Hint
 
 signal status_update(status)
 signal players_update(data)
+
+signal connected_to_server()
+signal disconnected_from_server(error)
 
 #signal host_tick
 #
@@ -46,35 +61,42 @@ func _ready():
 	get_tree().connect("network_peer_connected", self, "_connected")
 	get_tree().connect("network_peer_disconnected", self, "_disconnected")
 
+func clear_connection(recivedError):
+	emit_signal("disconnected_from_server", recivedError)
+	print("[CRUS ONLINE]: ERROR " + str(recivedError))
+	
+	get_tree().network_peer = null
+
 func host_server(port, recivedHostSettings = null):
-	if get_tree().network_peer == null:
-		save_data()
-		
-		if recivedHostSettings != null:
-			hostSettings = recivedHostSettings
-		var server = NetworkedMultiplayerENet.new()
-		server.create_server(port,16)
-		get_tree().set_network_peer(server)
-		
-		print(hostSettings)
-		
-		player_info[1] = my_info
-		
-		emit_signal("players_update", player_info)
-		emit_signal("status_update", "Hosting server")
-		
-		dataLoaded = true
-		print("Server hosted")
+	save_data()
+	
+	if recivedHostSettings != null:
+		hostSettings = recivedHostSettings
+	var server = NetworkedMultiplayerENet.new()
+	server.create_server(port,16)
+	get_tree().set_network_peer(server)
+	
+	print(hostSettings)
+	
+	player_info[1] = my_info
+	
+	emit_signal("players_update", player_info)
+	emit_signal("status_update", "Hosting server")
+	
+	dataLoaded = true
+	print("Server hosted")
 
 func join_to_server(ip,port):
-	if get_tree().network_peer == null:
-		save_data()
-		
-		var client = NetworkedMultiplayerENet.new()
-		client.create_client(ip,port)
-		get_tree().set_network_peer(client)
-		
-		print("Client try to connect")
+	save_data()
+	
+	lastConnected.ip = ip
+	lastConnected.port = port
+	
+	var client = NetworkedMultiplayerENet.new()
+	client.create_client(ip,port)
+	get_tree().set_network_peer(client)
+	
+	print("Client try to connect")
 
 func _disconnected(id):
 	if player_info[id] != null:
@@ -94,22 +116,57 @@ func _disconnected(id):
 
 func _connected(id):
 	if not dataLoaded:
-		rpc("connect_init")
+		rpc("password_require_check", passwordEntered)
 		print("[CLIENT]: Connect Init")
 
-master func connect_init():
+puppet func disconnect_client(recivedError):
+	clear_connection(recivedError)
+	
+	passwordEntered = false
+	password = ""
+
+master func password_require_check(recivedPasswordEntered):
 	var id = get_tree().get_rpc_sender_id()
-	rpc_id(id,"client_connect_init", hostSettings, player_info, Global.CURRENT_LEVEL)
-	print("[HOST]: Client Connect Init")
+	
+	if recivedPasswordEntered:
+		rpc_id(id, "password_checked")
+	else:
+		if serverPassword != "":
+			rpc_id(id, "disconnect_client", errorType.PASSWORD_REQUIRE)
+		else:
+			rpc_id(id, "password_not_require")
+
+puppet func password_not_require():
+		password = ""
+		rpc("connect_init", password, version)
+
+puppet func password_checked():
+	rpc("connect_init", password, version)
+
+master func connect_init(recivedPassword, recivedVersion):
+	var id = get_tree().get_rpc_sender_id()
+	
+	if recivedVersion != version:
+		rpc_id(id, "disconnect_client", errorType.WRONG_VERSION)
+	else:
+		if recivedPassword == serverPassword:
+			rpc_id(id, "client_connect_init", hostSettings, player_info, Global.CURRENT_LEVEL)
+			print("[HOST]: Client Connect Init")
+		else:
+			rpc_id(id, "disconnect_client", errorType.WRONG_PASSWORD)
 
 puppet func client_connect_init(recivedHostSettings,recivedPlayerInfo, level):
 	hostSettings = recivedHostSettings
 	player_info = recivedPlayerInfo
 	
+	passwordEntered = false
+	password = ""
+	
 	dataLoaded = true
 	rpc("host_add_player", my_info)
 
 	emit_signal("status_update", "Connected to server")
+	emit_signal("connected_to_server")
 	
 	print("[CLIENT]: Player connected")
 
