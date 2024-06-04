@@ -115,6 +115,8 @@ var fireaudio:AudioStreamPlayer3D
 # Multiplayer stuff
 ################################################################################
 
+var enabled = true
+
 puppet func _spawn_gib_client(gib, damage, collision_n, collision_p, gibType, gibName):
 	var new_gib = self[gibType][gib].instance()
 	new_gib.set_name(gibName)
@@ -158,15 +160,21 @@ puppet func _die_client():
 
 puppet func _hide_npc_client():
 	gib_sfx.play()
-	skeleton.hide()
-	colliders.get_node("Dead_Head/CollisionShape").disabled = true
-	colliders.get_node("Dead_Body/CollisionShape").disabled = true
+	hide()
 
-################################################################################
-
-func cleanup():
+master func cleanup():
 	if is_network_master():
-		queue_free()
+		enabled = false
+		hide()
+		global_transform.origin = Vector3(-1000,-1000,-1000)
+
+puppet func cleanup_client():
+	hide()
+	global_transform.origin = Vector3(-1000,-1000,-1000)
+
+master func check_npc():
+	if not enabled:
+		rpc_id(get_tree().get_rpc_sender_id(),"cleanup_client")
 
 puppet func set_stealth():
 	if not stealth:
@@ -175,7 +183,12 @@ puppet func set_stealth():
 	if is_network_master():
 		rpc("set_stealth")
 
+################################################################################
+
 func _ready():
+	if not is_network_master():
+		rpc_id(0,"check_npc")
+	
 	nodamage = get_node_or_null("Body/SFX/NoDamage")
 	if nodamage == null:
 		nodamage = AudioStreamPlayer3D.new()
@@ -185,17 +198,13 @@ func _ready():
 	set_process(false)
 	glob = Global
 	if hell_objective and not glob.hope_discarded:
-		queue_free()
-		return 
+		cleanup() 
 	elif hell_objective and (glob.hope_discarded):
 		objective = true
-	
 	if (chaos_objective and not glob.chaos_mode):
-		queue_free()
-		return 
+		cleanup() 
 	if chaos_objective and rand_range(0, 100) > 25:
-		queue_free()
-		return 
+		cleanup() 
 	if glob.chaos_mode:
 		if rand_range(0, 100) < 10:
 			stealth_random = true
@@ -211,17 +220,17 @@ func _ready():
 		if health < 70 and health > 20:
 			health = 70
 	if glob.DEAD_CIVS.find(npc_name) != - 1:
-		queue_free()
+		cleanup()
 	if glob.hope_discarded:
 		pass
 	elif (glob.ending_1 or glob.punishment_mode) and random_spawn:
 		randomize()
 		if randi() % 25 != 4:
-			queue_free()
+			cleanup()
 	elif random_spawn:
 		randomize()
 		if randi() % 250 != 4:
-			queue_free()
+			cleanup()
 	deathtimer = Timer.new()
 	add_child(deathtimer)
 	deathtimer.wait_time = 25
@@ -236,6 +245,7 @@ func _ready():
 	poisontimer.wait_time = 1
 	poisontimer.one_shot = true
 	poisontimer.connect("timeout", self, "poison_timeout")
+	
 	body = $Body
 	fireaudio = AudioStreamPlayer3D.new()
 	body.add_child(fireaudio)
@@ -247,8 +257,11 @@ func _ready():
 	torso = $Collisions / Torso
 	head = $Collisions / Head
 	legs = $Collisions / Legs
+
 	new_alert_sphere = alert_sphere.instance()
+	
 	body.add_child(new_alert_sphere)
+	
 	new_alert_sphere.global_transform.origin = body.global_transform.origin
 	if not civilian:
 		weapon = get_node_or_null("Body/Rotation_Helper/Weapon")

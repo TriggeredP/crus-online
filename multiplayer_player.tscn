@@ -1,7 +1,10 @@
-[gd_scene load_steps=105 format=2]
+[gd_scene load_steps=128 format=2]
 
 [ext_resource path="res://MOD_CONTENT/CruS Online/multiplayer_player.gd" type="Script" id=1]
 [ext_resource path="res://MOD_CONTENT/CruS Online/player_model/player_model.tscn" type="PackedScene" id=2]
+[ext_resource path="res://Entities/Particles/muzzleflash.tscn" type="PackedScene" id=3]
+[ext_resource path="res://Sfx/WeaponsPickups/Pistol/pistol_silenced_fire_1.wav" type="AudioStream" id=4]
+[ext_resource path="res://Sfx/WeaponsPickups/SMG/SMG_fire_1.wav" type="AudioStream" id=5]
 [ext_resource path="res://Imported_Mesh/Weapon_Mesh_Only/Nambu.obj" type="ArrayMesh" id=6]
 [ext_resource path="res://Imported_Mesh/Weapon_Mesh_Only/radgun_solid.obj" type="ArrayMesh" id=7]
 [ext_resource path="res://Imported_Mesh/Weapon_Mesh_Only/dartgun.obj" type="ArrayMesh" id=8]
@@ -71,6 +74,21 @@
 [ext_resource path="res://Sfx/wood01.wav" type="AudioStream" id=72]
 [ext_resource path="res://Sfx/Player/kick.wav" type="AudioStream" id=73]
 [ext_resource path="res://Sfx/Player/kickgrunt.wav" type="AudioStream" id=74]
+[ext_resource path="res://Kicksound.tscn" type="PackedScene" id=75]
+[ext_resource path="res://Sfx/WeaponsPickups/dartgun.wav" type="AudioStream" id=76]
+[ext_resource path="res://Sfx/vag.wav" type="AudioStream" id=77]
+[ext_resource path="res://Sfx/WeaponsPickups/Sniper/screamsplosion.wav" type="AudioStream" id=78]
+[ext_resource path="res://Sfx/lightgun.wav" type="AudioStream" id=79]
+[ext_resource path="res://Sfx/WeaponsPickups/Shotgun/shotgun_fire.wav" type="AudioStream" id=80]
+[ext_resource path="res://Sfx/WeaponsPickups/Rocket launcher/rocketlauncher_fire.wav" type="AudioStream" id=81]
+[ext_resource path="res://Sfx/427598__michorvath__ar15-pistol-shot.wav" type="AudioStream" id=82]
+[ext_resource path="res://Sfx/WeaponsPickups/AR/AR_fire.wav" type="AudioStream" id=83]
+[ext_resource path="res://Sfx/WeaponsPickups/S_SMG/fire.wav" type="AudioStream" id=84]
+[ext_resource path="res://Sfx/WeaponsPickups/revolver_fire.wav" type="AudioStream" id=85]
+[ext_resource path="res://Sfx/mg42.wav" type="AudioStream" id=86]
+[ext_resource path="res://Sfx/mechsound.wav" type="AudioStream" id=87]
+[ext_resource path="res://Sfx/WeaponsPickups/steyr.wav" type="AudioStream" id=88]
+[ext_resource path="res://Sfx/WeaponsPickups/flamethrower.wav" type="AudioStream" id=89]
 
 [sub_resource type="GDScript" id=66]
 script/source = "extends Spatial
@@ -101,6 +119,9 @@ extents = Vector3( 0.228365, 0.241875, 0.277687 )
 albedo_texture = ExtResource( 48 )
 metallic_specular = 0.0
 
+[sub_resource type="AudioStreamRandomPitch" id=67]
+audio_stream = ExtResource( 76 )
+
 [sub_resource type="SpatialMaterial" id=3]
 albedo_texture = ExtResource( 35 )
 metallic_specular = 0.0
@@ -116,6 +137,9 @@ metallic_specular = 0.0
 [sub_resource type="SpatialMaterial" id=16]
 albedo_texture = ExtResource( 47 )
 metallic_specular = 0.0
+
+[sub_resource type="AudioStreamRandomPitch" id=69]
+audio_stream = ExtResource( 76 )
 
 [sub_resource type="SpatialMaterial" id=19]
 albedo_texture = ExtResource( 40 )
@@ -153,6 +177,9 @@ metallic_specular = 0.0
 albedo_texture = ExtResource( 39 )
 metallic_specular = 0.0
 
+[sub_resource type="AudioStreamRandomPitch" id=70]
+audio_stream = ExtResource( 77 )
+
 [sub_resource type="SpatialMaterial" id=13]
 albedo_texture = ExtResource( 50 )
 metallic_specular = 0.0
@@ -160,6 +187,9 @@ metallic_specular = 0.0
 [sub_resource type="SpatialMaterial" id=6]
 albedo_texture = ExtResource( 53 )
 metallic_specular = 0.0
+
+[sub_resource type="AudioStreamRandomPitch" id=71]
+audio_stream = ExtResource( 76 )
 
 [sub_resource type="SpatialMaterial" id=4]
 albedo_texture = ExtResource( 51 )
@@ -169,6 +199,9 @@ metallic_specular = 0.0
 params_cull_mode = 2
 albedo_texture = ExtResource( 52 )
 metallic_specular = 0.0
+
+[sub_resource type="AudioStreamRandomPitch" id=68]
+audio_stream = ExtResource( 77 )
 
 [sub_resource type="SpatialMaterial" id=11]
 params_cull_mode = 2
@@ -244,7 +277,7 @@ bones/0/bound_children = [ NodePath("Chest") ]
 bones/6/bound_children = [ NodePath("RightHand") ]
 
 [node name="Head" parent="Puppet/PlayerModel/Armature/Skeleton" index="0"]
-transform = Transform( 0.984369, -0.0293086, 0.173657, 0.0146291, 0.996255, 0.0852166, -0.175505, -0.0813446, 0.981112, -0.00361, 0.616508, 0.0361252 )
+transform = Transform( 0.999961, -0.000857431, 0.00875298, 0.000671633, 0.999775, 0.0212139, -0.0087693, -0.0212076, 0.999737, -0.000539565, 0.61256, -0.0279116 )
 
 [node name="Head" type="StaticBody" parent="Puppet/PlayerModel/Armature/Skeleton/Head" index="1"]
 transform = Transform( 0.5, -2.32831e-10, 0, 0, 0.5, -3.72529e-09, 0, 0, 0.5, 0.00151798, 0.125857, 0.0126366 )
@@ -256,7 +289,7 @@ script = SubResource( 65 )
 shape = SubResource( 64 )
 
 [node name="RightHand" type="BoneAttachment" parent="Puppet/PlayerModel/Armature/Skeleton" index="1"]
-transform = Transform( -0.251886, -0.186773, 0.949562, -0.569482, 0.821935, 0.0106044, -0.78246, -0.538088, -0.313398, 0.182221, 0.644796, 0.0365694 )
+transform = Transform( 0.14914, -0.128445, 0.980438, -0.975317, 0.144175, 0.167249, -0.162837, -0.981181, -0.103771, 0.139553, 0.461656, -0.237993 )
 bone_name = "right_hand"
 
 [node name="Weapons" type="Spatial" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand"]
@@ -268,11 +301,30 @@ visible = false
 mesh = ExtResource( 11 )
 material/0 = ExtResource( 55 )
 
+[node name="Muzzleflash" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/Pistol_Mesh" instance=ExtResource( 3 )]
+transform = Transform( -0.00524261, 0.0231084, -0.399298, 0.010111, 0.399212, 0.0229707, 0.399837, -0.00979215, -0.00581649, 0.00173002, -0.00191712, -0.342979 )
+
+[node name="Pistol_Sound" type="AudioStreamPlayer3D" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/Pistol_Mesh"]
+stream = ExtResource( 4 )
+unit_db = 7.0
+unit_size = 5.0
+bus = "SFX"
+
 [node name="SMG_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
 transform = Transform( -1.60187e-07, -1, -6.70552e-08, 1, -1.42492e-07, 1.49012e-08, 0, 2.98023e-08, 1, -0.0498072, 0.00876129, -0.020474 )
 visible = false
 mesh = ExtResource( 22 )
 material/0 = ExtResource( 30 )
+
+[node name="Muzzleflash" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/SMG_Mesh" instance=ExtResource( 3 )]
+transform = Transform( -0.00524261, 0.0231083, -0.399298, 0.010111, 0.399212, 0.0229707, 0.399837, -0.00979215, -0.00581651, -8.23438e-05, 0.0100292, -0.344445 )
+
+[node name="SMG_Sound" type="AudioStreamPlayer3D" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/SMG_Mesh"]
+stream = ExtResource( 5 )
+unit_db = 7.0
+unit_size = 5.0
+pitch_scale = 0.84
+bus = "SFX"
 
 [node name="Tranq_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
 transform = Transform( -1.62921e-07, -1, 2.84217e-14, 1, -1.62921e-07, 0, 5.68434e-14, 5.68434e-14, 1, 0, 0, -0.0244993 )
@@ -280,11 +332,29 @@ visible = false
 material_override = SubResource( 17 )
 mesh = ExtResource( 8 )
 
+[node name="Placeholder" type="Spatial" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/Tranq_Mesh"]
+transform = Transform( 1, 0, 7.45058e-09, 9.31323e-10, 1, 0, -7.45058e-09, 7.45058e-09, 1, 0, 0, 0 )
+
+[node name="Dart_Sound" type="AudioStreamPlayer3D" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/Tranq_Mesh"]
+stream = SubResource( 67 )
+unit_db = 7.0
+unit_size = 5.0
+pitch_scale = 1.32
+bus = "SFX"
+
 [node name="Baton_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
 transform = Transform( -4.47035e-07, -1.49012e-08, 0.999999, 0.733018, 0.680209, 8.9407e-08, -0.68021, 0.733019, 2.04891e-07, -0.0263802, 0, 0.0769089 )
 visible = false
 mesh = ExtResource( 29 )
 material/0 = SubResource( 3 )
+
+[node name="Batonsound" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/Baton_Mesh" instance=ExtResource( 75 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.455319, 1.30754 )
+stream = ExtResource( 73 )
+unit_db = 7.0
+unit_size = 5.0
+pitch_scale = 2.43
+bus = "SFX"
 
 [node name="Shotgun_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
 transform = Transform( -1.78814e-07, -1, -1.11759e-08, 1, -1.78814e-07, 1.21072e-07, -6.51926e-08, -2.23517e-08, 1, 0.023242, -0.0300338, -2.98023e-08 )
@@ -292,11 +362,29 @@ visible = false
 material_override = SubResource( 15 )
 mesh = ExtResource( 25 )
 
+[node name="Muzzleflash" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/Shotgun_Mesh" instance=ExtResource( 3 )]
+transform = Transform( -0.00858181, 0.0209804, -0.399358, -0.0100457, 0.399311, 0.021194, 0.399781, 0.0104844, -0.0080403, -0.000860482, 0.020316, -0.461748 )
+
+[node name="Shotgun_Sound" type="AudioStreamPlayer3D" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/Shotgun_Mesh"]
+stream = ExtResource( 80 )
+unit_db = 7.0
+unit_size = 5.0
+bus = "SFX"
+
 [node name="RL_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
 transform = Transform( -2.38419e-07, -1, -2.32831e-08, 0.995678, -1.49012e-07, 0.0928746, -0.0928747, -2.98023e-08, 0.995678, 0.0301419, 0.00730366, 0.0436859 )
 visible = false
 mesh = ExtResource( 23 )
 material/0 = ExtResource( 57 )
+
+[node name="Placeholder" type="Spatial" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/RL_Mesh"]
+transform = Transform( 1, 0, 7.45058e-09, 9.31323e-10, 1, 0, -7.45058e-09, 7.45058e-09, 1, 0, 0, 0 )
+
+[node name="RL_Sound" type="AudioStreamPlayer3D" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/RL_Mesh"]
+stream = ExtResource( 81 )
+unit_db = 7.0
+unit_size = 5.0
+bus = "SFX"
 
 [node name="Sniper_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
 transform = Transform( -1.78814e-07, -1, 0, 1, -1.78814e-07, 5.21541e-08, -3.1665e-08, -1.49012e-08, 1, 2.98023e-08, -5.96046e-08, -0.267074 )
@@ -304,11 +392,31 @@ visible = false
 material_override = ExtResource( 34 )
 mesh = ExtResource( 19 )
 
+[node name="Muzzleflash" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/Sniper_Mesh" instance=ExtResource( 3 )]
+transform = Transform( -0.00524258, 0.0231084, -0.399299, 0.010111, 0.399212, 0.0229707, 0.399838, -0.00979214, -0.00581651, 0.00215334, 0.01802, -0.974579 )
+
+[node name="Sniper_Sound" type="AudioStreamPlayer3D" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/Sniper_Mesh"]
+stream = ExtResource( 82 )
+unit_db = 7.0
+unit_size = 5.0
+pitch_scale = 0.3
+bus = "SFX"
+
 [node name="AR_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
 transform = Transform( -1.62921e-07, -1, 3.55271e-14, 1, -1.62921e-07, 0, 7.10543e-14, 7.10543e-14, 1, 0.00964653, -0.00763553, 0 )
 visible = false
 material_override = ExtResource( 31 )
 mesh = ExtResource( 27 )
+
+[node name="Muzzleflash" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/AR_Mesh" instance=ExtResource( 3 )]
+transform = Transform( -0.00524261, 0.0231084, -0.399298, 0.010111, 0.399212, 0.0229707, 0.399837, -0.00979212, -0.00581649, 0.00422111, 0.0242242, -0.325512 )
+
+[node name="AR_Sound" type="AudioStreamPlayer3D" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/AR_Mesh"]
+stream = ExtResource( 83 )
+unit_db = 7.0
+unit_size = 5.0
+pitch_scale = 1.45
+bus = "SFX"
 
 [node name="S_SMG_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
 transform = Transform( -1.62921e-07, -1, 2.84217e-14, 1, -1.62921e-07, 0, 5.68434e-14, 5.68434e-14, 1, 0, 0, -0.00960273 )
@@ -316,11 +424,30 @@ visible = false
 material_override = SubResource( 7 )
 mesh = ExtResource( 12 )
 
+[node name="Muzzleflash" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/S_SMG_Mesh" instance=ExtResource( 3 )]
+transform = Transform( -0.00949757, 0.0203542, -0.399369, -0.0156923, 0.399155, 0.0207165, 0.399579, 0.0161595, -0.00867909, 0.0205972, -0.0117747, -0.536829 )
+
+[node name="S_SMG_Sound" type="AudioStreamPlayer3D" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/S_SMG_Mesh"]
+stream = ExtResource( 84 )
+unit_db = 7.0
+unit_size = 5.0
+pitch_scale = 0.95
+bus = "SFX"
+
 [node name="Nambu_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
-transform = Transform( -1.62921e-07, -1, 2.13163e-14, 1, -1.62921e-07, 0, 4.26326e-14, 4.26326e-14, 1, 0, -0.0174051, 0 )
+transform = Transform( -1.30385e-07, -1, -3.72529e-08, 1, -2.51457e-08, -1.49012e-08, 1.49012e-08, 2.23517e-08, 1, -0.0434647, 0.00783011, -0.170403 )
 visible = false
 material_override = ExtResource( 33 )
 mesh = ExtResource( 6 )
+
+[node name="Muzzleflash" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/Nambu_Mesh" instance=ExtResource( 3 )]
+transform = Transform( -0.00524261, 0.0231084, -0.399298, 0.010111, 0.399212, 0.0229707, 0.399837, -0.00979214, -0.00581649, -0.0022741, 0.0235802, -0.0792827 )
+
+[node name="Nambu_Sound" type="AudioStreamPlayer3D" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/Nambu_Mesh"]
+stream = ExtResource( 85 )
+unit_db = 7.0
+unit_size = 5.0
+bus = "SFX"
 
 [node name="Gas_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
 transform = Transform( -1.62921e-07, -1, 2.13163e-14, 1, -1.62921e-07, 0, 4.26326e-14, 4.26326e-14, 1, 0, 0, -0.0167323 )
@@ -328,11 +455,30 @@ visible = false
 material_override = SubResource( 16 )
 mesh = ExtResource( 24 )
 
+[node name="Placeholder" type="Spatial" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/Gas_Mesh"]
+transform = Transform( 1, 0, 7.45058e-09, 9.31323e-10, 1, 0, -7.45058e-09, 7.45058e-09, 1, 0, 0, 0 )
+
+[node name="Dart_Sound" type="AudioStreamPlayer3D" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/Gas_Mesh"]
+stream = SubResource( 69 )
+unit_db = 7.0
+unit_size = 5.0
+pitch_scale = 1.32
+bus = "SFX"
+
 [node name="MG3_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
 transform = Transform( -1.62921e-07, -1, 4.9738e-14, 1, -1.62921e-07, 0, 9.9476e-14, 9.9476e-14, 1, 0.0127081, -0.00718672, 0.0170767 )
 visible = false
 material_override = SubResource( 19 )
 mesh = ExtResource( 10 )
+
+[node name="Muzzleflash" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/MG3_Mesh" instance=ExtResource( 3 )]
+transform = Transform( -0.00524261, 0.0231084, -0.399298, 0.010111, 0.399212, 0.0229707, 0.399837, -0.00979212, -0.00581649, 0.00119251, 0.0342695, -0.995539 )
+
+[node name="MG3_Sound" type="AudioStreamPlayer3D" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/MG3_Mesh"]
+stream = ExtResource( 86 )
+unit_db = 7.0
+unit_size = 5.0
+bus = "SFX"
 
 [node name="Autoshotgun_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
 transform = Transform( -1.62921e-07, -1, 6.39488e-14, 1, -1.62921e-07, 0, 1.27898e-13, 1.27898e-13, 1, 0.0155858, -0.0170236, 0.021488 )
@@ -340,11 +486,23 @@ visible = false
 material_override = SubResource( 14 )
 mesh = ExtResource( 21 )
 
+[node name="Muzzleflash" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/Autoshotgun_Mesh" instance=ExtResource( 3 )]
+transform = Transform( -0.00524261, 0.0231084, -0.399298, 0.010111, 0.399212, 0.0229707, 0.399837, -0.00979213, -0.00581649, 0.037868, -0.00232983, -0.685321 )
+
+[node name="Shotgun_Sound" type="AudioStreamPlayer3D" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/Autoshotgun_Mesh"]
+stream = ExtResource( 80 )
+unit_db = 7.0
+unit_size = 5.0
+bus = "SFX"
+
 [node name="Mauser_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
 transform = Transform( -1.62921e-07, -1, 4.9738e-14, 1, -1.62921e-07, 0, 9.9476e-14, 9.9476e-14, 1, 0.0125899, -0.0349369, 0.0404422 )
 visible = false
 material_override = SubResource( 20 )
 mesh = ExtResource( 17 )
+
+[node name="Muzzleflash" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/Mauser_Mesh" instance=ExtResource( 3 )]
+transform = Transform( -0.00880968, 0.0208265, -0.399361, -0.0114455, 0.39928, 0.0210748, 0.399739, 0.0118915, -0.008198, -0.0049268, 0.019686, -1.07631 )
 
 [node name="Bore_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
 transform = Transform( -1.62921e-07, -1, 4.9738e-14, 1, -1.62921e-07, 0, 9.9476e-14, 9.9476e-14, 1, 0.00996399, -0.0128468, 0.0250506 )
@@ -352,11 +510,17 @@ visible = false
 material_override = ExtResource( 32 )
 mesh = ExtResource( 9 )
 
+[node name="Placeholder" type="Spatial" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/Bore_Mesh"]
+transform = Transform( 1, 0, 7.45058e-09, 9.31323e-10, 1, 0, -7.45058e-09, 7.45058e-09, 1, 0, 0, 0 )
+
 [node name="MKR_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
 transform = Transform( -1.62921e-07, -1, 5.68434e-14, 1, -1.62921e-07, 0, 1.13687e-13, 1.13687e-13, 1, 0.0252202, -0.025261, 0.0514158 )
 visible = false
 material_override = SubResource( 22 )
 mesh = ExtResource( 15 )
+
+[node name="Muzzleflash" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/MKR_Mesh" instance=ExtResource( 3 )]
+transform = Transform( -0.00524261, 0.0231084, -0.399298, 0.010111, 0.399212, 0.0229707, 0.399837, -0.00979213, -0.00581649, 0.00163668, 0.0142248, -0.397707 )
 
 [node name="Rad_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
 transform = Transform( -1.62921e-07, -1, 9.9476e-14, 1, -1.62921e-07, -1.42109e-14, 1.7053e-13, 1.98952e-13, 1, 0.0322447, -0.0232374, 0.086473 )
@@ -364,17 +528,35 @@ visible = false
 material_override = SubResource( 18 )
 mesh = ExtResource( 7 )
 
+[node name="Placeholder" type="Spatial" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/Rad_Mesh"]
+transform = Transform( 1, 0, 7.45058e-09, 9.31323e-10, 1, 0, -7.45058e-09, 7.45058e-09, 1, 0, 0, 0 )
+
+[node name="Rad_Sound" type="AudioStreamPlayer3D" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/Rad_Mesh"]
+stream = ExtResource( 87 )
+unit_db = 7.0
+unit_size = 5.0
+pitch_scale = 2.03
+bus = "SFX"
+
 [node name="Flashlight_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
 transform = Transform( 0.680209, -0.733018, 4.26326e-14, 0.733018, 0.680209, 0, 0, 8.52651e-14, 1, 0.0678082, 1.49012e-08, 0.0712996 )
 visible = false
 material_override = SubResource( 5 )
 mesh = ExtResource( 16 )
 
+[node name="Placeholder" type="Spatial" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/Flashlight_Mesh"]
+transform = Transform( 1, 0, 7.45058e-09, 9.31323e-10, 1, 0, -7.45058e-09, 7.45058e-09, 1, 0, 0, 0 )
+
+[node name="Placeholder2" type="AudioStreamPlayer3D" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/Flashlight_Mesh"]
+
 [node name="Zippy_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
-transform = Transform( -1.62921e-07, -1, 6.39488e-14, 1, -1.62921e-07, 0, 1.27898e-13, 1.27898e-13, 1, 0.0326614, -0.0253545, 0.0754782 )
+transform = Transform( -8.00937e-08, -1, -8.9407e-08, 1, 1.55531e-07, -5.21541e-08, 5.96046e-08, 1.04308e-07, 1, 0.0219309, -0.0177941, 0.0208288 )
 visible = false
 material_override = SubResource( 2 )
 mesh = ExtResource( 13 )
+
+[node name="Muzzleflash" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/Zippy_Mesh" instance=ExtResource( 3 )]
+transform = Transform( -0.00433452, 0.0104608, -0.199679, -0.00529047, 0.19965, 0.0105742, 0.199883, 0.00551116, -0.00405023, 0.0036006, 0.0119138, -0.101614 )
 
 [node name="AN94_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
 transform = Transform( -1.62921e-07, -1, 4.9738e-14, 1, -1.62921e-07, 0, 9.9476e-14, 9.9476e-14, 1, 0.0205041, -0.0260217, 0.0240001 )
@@ -382,11 +564,23 @@ visible = false
 material_override = SubResource( 8 )
 mesh = ExtResource( 14 )
 
+[node name="Muzzleflash" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/AN94_Mesh" instance=ExtResource( 3 )]
+transform = Transform( -0.00628836, 0.0224675, -0.399319, 0.00386969, 0.399353, 0.0224084, 0.399931, -0.00351074, -0.00649563, -0.00214475, 0.0155928, -0.688621 )
+
 [node name="VAG72_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
 transform = Transform( -1.62921e-07, -1, 6.39488e-14, 1, -1.62921e-07, 0, 1.27898e-13, 1.27898e-13, 1, 0.0357013, -0.0203427, 0.0429826 )
 visible = false
 material_override = SubResource( 12 )
 mesh = ExtResource( 26 )
+
+[node name="Muzzleflash" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/VAG72_Mesh" instance=ExtResource( 3 )]
+transform = Transform( -0.00393195, 0.0173313, -0.299473, 0.00758323, 0.299409, 0.017228, 0.299879, -0.00734407, -0.00436228, -0.012616, 0.0525203, -0.18792 )
+
+[node name="VAG72_Sound" type="AudioStreamPlayer3D" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/VAG72_Mesh"]
+stream = SubResource( 70 )
+unit_db = 7.0
+unit_size = 5.0
+bus = "SFX"
 
 [node name="Steyr_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
 transform = Transform( -1.62921e-07, -1, 4.9738e-14, 1, -1.62921e-07, 0, 9.9476e-14, 9.9476e-14, 1, 0.0205038, -0.0243492, 0.0683106 )
@@ -394,11 +588,30 @@ visible = false
 material_override = SubResource( 13 )
 mesh = ExtResource( 18 )
 
+[node name="Muzzleflash" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/Steyr_Mesh" instance=ExtResource( 3 )]
+transform = Transform( -0.00354878, 0.0217584, -0.399392, -0.00869558, 0.399309, 0.0218311, 0.399889, 0.00887615, -0.0030697, -0.00138977, 0.0437344, -0.510623 )
+
+[node name="Steyr_Sound" type="AudioStreamPlayer3D" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/Steyr_Mesh"]
+stream = ExtResource( 88 )
+unit_db = 7.0
+unit_size = 5.0
+bus = "SFX"
+
 [node name="DNA_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
 transform = Transform( -1.62921e-07, -1, 4.26326e-14, 1, -1.62921e-07, 0, 8.52651e-14, 8.52651e-14, 1, 0, -0.0189149, -0.000422537 )
 visible = false
 material_override = SubResource( 6 )
 mesh = ExtResource( 20 )
+
+[node name="Muzzleflash" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/DNA_Mesh" instance=ExtResource( 3 )]
+transform = Transform( 0.0013907, 0.023574, -0.399303, 0.00894973, 0.399203, 0.0235993, 0.399897, -0.00901616, 0.000860419, -0.000650287, -0.0201312, -0.376765 )
+
+[node name="Dart_Sound" type="AudioStreamPlayer3D" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/DNA_Mesh"]
+stream = SubResource( 71 )
+unit_db = 7.0
+unit_size = 5.0
+pitch_scale = 1.32
+bus = "SFX"
 
 [node name="Rod_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
 transform = Transform( -4.32209e-07, -1.61835e-08, 0.999999, 0.733018, 0.680209, 7.45059e-08, -0.68021, 0.733019, 1.94707e-07, -0.272677, -0.0249341, 0.0878842 )
@@ -406,11 +619,25 @@ visible = false
 material_override = ExtResource( 58 )
 mesh = ExtResource( 28 )
 
+[node name="Placeholder" type="Spatial" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/Rod_Mesh"]
+transform = Transform( 1, 0, 7.45058e-09, 9.31323e-10, 1, 0, -7.45058e-09, 7.45058e-09, 1, 0, 0, 0 )
+
 [node name="FT_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
 transform = Transform( -1.62921e-07, -1, 2.84217e-14, 1, -1.62921e-07, 0, 5.68434e-14, 5.68434e-14, 1, 0.0508103, 1.49012e-08, 0.0863747 )
 visible = false
 material_override = SubResource( 4 )
 mesh = ExtResource( 59 )
+
+[node name="Placeholder" type="Spatial" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/FT_Mesh"]
+transform = Transform( 1, 0, 7.45058e-09, 9.31323e-10, 1, 0, -7.45058e-09, 7.45058e-09, 1, 0, 0, 0 )
+
+[node name="FT_Sound" type="AudioStreamPlayer3D" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/FT_Mesh"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.163491, 0, 0.603554 )
+stream = ExtResource( 89 )
+unit_db = 7.0
+unit_size = 5.0
+max_db = 0.0
+bus = "SFX"
 
 [node name="SKS_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
 transform = Transform( -1.62921e-07, -1, 3.55271e-14, 1, -1.62921e-07, 0, 7.10543e-14, 7.10543e-14, 1, 0.0221109, -0.0333307, 0 )
@@ -418,11 +645,38 @@ visible = false
 material_override = SubResource( 9 )
 mesh = ExtResource( 61 )
 
+[node name="Muzzleflash" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/SKS_Mesh" instance=ExtResource( 3 )]
+transform = Transform( -0.0024731, 0.0217598, -0.399401, -0.00733706, 0.399338, 0.0218018, 0.399925, 0.00746092, -0.00206998, -0.00177824, 0.0345212, -0.679883 )
+
+[node name="SKS_Sound" type="AudioStreamPlayer3D" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/SKS_Mesh"]
+stream = SubResource( 68 )
+unit_db = 7.0
+unit_size = 5.0
+pitch_scale = 0.85
+bus = "SFX"
+
+[node name="SKS_Sound2" type="AudioStreamPlayer3D" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/SKS_Mesh"]
+stream = ExtResource( 78 )
+unit_db = 7.0
+unit_size = 5.0
+pitch_scale = 3.17
+bus = "SFX"
+
 [node name="Nailer_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
 transform = Transform( -1.62921e-07, -1, 2.13163e-14, 1, -1.62921e-07, 0, 4.26326e-14, 4.26326e-14, 1, 0, 0, 0.000238955 )
 visible = false
 material_override = SubResource( 11 )
 mesh = ExtResource( 60 )
+
+[node name="Muzzleflash" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/Nailer_Mesh" instance=ExtResource( 3 )]
+transform = Transform( 0.0105177, 0.0242357, -0.399127, 0.00733458, 0.399186, 0.0244326, 0.399794, -0.00796096, 0.0100518, -0.00489646, -0.0238975, -0.276728 )
+
+[node name="Nailer_Sound" type="AudioStreamPlayer3D" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/Nailer_Mesh"]
+stream = ExtResource( 4 )
+unit_db = 7.0
+unit_size = 5.0
+pitch_scale = 3.59
+bus = "SFX"
 
 [node name="SHOCK_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
 transform = Transform( -1.62921e-07, -1, 2.84217e-14, 1, -1.62921e-07, 0, 5.68434e-14, 5.68434e-14, 1, 0, -0.020564, 0.040672 )
@@ -430,11 +684,29 @@ visible = false
 material_override = SubResource( 10 )
 mesh = ExtResource( 62 )
 
+[node name="Muzzleflash" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/SHOCK_Mesh" instance=ExtResource( 3 )]
+transform = Transform( -0.0100238, 0.0227807, -0.399225, 0.0109413, 0.399216, 0.0225056, 0.399724, -0.0103561, -0.0106274, 0.0020338, 0.0146874, -0.623748 )
+
+[node name="Shotgun_Sound" type="AudioStreamPlayer3D" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/SHOCK_Mesh"]
+stream = ExtResource( 80 )
+unit_db = 7.0
+unit_size = 5.0
+bus = "SFX"
+
 [node name="Light_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
 transform = Transform( -1.78814e-07, -1, 0, 1, -1.78814e-07, 5.21541e-08, -3.1665e-08, -1.49012e-08, 1, -0.0594215, 0.0202921, 0.168891 )
 visible = false
 material_override = SubResource( 21 )
 mesh = ExtResource( 63 )
+
+[node name="Placeholder" type="Spatial" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/Light_Mesh"]
+transform = Transform( 1, 0, 7.45058e-09, 9.31323e-10, 1, 0, -7.45058e-09, 7.45058e-09, 1, 0, 0, 0 )
+
+[node name="Light_Sound" type="AudioStreamPlayer3D" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/Light_Mesh"]
+stream = ExtResource( 79 )
+unit_db = 7.0
+unit_size = 5.0
+bus = "SFX"
 
 [node name="Hand" type="StaticBody" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand"]
 transform = Transform( 0.282236, -0.926445, 0.249082, -0.292867, -0.330449, -0.897237, 0.913549, 0.180284, -0.364591, 0.0964885, 0.186504, -0.0474778 )
@@ -466,7 +738,7 @@ material_override = null
 [node name="BoneAttachment" type="BoneAttachment" parent="Puppet/PlayerModel/Armature/Skeleton" index="5"]
 
 [node name="AnimTree" parent="Puppet/PlayerModel" index="2"]
-parameters/ARMS_BLEND/blend_amount = -1.0
+parameters/ARMS_BLEND/blend_amount = 1.0
 parameters/CROUCHMOVE_AMOUNT/blend_amount = 1.0
 parameters/RUN_FORWARD_DIRECTION/blend_amount = 0
 
@@ -535,5 +807,10 @@ unit_db = 1.0
 unit_size = 5.7
 pitch_scale = 0.91
 bus = "SFX"
+
+[node name="FlashBuffer" type="Timer" parent="."]
+wait_time = 0.2
+
+[connection signal="timeout" from="FlashBuffer" to="." method="flash_hide"]
 
 [editable path="Puppet/PlayerModel"]

@@ -194,6 +194,8 @@ onready var stealthMaterial = preload("res://Materials/seethrough.tres")
 
 var inMenu = false
 
+onready var playerPuppet = get_tree().get_nodes_in_group("Multiplayer")[0].playerPuppet
+
 remote func _create_drop_weapon(recivedTransform,recivedHoldPos,implantThrowBonus,recivedCurrentWeapon,recivedAmmo,playerVelocity,recivdeRandName,playerIgnoreId):
 	var new_weapon_drop = weapon_drop.instance()
 	new_weapon_drop.set_name(new_weapon_drop.name + "#" + str(recivdeRandName))
@@ -1235,6 +1237,7 @@ func cancer()->void :
 	if timer.is_stopped():
 		timer.start(0.2)
 		audio[0].play()
+		playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 		if player:
 			magazine_ammo[current_weapon] -= 1
 		raycast.rotation = raycast_init_rot
@@ -1289,6 +1292,7 @@ func smg()->void :
 				get_parent().get_parent().muzzleflash.show()
 		audio[current_weapon].play()
 		audio[current_weapon].pitch_scale = float(magazine_ammo[current_weapon]) / MAX_MAG_AMMO[current_weapon] + 0.4 + rand_range( - 0.1, 0.1)
+		playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 		magazine_ammo[current_weapon] -= 1
 
 func steyr()->void :
@@ -1301,6 +1305,7 @@ func steyr()->void :
 			if get_parent().get_parent().muzzleflash:
 				get_parent().get_parent().muzzleflash.show()
 		audio[current_weapon].play()
+		playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 		
 		
 		timer.start(0.2)
@@ -1438,6 +1443,7 @@ func mkr()->void :
 				get_parent().get_parent().muzzleflash.show()
 		audio[current_weapon].play()
 		audio[current_weapon].pitch_scale = float(magazine_ammo[current_weapon]) / MAX_MAG_AMMO[current_weapon] + 0.4 + rand_range( - 0.1, 0.1)
+		playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 		magazine_ammo[current_weapon] -= 1
 
 func blackjack()->void :
@@ -1454,6 +1460,7 @@ func blackjack_timeout():
 			var col_n = (global_transform.origin + Vector3.DOWN - ($Front_Pos_Helper.global_transform.origin + Vector3.UP * 3)).normalized()
 			if global_transform.origin.distance_to(col_p) < 3 and is_instance_valid(col):
 				$Batonsound.play()
+				playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 				glob.player.player_velocity += 5 * col_n
 				glob.player.player_view.fov *= 1.02
 				if col.has_method("tranq_timeout"):
@@ -1516,7 +1523,7 @@ func mg3()->void :
 			if get_parent().get_parent().muzzleflash:
 				get_parent().get_parent().muzzleflash.show()
 		audio[current_weapon][0].play()
-		
+		playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 		
 
 		magazine_ammo[current_weapon] -= 1
@@ -1551,7 +1558,7 @@ func silenced_smg()->void :
 				get_parent().get_parent().muzzleflash.show()
 		audio[current_weapon].play()
 		audio[current_weapon].pitch_scale = float(magazine_ammo[current_weapon]) / MAX_MAG_AMMO[current_weapon] + 0.4
-
+		playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 		magazine_ammo[current_weapon] -= 1
 
 func nailer()->void :
@@ -1587,7 +1594,7 @@ func nailer()->void :
 			if get_parent().get_parent().muzzleflash:
 				get_parent().get_parent().muzzleflash.show()
 		audio[current_weapon].play()
-		
+		playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 
 		magazine_ammo[current_weapon] -= 1
 
@@ -1637,7 +1644,7 @@ func an94_internal():
 			anim.stop()
 			anim.play(FIRE_ANIM[current_weapon])
 		audio[current_weapon].play()
-		
+		playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 
 		magazine_ammo[current_weapon] -= 1
 
@@ -1692,7 +1699,7 @@ func ar_internal():
 			anim.stop()
 			anim.play(FIRE_ANIM[current_weapon])
 		audio[current_weapon].play()
-		
+		playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 
 		magazine_ammo[current_weapon] -= 1
 func zippy()->void :
@@ -1735,6 +1742,7 @@ func zippy()->void :
 				
 			audio[current_weapon].play()
 			audio[current_weapon].pitch_scale = float(magazine_ammo[current_weapon]) / MAX_MAG_AMMO[current_weapon] + 0.4
+			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 			magazine_ammo[current_weapon] -= 1
 		elif rand == 1:
 			timer.start(0.07)
@@ -1742,6 +1750,7 @@ func zippy()->void :
 			muzzle_light.light_energy = 1
 			magazine_ammo[current_weapon] -= 1
 			audio[current_weapon].play()
+			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 			glob.player.damage(5, Vector3.ZERO, global_transform.origin, global_transform.origin)
 func pistol()->void :
 	if timer.is_stopped():
@@ -1786,6 +1795,7 @@ func pistol()->void :
 			
 		audio[current_weapon].play()
 		audio[current_weapon].pitch_scale = float(magazine_ammo[current_weapon]) / MAX_MAG_AMMO[current_weapon] + 0.4
+		playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 		magazine_ammo[current_weapon] -= 1
 
 
@@ -1830,7 +1840,7 @@ func vag72()->void :
 
 			
 		audio[current_weapon].play()
-		
+		playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 		magazine_ammo[current_weapon] -= 1
 
 func sks()->void :
@@ -1868,6 +1878,7 @@ func sks()->void :
 			else :
 				dmg = 20000
 				$SKS_Sound2.play()
+				playerPuppet.shoot_play(audio[current_weapon].pitch_scale, 1)
 			damage[current_weapon] = dmg
 			print(damage[current_weapon])
 			do_damage(collider)
@@ -1891,6 +1902,7 @@ func sks()->void :
 
 			
 		$SKS_Sound.play()
+		playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 		
 		
 
@@ -1929,6 +1941,7 @@ func skullgun_internal():
 			
 			
 		audio[0].play()
+		playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 		
 
 
@@ -1967,7 +1980,7 @@ func nambu()->void :
 			get_parent().rotation.x -= 0.1
 		audio[current_weapon].play()
 		audio[current_weapon].pitch_scale = float(magazine_ammo[current_weapon]) / MAX_MAG_AMMO[current_weapon] + 0.4
-		
+		playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 		
 	
 func nambu_fire():
@@ -1992,6 +2005,7 @@ func nambu_fire():
 			get_parent().rotation.x -= 0.1
 		audio[current_weapon].play()
 		audio[current_weapon].pitch_scale = float(magazine_ammo[current_weapon]) / MAX_MAG_AMMO[current_weapon] + 0.4
+		playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 	
 func shoot_through(collider, collision_p):
 	if collider.has_method("damage"):
@@ -2077,7 +2091,7 @@ func sniper()->void :
 			anim.play(FIRE_ANIM[current_weapon])
 		
 		audio[current_weapon].play()
-		
+		playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 		magazine_ammo[current_weapon] -= 1
 		if player:
 			yield (get_tree().create_timer(0.1), "timeout")
@@ -2131,6 +2145,7 @@ func mauser()->void :
 		
 		audio[current_weapon].play()
 		audio[current_weapon].pitch_scale = float(magazine_ammo[current_weapon]) / MAX_MAG_AMMO[current_weapon]
+		playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 		magazine_ammo[current_weapon] -= 1
 		if player:
 			yield (get_tree().create_timer(0.2), "timeout")
@@ -2160,6 +2175,7 @@ func shock()->void :
 			anim.play(FIRE_ANIM[current_weapon])
 		audio[current_weapon].play()
 		audio[current_weapon].pitch_scale = float(magazine_ammo[current_weapon]) / MAX_MAG_AMMO[current_weapon] + 0.4
+		playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 		magazine_ammo[current_weapon] -= 1
 		
 		if player:
@@ -2187,6 +2203,7 @@ func shotgun()->void :
 			anim.play(FIRE_ANIM[current_weapon])
 		audio[current_weapon].play()
 		audio[current_weapon].pitch_scale = float(magazine_ammo[current_weapon]) / MAX_MAG_AMMO[current_weapon] + 0.4
+		playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 		magazine_ammo[current_weapon] -= 1
 		
 		if player:
@@ -2217,7 +2234,7 @@ func autoshotgun()->void :
 			$OmniLight.light_energy = 1
 			anim.play(FIRE_ANIM[current_weapon])
 		audio[current_weapon].play()
-		
+		playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 		magazine_ammo[current_weapon] -= 1
 		
 		if player:
@@ -2255,6 +2272,7 @@ func rocket_launcher()->void :
 				anim.stop()
 				anim.play(FIRE_ANIM[current_weapon])
 				audio[current_weapon].play()
+				playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 				glob.player.reticle.shoot()
 			else :
 				missile_new.set_collision_mask_bit(2, 0)
@@ -2277,6 +2295,7 @@ func light()->void :
 				anim.stop()
 				anim.play(FIRE_ANIM[current_weapon])
 				audio[current_weapon].play()
+				playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 				glob.player.reticle.shoot()
 				get_parent().rotation.x -= rand_range(0, 0.03)
 				player_weapon.rotation.z = 0 + rand_range( - 0.1, 0.1)
@@ -2316,6 +2335,7 @@ func gas()->void :
 			timer.start(3)
 			
 			audio[current_weapon].play()
+			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 			if player:
 				magazine_ammo[current_weapon] -= 1
 				anim.stop()
@@ -2370,18 +2390,21 @@ func bore()->void :
 			anim.stop()
 			anim.play(FIRE_ANIM[current_weapon])
 			audio[current_weapon].play()
+			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 			glob.player.reticle.shoot()
 			
 func radiator()->void :
 	audio[current_weapon].pitch_scale = clamp(cylinder_velocity * 10 + 0.01, 2.0, 4)
 	if not audio[current_weapon].playing:
 		audio[current_weapon].play()
+		playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 	cylinder_velocity += 0.005
 	
 	if cylinder_velocity < 0.1:
 		return 
 	if timer.is_stopped():
 		$Rad_Sound2.play()
+		playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 		timer.start(0.8)
 		$Radiation_Area / MeshInstance.scale.z = 1
 		$Radiation_Area / MeshInstance.scale.x = 1
@@ -2428,6 +2451,7 @@ func tranq()->void :
 			
 			
 			audio[current_weapon].play()
+			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 			if player:
 				magazine_ammo[current_weapon] -= 1
 				anim.stop()
@@ -2588,6 +2612,7 @@ func shoot()->void :
 			if not audio[current_weapon].playing:
 				if Input.is_action_pressed("mouse_1"):
 					audio[current_weapon].play()
+					playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 		W_NAILER:
 			nailer()
 	set_UI_ammo()

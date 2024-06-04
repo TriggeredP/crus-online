@@ -1,7 +1,5 @@
 extends Spatial
 
-var singleton
-
 var weaponsMesh
 var currentWeaponId = 0
 
@@ -67,6 +65,7 @@ remote func _update_puppet(weaponId,playerIsDead,playerOnFloor,playerMovement,pl
 		weaponBlend = lerp(weaponBlend,1,0.1)
 		weaponsMesh[currentWeaponId].hide()
 		weaponsMesh[weaponId].show()
+		weaponsMesh[weaponId].get_child(0).hide()
 		currentWeaponId = weaponId
 	
 	animTree.set("parameters/ARMS_BLEND/blend_amount", weaponBlend)
@@ -80,6 +79,9 @@ func _ready():
 	$Puppet/Nickname.modulate = Color(color)
 	
 	rset_config("transform_lerp", MultiplayerAPI.RPC_MODE_REMOTE)
+	
+	if is_network_master():
+		get_tree().get_nodes_in_group("Multiplayer")[0].playerPuppet = self
 
 func play_death_sound():
 	$Puppet/PlayerModel/SFX/IED1.play()
@@ -124,3 +126,15 @@ func drop_weapon():
 
 func setup_puppet(id):
 	$Puppet/PlayerModel/Armature/Skeleton/Chest/Body.set_meta("puppetId",id)
+
+func shoot_play(pitch, soundId = 0):
+	rpc("shoot_commit", pitch, soundId)
+
+remote func shoot_commit(pitch, soundId):
+	weaponsMesh[currentWeaponId].get_child(0).show()
+	weaponsMesh[currentWeaponId].get_child(1 + soundId).pitch_scale = pitch
+	weaponsMesh[currentWeaponId].get_child(1 + soundId).play()
+	$FlashBuffer.start()
+
+func flash_hide():
+	weaponsMesh[currentWeaponId].get_child(0).hide()

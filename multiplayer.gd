@@ -1,6 +1,6 @@
 extends Node
 
-var version = "Alpha 280324/2240"
+var version = "Alpha 040624/2323"
 
 var player_info = {}
 
@@ -35,6 +35,8 @@ onready var Sync = $Sync
 onready var Players = $Players
 onready var Menu = $Menu
 onready var Hint = $Hint
+
+var playerPuppet = null
 
 signal status_update(status)
 signal players_update(data)

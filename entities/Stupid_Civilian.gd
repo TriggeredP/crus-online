@@ -128,7 +128,6 @@ func _physics_process(delta):
 		var playerData = get_near_player()
 		
 		if playerData.distance > glob.draw_distance + 10:
-			print("low draw distance")
 			return 
 		
 		var fps = Global.fps
