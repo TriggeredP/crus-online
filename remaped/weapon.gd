@@ -2,8 +2,6 @@ extends Spatial
 export  var player:bool = false
 export  var enemy_accuracy:float = 0.1
 
-
-
 enum {W_PISTOL, W_SMG, W_TRANQ, W_BLACKJACK, W_SHOTGUN, W_ROCKET_LAUNCHER, W_SNIPER, W_AR, W_SILENCED_SMG, W_NAMBU, W_GAS, W_MG3, W_AUTOSHOTGUN, W_MAUSER, W_BORE, W_MKR, W_RADIATOR, W_FLASHLIGHT, W_ZIPPY, W_AN94, W_VAG72, W_STEYR, W_CANCER, W_ROD, W_FLAMETHROWER, W_SKS, W_NAILER, W_SHOCK, W_LIGHT}
 const W_NAMES = ["10x25mm Subsonic", "9x19mm Corporate", "Animal Tranquilizer", null, "12 Gauge Flechette", "125mm HEAT", "20x124mm AP", "4.73×33mm Caseless", "9x19mm Goreforce", ".38 Suspicious", "50mm Flesh Eater Grenade", "7.62×51mm DU", "12 Gauge Super Auto", "7.62x51mm Executive", "Null", "4.5×26mm MCR", "null", "null", ".22 SR", "5.45×39mm Abyss", "7.62mm Rancid", "5.56×45mm Sabot", "DNA Scrambler", null, "Fuel", "7.62×39mm Financial", "1x45mm Depleted Uranium Nail", "12 Gauge Shockforce", "Thrngnrngnrxnon"]
 enum {T_FLESH, T_ENVIRONMENT}
@@ -196,10 +194,10 @@ var inMenu = false
 
 onready var playerPuppet = get_tree().get_nodes_in_group("Multiplayer")[0].playerPuppet
 
-remote func _create_drop_weapon(recivedTransform,recivedHoldPos,implantThrowBonus,recivedCurrentWeapon,recivedAmmo,playerVelocity,recivdeRandName,playerIgnoreId):
+remote func _create_drop_weapon(parentPath, recivedTransform,recivedHoldPos,implantThrowBonus,recivedCurrentWeapon,recivedAmmo,playerVelocity,recivdeRandName,playerIgnoreId):
 	var new_weapon_drop = weapon_drop.instance()
 	new_weapon_drop.set_name(new_weapon_drop.name + "#" + str(recivdeRandName))
-	get_tree().get_nodes_in_group("Sync")[0].add_child(new_weapon_drop)
+	get_node(parentPath).add_child(new_weapon_drop)
 	new_weapon_drop.global_transform.origin = recivedTransform - (recivedTransform - recivedHoldPos).normalized()
 	new_weapon_drop.gun.MESH[new_weapon_drop.gun.current_weapon].hide()
 	new_weapon_drop.gun.current_weapon = recivedCurrentWeapon
@@ -209,30 +207,12 @@ remote func _create_drop_weapon(recivedTransform,recivedHoldPos,implantThrowBonu
 	new_weapon_drop.velocity += playerVelocity
 	new_weapon_drop.gun.MESH[recivedCurrentWeapon].show()
 	new_weapon_drop.playerIgnoreId = playerIgnoreId
-	
-	new_weapon_drop.set_meta("syncData",{
-		"assetPath": "res://Entities/Objects/Gun_Pickup.tscn",
-		"syncProperties": [
-			"global_transform",
-			"velocity",
-			"gun.current_weapon",
-			"gun.ammo",
-			"playerIgnoreId"
-		]
-	})
 
-remote func _spawn_object(recivedObject,recivedName,recivedTransform):
+remote func _spawn_object(parentPath, recivedObject,recivedName,recivedTransform):
 	var newObject = load(recivedObject).instance()
 	newObject.set_name(recivedName)
-	get_tree().get_nodes_in_group("Sync")[0].add_child(newObject)
+	get_node(parentPath).add_child(newObject)
 	newObject.global_transform = recivedTransform
-	
-	newObject.set_meta("syncData",{
-		"assetPath": recivedObject,
-		"syncProperties": [
-			"global_transform"
-		]
-	})
 
 remote func _play_sound(soundName):
 	var netId = get_tree().get_rpc_sender_id()
@@ -261,11 +241,6 @@ func update_implants():
 		right_arm_mesh.material_override = lifemat
 
 ########################################
-
-#	randomize()
-#	var randName = int(rand_range(0,1000000))
-#	missile_new.set_name(missile_new.name + "#" + str(randName))
-#	rpc("_spawn_object","res://MOD_CONTENT/CruS Online/effects/fake_Missile_Kinematic.tscn",missile_new.name,missile_new.global_transform)
 
 func _ready()->void :
 	glob = Global
@@ -304,7 +279,6 @@ func _ready()->void :
 		hold_pos = get_node_or_null("Object_Hold_Pos")
 		anim = $Player_Weapon / AnimationPlayer
 		orb_anim = $orbarms / AnimationPlayer
-		
 		
 		AR_mesh = get_node_or_null("Player_Weapon/Player_Weapon/Skeleton/BoneAttachment 9/AR")
 		AR_dot = get_node_or_null("Player_Weapon/AR_dot")
@@ -662,11 +636,10 @@ func _process(delta)->void :
 		leaning = Input.is_action_pressed("Lean_Left") or Input.is_action_pressed("Lean_Right")
 		player_muzzle_flash.hide()
 		if Input.is_action_just_pressed("drop") and current_weapon != null:
-			randomize()
-			var randName = int(rand_range(0,1000000))
+			
 			var new_weapon_drop = weapon_drop.instance()
-			new_weapon_drop.set_name(new_weapon_drop.name + "#" + str(randName))
-			get_tree().get_nodes_in_group("Sync")[0].add_child(new_weapon_drop)
+			new_weapon_drop.set_name(new_weapon_drop.name + "#" + str(randi() % 100000000))
+			glob.player.get_parent().add_child(new_weapon_drop)
 			new_weapon_drop.global_transform.origin = global_transform.origin - (global_transform.origin - hold_pos.global_transform.origin).normalized()
 			new_weapon_drop.gun.MESH[new_weapon_drop.gun.current_weapon].hide()
 			new_weapon_drop.gun.current_weapon = current_weapon
@@ -677,18 +650,8 @@ func _process(delta)->void :
 			new_weapon_drop.gun.MESH[current_weapon].show()
 			new_weapon_drop.playerIgnoreId = get_tree().get_network_unique_id()
 			
-			new_weapon_drop.set_meta("syncData",{
-				"assetPath": "res://Entities/Objects/Gun_Pickup.tscn",
-				"syncProperties": [
-					"global_transform",
-					"velocity",
-					"gun.current_weapon",
-					"gun.ammo",
-					"playerIgnoreId"
-				]
-			})
+			rpc("_create_drop_weapon", glob.player.get_parent().get_path(),global_transform.origin,hold_pos.global_transform.origin,glob.implants.arm_implant.throw_bonus,current_weapon,magazine_ammo[current_weapon],glob.player.player_velocity,new_weapon_drop.name,get_tree().get_network_unique_id())
 			
-			rpc("_create_drop_weapon",global_transform.origin,hold_pos.global_transform.origin,glob.implants.arm_implant.throw_bonus,current_weapon,magazine_ammo[current_weapon],glob.player.player_velocity,randName,get_tree().get_network_unique_id())
 			if weapon1 == current_weapon:
 				weapon1 = null
 			if weapon2 == current_weapon:
@@ -1157,8 +1120,10 @@ func _process(delta)->void :
 		
 		if current_weapon == W_FLASHLIGHT and flash_light_switch:
 			flashlight.show()
+			playerPuppet.flashlight(true)
 		else :
 			flashlight.hide()
+			playerPuppet.flashlight(false)
 		if Input.is_action_just_pressed("Use") and $Use_Raycast.is_colliding():
 			var collider = $Use_Raycast.get_collider()
 			if collider.has_method("use"):
@@ -2157,7 +2122,7 @@ func mauser()->void :
 	
 func shock()->void :
 	if timer.is_stopped():
-		randomize()
+		
 
 		for i in range(40):
 			raycast.rotation = raycast_init_rot + Vector3(rand_range( - accuracy[current_weapon] - leaning_modifier, accuracy[current_weapon] + leaning_modifier), 
@@ -2185,7 +2150,7 @@ func shock()->void :
 		
 func shotgun()->void :
 	if timer.is_stopped():
-		randomize()
+		
 
 		for i in range(12):
 			raycast.rotation = raycast_init_rot + Vector3(rand_range( - accuracy[current_weapon] - leaning_modifier, accuracy[current_weapon] + leaning_modifier), 
@@ -2216,7 +2181,7 @@ func shotgun()->void :
 
 func autoshotgun()->void :
 	if timer.is_stopped():
-		randomize()
+		
 
 		for i in range(12):
 			raycast.rotation = raycast_init_rot + Vector3(rand_range( - accuracy[current_weapon] - leaning_modifier, accuracy[current_weapon] + leaning_modifier), 
@@ -2249,22 +2214,20 @@ func rocket_launcher()->void :
 		if timer.is_stopped():
 			var missile_new = BULLETS.instance()
 			
-			randomize()
-			var randName = int(rand_range(0,1000000))
-			missile_new.set_name(missile_new.name + "#" + str(randName))
+			var missleParent = null
+			
+			if player:
+				missleParent = get_parent().get_parent().get_parent()
+			else :
+				missleParent = get_parent().get_parent().get_parent().get_parent()
+			
+			missile_new.set_name(missile_new.name + "#" + str(randi() % 100000000))
 
-			get_tree().get_nodes_in_group("Sync")[0].add_child(missile_new)
+			missleParent.add_child(missile_new)
 			missile_new.global_transform.origin = global_transform.origin
 			missile_new.velocity = (global_transform.origin - $Front_Pos_Helper.global_transform.origin).normalized() * - 30
 			
-			missile_new.set_meta("syncData",{
-				"assetPath": "res://MOD_CONTENT/CruS Online/effects/fake_Missile_Kinematic.tscn",
-				"syncProperties": [
-					"global_transform"
-				]
-			})
-			
-			rpc("_spawn_object","res://MOD_CONTENT/CruS Online/effects/fake_Missile_Kinematic.tscn",missile_new.name,missile_new.global_transform)
+			rpc("_spawn_object", missleParent.get_path(),"res://MOD_CONTENT/CruS Online/effects/fake_Missile_Kinematic.tscn",missile_new.name,missile_new.global_transform)
 			
 			timer.start(0.7)
 			magazine_ammo[current_weapon] -= 1
@@ -2306,23 +2269,21 @@ func light()->void :
 func gas()->void :
 		if timer.is_stopped():
 			
+			var missleParent = null
+			
+			if player:
+				missleParent = get_parent().get_parent().get_parent()
+			else :
+				missleParent = get_parent().get_parent().get_parent().get_parent()
+			
 			var missile_new = GAS_GRENADE.instance()
 			if player:
 				zoom_flag = false
-			get_tree().get_nodes_in_group("Sync")[0].add_child(missile_new)
+			missleParent.add_child(missile_new)
 			
-			randomize()
-			var randName = int(rand_range(0,1000000))
-			missile_new.set_name(missile_new.name + "#" + str(randName))
+			missile_new.set_name(missile_new.name + "#" + str(randi() % 100000000))
 			
-			missile_new.set_meta("syncData",{
-				"assetPath": "res://MOD_CONTENT/CruS Online/effects/fake_Grenade.tscn",
-				"syncProperties": [
-					"global_transform"
-				]
-			})
-			
-			rpc("_spawn_object","res://MOD_CONTENT/CruS Online/effects/fake_Grenade.tscn",missile_new.name,missile_new.global_transform)
+			rpc("_spawn_object", missleParent.get_path(), "res://MOD_CONTENT/CruS Online/effects/fake_Grenade.tscn", missile_new.name, missile_new.global_transform)
 			
 			if player:
 				missile_new.set_collision_mask_bit(1, 0)
@@ -2349,32 +2310,31 @@ func flamethrower():
 			magazine_ammo[current_weapon] -= 1
 			var missile_new = FIRE.instance()
 			
-			randomize()
+			
 			var randName = int(rand_range(0,1000000))
 			missile_new.set_name(missile_new.name + "#" + str(randName))
 			
+			var missleParent = null
+			
 			if player:
-				get_tree().get_nodes_in_group("Sync")[0].add_child(missile_new)
+				missleParent = get_parent().get_parent().get_parent()
 			else :
-				get_parent().get_parent().get_parent().get_parent().add_child(missile_new)
+				missleParent = get_parent().get_parent().get_parent().get_parent()
+			
+			missleParent.add_child(missile_new)
+
 			if player:
 				missile_new.set_collision_mask_bit(1, 0)
 			else :
 				missile_new.set_collision_mask_bit(1, 1)
 				missile_new.set_collision_mask_bit(2, 0)
+			
 			missile_new.global_transform.origin = player_muzzle_flash.global_transform.origin
 			
 			missile_new.velocity = - (global_transform.origin - $Front_Pos_Helper.global_transform.origin).normalized() * 40
 			missile_new.velocity += Global.player.player_velocity
-			
-			missile_new.set_meta("syncData",{
-				"assetPath": "res://Entities/Bullets/Fire.tscn",
-				"syncProperties": [
-					"global_transform"
-				]
-			})
 
-			rpc("_spawn_object","res://Entities/Bullets/Fire.tscn",missile_new.name,missile_new.global_transform)
+			rpc("_spawn_object", missleParent.get_path(),"res://Entities/Bullets/Fire.tscn",missile_new.name,missile_new.global_transform)
 			
 func bore()->void :
 		if timer.is_stopped():
@@ -2413,21 +2373,14 @@ func radiator()->void :
 		for r in range(6):
 			var rad_new = RADIATION.instance()
 			
-			randomize()
-			var randName = int(rand_range(0,1000000))
-			rad_new.set_name(rad_new.name + "#" + str(randName))
+			rad_new.set_name(rad_new.name + "#" + str(randi() % 100000000))
 			
-			get_tree().get_nodes_in_group("Sync")[0].add_child(rad_new)
+			var missleParent = get_parent().get_parent().get_parent()
+			
+			missleParent.add_child(rad_new)
 			rad_new.global_transform.origin = global_transform.origin + - (global_transform.origin - $Front_Pos_Helper.global_transform.origin).normalized() * (r + 4)
 			
-			rad_new.set_meta("syncData",{
-				"assetPath": "res://MOD_CONTENT/CruS Online/effects/fake_Radiation.tscn",
-				"syncProperties": [
-					"global_transform"
-				]
-			})
-			
-			rpc("_spawn_object","res://MOD_CONTENT/CruS Online/effects/fake_Radiation.tscn",rad_new.name,rad_new.global_transform)
+			rpc("_spawn_object", missleParent.get_path(),"res://MOD_CONTENT/CruS Online/effects/fake_Radiation.tscn",rad_new.name,rad_new.global_transform)
 		for b in $Radiation_Area.get_overlapping_bodies():
 			if b.has_method("damage"):
 				b.damage(50, (global_transform.origin - $Front_Pos_Helper.global_transform.origin).normalized(), b.global_transform.origin, global_transform.origin)

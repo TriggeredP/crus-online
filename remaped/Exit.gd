@@ -38,15 +38,16 @@ master func sub_player_count():
 	playersCount -= 1
 
 master func get_player_count():
-	rpc_id(get_tree().get_rpc_sender_id(),"send_player_count",playersCount,len(get_tree().get_nodes_in_group("Multiplayer")[0].player_info))
-	print(get_tree().get_nodes_in_group("Multiplayer")[0].player_info)
+	if $"/root/Global".objective_complete:
+		rpc_id(get_tree().get_rpc_sender_id(),"send_player_count",playersCount,len(get_tree().get_nodes_in_group("Multiplayer")[0].player_info))
 
 puppet func send_player_count(exitCount,hostCount):
 	Global.UI.notify(str(exitCount) + "/" + str(hostCount) + " need to exit", Color(1, 0, 0))
 
 master func check_exit(show = false):
-	var players = len(get_tree().get_nodes_in_group("Multiplayer")[0].player_info)
-	if playersCount == players:
-		get_tree().get_nodes_in_group("Multiplayer")[0].goto_menu_host()
-	elif show:
-		Global.UI.notify(str(playersCount) + "/" + str(players) + " need to exit", Color(1, 0, 0))
+	if $"/root/Global".objective_complete:
+		var players = len(get_tree().get_nodes_in_group("Multiplayer")[0].player_info)
+		if playersCount == players:
+			get_tree().get_nodes_in_group("Multiplayer")[0].goto_menu_host()
+		elif show:
+			Global.UI.notify(str(playersCount) + "/" + str(players) + " need to exit", Color(1, 0, 0))

@@ -43,7 +43,7 @@ func damage(damage, collision_n, collision_p, shooter_pos):
 	if damage < 3:
 		return 
 	velocity -= collision_n * damage
-	randomize()
+	
 	angular_velocity = Vector3(rand_range(1,5),rand_range(1,5),rand_range(1,5))
 
 func remove():

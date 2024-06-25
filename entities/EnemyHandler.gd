@@ -117,18 +117,23 @@ var fireaudio:AudioStreamPlayer3D
 
 var enabled = true
 
-puppet func _spawn_gib_client(gib, damage, collision_n, collision_p, gibType, gibName):
+remote func _create_drop_weapon(parentPath, recivedTransform, recivedVelocity, recivedCurrentWeapon, recivedAmmo, recivdeRandName, playerIgnoreId):
+	var new_weapon_drop = weapon_drop.instance()
+	new_weapon_drop.set_name(new_weapon_drop.name + "#" + str(recivdeRandName))
+	get_node(parentPath).add_child(new_weapon_drop)
+	new_weapon_drop.global_transform.origin = recivedTransform
+	new_weapon_drop.gun.MESH[new_weapon_drop.gun.current_weapon].hide()
+	new_weapon_drop.gun.current_weapon = recivedCurrentWeapon
+	new_weapon_drop.gun.ammo = recivedAmmo
+	new_weapon_drop.rotation.y = rand_range( - PI, PI)
+	new_weapon_drop.velocity = recivedVelocity
+	new_weapon_drop.gun.MESH[recivedCurrentWeapon].show()
+	new_weapon_drop.playerIgnoreId = playerIgnoreId
+
+puppet func _spawn_gib_client(parentPath, gib, damage, collision_n, collision_p, gibType, gibName):
 	var new_gib = self[gibType][gib].instance()
 	new_gib.set_name(gibName)
-		
-	new_gib.set_meta("syncData",{
-		"assetPath": self[gibType][gib].resource_path,
-		"syncProperties": [
-			"global_transform"
-		]
-	})
-		
-	get_tree().get_nodes_in_group("Sync")[0].add_child(new_gib)
+	get_node(parentPath).add_child(new_gib)
 
 puppet func _die_client():
 	if not dead:
@@ -166,11 +171,13 @@ master func cleanup():
 	if is_network_master():
 		enabled = false
 		hide()
-		global_transform.origin = Vector3(-1000,-1000,-1000)
+		dead = true
+		global_transform.origin = Vector3(1000,1000,1000)
 
 puppet func cleanup_client():
 	hide()
-	global_transform.origin = Vector3(-1000,-1000,-1000)
+	dead = true
+	global_transform.origin = Vector3(1000,1000,1000)
 
 master func check_npc():
 	if not enabled:
@@ -224,11 +231,11 @@ func _ready():
 	if glob.hope_discarded:
 		pass
 	elif (glob.ending_1 or glob.punishment_mode) and random_spawn:
-		randomize()
+		
 		if randi() % 25 != 4:
 			cleanup()
 	elif random_spawn:
-		randomize()
+		
 		if randi() % 250 != 4:
 			cleanup()
 	deathtimer = Timer.new()
@@ -457,20 +464,13 @@ master func spawn_gib(gib, count, damage, collision_n, collision_p, gibType = "G
 			return
 
 		for i_gib in range(count):
-			randomize()
+			
 			var newGibName = int(rand_range(0,1000000))
 			var new_gib = self[gibType][gib].instance()
 			
 			new_gib.set_name(new_gib.name + "#" + str(newGibName))
 			
-			new_gib.set_meta("syncData",{
-				"assetPath": self[gibType][gib].resource_path,
-				"syncProperties": [
-					"global_transform"
-				]
-			})
-			
-			get_tree().get_nodes_in_group("Sync")[0].add_child(new_gib)
+			get_parent().add_child(new_gib)
 			
 			new_gib.global_transform.origin = collision_p
 			if "velocity" in new_gib:
@@ -478,7 +478,7 @@ master func spawn_gib(gib, count, damage, collision_n, collision_p, gibType = "G
 			elif "body" in new_gib:
 				new_gib.body.velocity = (damage + rand_range(0, 10)) * - collision_n
 		
-			rpc("_spawn_gib_client", gib, damage, collision_n, collision_p, gibType, new_gib.name)
+			rpc("_spawn_gib_client", get_parent().get_path(), gib, damage, collision_n, collision_p, gibType, new_gib.name)
 
 master func remove_weapon():
 	if is_network_master():
@@ -486,20 +486,25 @@ master func remove_weapon():
 			if weapon.disabled:
 				return 
 			weapon.disabled = true
+
+			var boneattachment = skeleton.get_node_or_null("Armature/Skeleton/BoneAttachment")
+			if boneattachment:
+				boneattachment.hide()
 			
-			# TODO: Синхронизировать оружие (1)
-			
-#			var boneattachment = skeleton.get_node_or_null("Armature/Skeleton/BoneAttachment")
-#			if boneattachment:
-#				boneattachment.hide()
-#			var new_weapon_drop = weapon_drop.instance()
-#			get_parent().add_child(new_weapon_drop)
-#			new_weapon_drop.global_transform.origin = body.global_transform.origin + Vector3(0, 2, 0)
-#			new_weapon_drop.velocity = - (new_weapon_drop.global_transform.origin - glob.player.global_transform.origin).normalized() * 10
-#			new_weapon_drop.gun.MESH[new_weapon_drop.gun.current_weapon].hide()
-#			new_weapon_drop.gun.current_weapon = weapon.current_weapon
-#			new_weapon_drop.gun.ammo = weapon.MAX_MAG_AMMO[weapon.current_weapon]
-#			new_weapon_drop.gun.MESH[weapon.current_weapon].show()
+			var randName = int(rand_range(0,1000000))
+			var new_weapon_drop = weapon_drop.instance()
+			new_weapon_drop.set_name(new_weapon_drop.name + "#" + str(randName))
+			get_parent().add_child(new_weapon_drop)
+			new_weapon_drop.playerIgnoreId = get_tree().get_network_unique_id()
+			new_weapon_drop.global_transform.origin = body.global_transform.origin + Vector3(0, 2, 0)
+			new_weapon_drop.velocity = - (new_weapon_drop.global_transform.origin - glob.player.global_transform.origin).normalized() * 10
+			new_weapon_drop.gun.MESH[new_weapon_drop.gun.current_weapon].hide()
+			new_weapon_drop.gun.current_weapon = weapon.current_weapon
+			new_weapon_drop.gun.ammo = weapon.MAX_MAG_AMMO[weapon.current_weapon]
+			new_weapon_drop.gun.MESH[weapon.current_weapon].show()
+
+			rpc("_create_drop_weapon", get_parent().get_path(), new_weapon_drop.global_transform.origin, new_weapon_drop.velocity, new_weapon_drop.gun.current_weapon, new_weapon_drop.gun.ammo, randName,get_tree().get_network_unique_id())
+
 	else:
 		rpc_id(0,"remove_weapon")
 	
@@ -526,16 +531,19 @@ func die(damage, collision_n, collision_p):
 			if not civilian and "current_weapon" in weapon:
 				if "disabled" in weapon:
 					if not weapon.disabled:
-						pass
-						# TODO: Синхронизировать оружие (2)
 						
-#						var new_weapon_drop = weapon_drop.instance()
-#						get_parent().add_child(new_weapon_drop)
-#						new_weapon_drop.global_transform.origin = body.global_transform.origin + Vector3(0, 1, 0)
-#						new_weapon_drop.gun.MESH[new_weapon_drop.gun.current_weapon].hide()
-#						new_weapon_drop.gun.current_weapon = weapon.current_weapon
-#						new_weapon_drop.gun.ammo = weapon.MAX_MAG_AMMO[weapon.current_weapon]
-#						new_weapon_drop.gun.MESH[weapon.current_weapon].show()
+						var randName = int(rand_range(0,1000000))
+						var new_weapon_drop = weapon_drop.instance()
+						new_weapon_drop.set_name(new_weapon_drop.name + "#" + str(randName))
+						get_parent().add_child(new_weapon_drop)
+						new_weapon_drop.playerIgnoreId = get_tree().get_network_unique_id()
+						new_weapon_drop.global_transform.origin = body.global_transform.origin + Vector3(0, 1, 0)
+						new_weapon_drop.gun.MESH[new_weapon_drop.gun.current_weapon].hide()
+						new_weapon_drop.gun.current_weapon = weapon.current_weapon
+						new_weapon_drop.gun.ammo = weapon.MAX_MAG_AMMO[weapon.current_weapon]
+						new_weapon_drop.gun.MESH[weapon.current_weapon].show()
+
+						rpc("_create_drop_weapon", get_parent().get_path(), new_weapon_drop.global_transform.origin, new_weapon_drop.velocity, new_weapon_drop.gun.current_weapon, new_weapon_drop.gun.ammo, randName,get_tree().get_network_unique_id())
 			for particle in all_particles:
 				particle.queue_free()
 			body.set_dead()

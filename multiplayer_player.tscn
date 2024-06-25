@@ -1,4 +1,4 @@
-[gd_scene load_steps=128 format=2]
+[gd_scene load_steps=137 format=2]
 
 [ext_resource path="res://MOD_CONTENT/CruS Online/multiplayer_player.gd" type="Script" id=1]
 [ext_resource path="res://MOD_CONTENT/CruS Online/player_model/player_model.tscn" type="PackedScene" id=2]
@@ -89,6 +89,8 @@
 [ext_resource path="res://Sfx/mechsound.wav" type="AudioStream" id=87]
 [ext_resource path="res://Sfx/WeaponsPickups/steyr.wav" type="AudioStream" id=88]
 [ext_resource path="res://Sfx/WeaponsPickups/flamethrower.wav" type="AudioStream" id=89]
+[ext_resource path="res://flashlight.tscn" type="PackedScene" id=90]
+[ext_resource path="res://Textures/Particles/shine.png" type="Texture" id=91]
 
 [sub_resource type="GDScript" id=66]
 script/source = "extends Spatial
@@ -108,8 +110,14 @@ script/source = "extends StaticBody
 
 onready var client = get_node(\"../../../../../../\")
 
+func _ready():
+	set_meta(\"puppet\", -1)
+
 func damage(damage, collision_n, collision_p, shooter_pos):
 	client.do_damage(damage * 2, collision_n, collision_p, shooter_pos)
+
+func set_toxic():
+	client.set_toxic()
 "
 
 [sub_resource type="BoxShape" id=64]
@@ -164,6 +172,28 @@ metallic_specular = 0.0
 [sub_resource type="SpatialMaterial" id=5]
 albedo_texture = ExtResource( 45 )
 metallic_specular = 0.0
+
+[sub_resource type="SpatialMaterial" id=72]
+flags_transparent = true
+flags_unshaded = true
+params_blend_mode = 1
+albedo_texture = ExtResource( 91 )
+
+[sub_resource type="QuadMesh" id=73]
+size = Vector2( 2.307, 1.912 )
+
+[sub_resource type="QuadMesh" id=74]
+size = Vector2( 4.674, 1.037 )
+
+[sub_resource type="SpatialMaterial" id=75]
+flags_transparent = true
+flags_unshaded = true
+params_blend_mode = 1
+params_billboard_mode = 1
+albedo_texture = ExtResource( 91 )
+
+[sub_resource type="QuadMesh" id=76]
+size = Vector2( 2.247, 0.145 )
 
 [sub_resource type="SpatialMaterial" id=2]
 albedo_texture = ExtResource( 36 )
@@ -239,6 +269,9 @@ func _ready():
 
 func damage(damage, collision_n, collision_p, shooter_pos):
 	client.do_damage(damage, collision_n, collision_p, shooter_pos)
+
+func set_toxic():
+	client.set_toxic()
 "
 
 [sub_resource type="BoxShape" id=35]
@@ -252,6 +285,24 @@ audio_stream = ExtResource( 72 )
 
 [sub_resource type="AudioStreamRandomPitch" id=63]
 audio_stream = ExtResource( 74 )
+
+[sub_resource type="GDScript" id=78]
+script/source = "extends StaticBody
+
+onready var client = $\"../..\"
+
+func _ready():
+	set_meta(\"puppet\", -1)
+
+func damage(damage, collision_n, collision_p, shooter_pos):
+	client.do_damage(damage, collision_n, collision_p, shooter_pos)
+
+func set_toxic():
+	client.set_toxic()
+"
+
+[sub_resource type="BoxShape" id=77]
+extents = Vector3( 0.325025, 0.152253, 0.338203 )
 
 [node name="PlayerClient" type="Spatial"]
 script = ExtResource( 1 )
@@ -539,15 +590,34 @@ pitch_scale = 2.03
 bus = "SFX"
 
 [node name="Flashlight_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
-transform = Transform( 0.680209, -0.733018, 4.26326e-14, 0.733018, 0.680209, 0, 0, 8.52651e-14, 1, 0.0678082, 1.49012e-08, 0.0712996 )
+transform = Transform( 0.680209, -0.733018, -4.47035e-08, 0.733018, 0.680209, -2.98023e-08, -1.04308e-07, 5.21541e-08, 1, 0.00183082, -0.00610819, -0.0838972 )
 visible = false
 material_override = SubResource( 5 )
 mesh = ExtResource( 16 )
 
 [node name="Placeholder" type="Spatial" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/Flashlight_Mesh"]
-transform = Transform( 1, 0, 7.45058e-09, 9.31323e-10, 1, 0, -7.45058e-09, 7.45058e-09, 1, 0, 0, 0 )
+transform = Transform( 1, -7.91624e-08, 4.47035e-08, 1.11759e-08, 1, -3.72529e-09, 1.49012e-08, 7.45058e-09, 1, 0, 0, 0 )
 
 [node name="Placeholder2" type="AudioStreamPlayer3D" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/Flashlight_Mesh"]
+
+[node name="SpotLight" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/Flashlight_Mesh" instance=ExtResource( 90 )]
+transform = Transform( -0.41546, 0.904131, -0.0996963, -0.904131, -0.398456, 0.154206, 0.0996973, 0.154206, 0.982996, 0.0146111, 0.023446, -0.240689 )
+visible = true
+
+[node name="MeshInstance" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/Flashlight_Mesh/SpotLight"]
+transform = Transform( -0.835119, 0.535397, -0.126203, 0.539874, 0.841745, -0.00151339, 0.10542, -0.0693972, -0.992003, 0.0161699, 0.00855601, -0.122556 )
+material_override = SubResource( 72 )
+mesh = SubResource( 73 )
+
+[node name="MeshInstance3" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/Flashlight_Mesh/SpotLight"]
+transform = Transform( -0.835119, 0.535397, -0.126203, 0.539874, 0.841745, -0.00151339, 0.10542, -0.0693972, -0.992003, 0.0351164, 0.00878298, 0.0263681 )
+material_override = SubResource( 72 )
+mesh = SubResource( 74 )
+
+[node name="MeshInstance2" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/Flashlight_Mesh/SpotLight"]
+transform = Transform( -0.835119, 0.535397, -0.126203, 0.539874, 0.841745, -0.00151339, 0.10542, -0.0693972, -0.992003, 0.0278823, 0.00179744, 0.00483519 )
+material_override = SubResource( 75 )
+mesh = SubResource( 76 )
 
 [node name="Zippy_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
 transform = Transform( -8.00937e-08, -1, -8.9407e-08, 1, 1.55531e-07, -5.21541e-08, 5.96046e-08, 1.04308e-07, 1, 0.0219309, -0.0177941, 0.0208288 )
@@ -735,12 +805,8 @@ shape = SubResource( 35 )
 [node name="Torso_Mesh" parent="Puppet/PlayerModel/Armature/Skeleton" index="4"]
 material_override = null
 
-[node name="BoneAttachment" type="BoneAttachment" parent="Puppet/PlayerModel/Armature/Skeleton" index="5"]
-
 [node name="AnimTree" parent="Puppet/PlayerModel" index="2"]
 parameters/ARMS_BLEND/blend_amount = 1.0
-parameters/CROUCHMOVE_AMOUNT/blend_amount = 1.0
-parameters/RUN_FORWARD_DIRECTION/blend_amount = 0
 
 [node name="SFX" type="Spatial" parent="Puppet/PlayerModel"]
 transform = Transform( 1, 0, 2.13163e-14, 0, 1, 0, -2.13163e-14, 0, 1, 0, -0.00320655, 0 )
@@ -807,6 +873,16 @@ unit_db = 1.0
 unit_size = 5.7
 pitch_scale = 0.91
 bus = "SFX"
+
+[node name="RatHandler" type="StaticBody" parent="Puppet"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
+collision_layer = 6
+collision_mask = 0
+script = SubResource( 78 )
+
+[node name="CollisionShape" type="CollisionShape" parent="Puppet/RatHandler"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.000946999, -0.00517857, -0.000126362 )
+shape = SubResource( 77 )
 
 [node name="FlashBuffer" type="Timer" parent="."]
 wait_time = 0.2

@@ -51,9 +51,12 @@ func _physics_process(delta):
 			smokeparticle.emitting = false
 			smokeparticle.get_node("OmniLight").queue_free()
 			var new_explosion = explosion.instance()
-			get_tree().get_nodes_in_group("Sync")[0].add_child(new_explosion)
+			
+			new_explosion.set_name(new_explosion.name + "#" + str(randi() % 100000000))
+			
+			collision.collider.get_parent().add_child(new_explosion)
 			new_explosion.global_transform.origin = global_transform.origin - Vector3(0, 1, 0)
-			rpc("_create_object","res://MOD_CONTENT/CruS Online/effects/fake_Explosion.tscn",new_explosion.name,new_explosion.global_transform)
+			rpc("_create_object", collision.collider.get_parent().get_path(), "res://MOD_CONTENT/CruS Online/effects/fake_Explosion.tscn", collision.collider.get_parent().get_path(), new_explosion.name,new_explosion.global_transform)
 			$CollisionShape.disabled = true
 			var shrapnel_rotation = Vector3(1, 1, 0).rotated(Vector3.UP, deg2rad(rand_range(0, 180)))
 			for i in range(4):

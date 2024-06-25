@@ -12,10 +12,10 @@ remote func _set_transform(recivedTransform):
 remote func _delete():
 	queue_free()
 
-remote func _create_object(recivedObject,recivedName,recivedTransform):
+remote func _create_object(recivedPath, recivedObject,recivedName,recivedTransform):
 	var newObject = load(recivedObject).instance()
 	newObject.set_name(recivedName)
-	get_tree().get_nodes_in_group(\"Sync\")[0].add_child(newObject)
+	get_node(recivedPath).add_child(newObject)
 	newObject.global_transform = recivedTransform
 "
 

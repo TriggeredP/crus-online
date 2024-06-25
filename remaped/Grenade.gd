@@ -45,17 +45,17 @@ var fakeExplosionTypes = [
 	"res://MOD_CONTENT/CruS Online/effects/fake_Explosion.tscn"
 ]
 
-remote func _spawn_shrapnel(recivedObject,recivedName,recivedTransform,recivedShrapnel):
+remote func _spawn_shrapnel(recivedPath, recivedObject,recivedName,recivedTransform,recivedShrapnel):
 	var newObject = load(recivedObject).instance()
 	newObject.set_name(recivedName)
-	get_tree().get_nodes_in_group("Sync")[0].add_child(newObject)
+	get_node(recivedPath).add_child(newObject)
 	newObject.global_transform = recivedTransform
 	newObject.shrapnel_flag = recivedShrapnel
 
-remote func _create_object(recivedObject,recivedName,recivedTransform):
+remote func _create_object(recivedPath, recivedObject,recivedName,recivedTransform):
 	var newObject = load(recivedObject).instance()
 	newObject.set_name(recivedName)
-	get_tree().get_nodes_in_group("Sync")[0].add_child(newObject)
+	get_node(recivedPath).add_child(newObject)
 	newObject.global_transform = recivedTransform
 
 ################################################################################
@@ -105,7 +105,7 @@ func _physics_process(delta):
 			get_parent().add_child(new_explosion)
 			new_explosion.global_transform.origin = global_transform.origin
 			explosion_flag = true
-			rpc("_create_object",fakeExplosionTypes[EXPLOSION_TYPE],new_explosion.name,new_explosion.global_transform)
+			rpc("_create_object", get_parent().get_path(), fakeExplosionTypes[EXPLOSION_TYPE],new_explosion.name,new_explosion.global_transform)
 			rpc("_delete")
 			queue_free()
 	if home_on_player:
@@ -124,16 +124,16 @@ func _physics_process(delta):
 				shrapnel_rotation = shrapnel_rotation.rotated(Vector3.UP, deg2rad(90))
 				var shrapnel = self.duplicate()
 
-				randomize()
+				
 				var randName = int(rand_range(0,1000000))
 				shrapnel.set_name(shrapnel.name + "#" + str(randName))
 
-				get_tree().get_nodes_in_group("Sync")[0].add_child(shrapnel)
+				get_parent().add_child(shrapnel)
 				shrapnel.shrapnel_flag = true
 				shrapnel.global_transform.origin = global_transform.origin
 				shrapnel.set_velocity(30, (shrapnel.global_transform.origin - (shrapnel.global_transform.origin - shrapnel_rotation)).normalized(), global_transform.origin)
 
-				rpc("_spawn_shrapnel","res://MOD_CONTENT/CruS Online/effects/fake_Grenade.tscn",shrapnel.name,shrapnel.global_transform,true)
+				rpc("_spawn_shrapnel", get_parent().get_path(), "res://MOD_CONTENT/CruS Online/effects/fake_Grenade.tscn",shrapnel.name,shrapnel.global_transform,true)
 		var new_explosion = explosion_types[EXPLOSION_TYPE].instance()
 		add_child(new_explosion)
 		new_explosion.global_transform.origin = global_transform.origin
@@ -170,7 +170,7 @@ func _physics_process(delta):
 			get_parent().add_child(new_explosion)
 			new_explosion.global_transform.origin = global_transform.origin
 			explosion_flag = true
-			rpc("_create_object",fakeExplosionTypes[EXPLOSION_TYPE],new_explosion.name,new_explosion.global_transform)
+			rpc("_create_object", get_parent().get_path(), fakeExplosionTypes[EXPLOSION_TYPE],new_explosion.name,new_explosion.global_transform)
 			rpc("_delete")
 			queue_free()
 		if collision.collider.has_method("destroy"):
@@ -192,7 +192,7 @@ func _physics_process(delta):
 	velocity.y -= gravity * delta
 
 func set_velocity(damage, collision_n, collision_p):
-	randomize()
+	
 	velocity -= collision_n * damage / mass
 	rot_changed = Vector3(0, rand_range( - PI, PI), rand_range( - PI, PI))
 	

@@ -181,19 +181,12 @@ remote func send_death_nofify(killerId):
 		var killerNickname = get_tree().get_nodes_in_group("Multiplayer")[0].player_info[killerId].nickname
 		Global.UI.notify(deathMessages.killedByPlayer[randi() % deathMessages.killedByPlayer.size()] % [deadNickname,killerNickname], Color(1, 0, 0))
 
-remote func _spawn_gib(gib,gibName,gibPos,recivedDamage):
+remote func _spawn_gib(parentPath, gib, gibName, gibPos, recivedDamage):
 	var new_gib = gibs[gib].instance()
 	new_gib.set_name(gibName)
-	get_tree().get_nodes_in_group("Sync")[0].add_child(new_gib)
+	get_node(parentPath).add_child(new_gib)
 	new_gib.global_transform.origin = gibPos
 	new_gib.damage(recivedDamage[0], recivedDamage[1], recivedDamage[2], recivedDamage[3])
-	
-	new_gib.set_meta("syncData",{
-		"assetPath": gibsPath[gib],
-		"syncProperties": [
-			"global_transform"
-		]
-	})
 
 remote func _play_sound(soundName):
 	var netId = get_tree().get_rpc_sender_id()
@@ -1192,23 +1185,15 @@ func set_ladder(truth):
 
 func spawn_gib(gib, count, damage, collision_n, collision_p):
 	for i_gib in range(count):
-		randomize()
-		var randName = int(rand_range(0,1000000))
+		
 		var new_gib = gibs[gib].instance()
-		new_gib.set_name(new_gib.name + "#" + str(randName))
-		get_tree().get_nodes_in_group("Sync")[0].add_child(new_gib)
+		new_gib.set_name(new_gib.name + "#" + str(randi() % 100000000))
+		get_parent().add_child(new_gib)
 		new_gib.global_transform.origin = global_transform.origin
 		var damageArgs = [damage * 10, - collision_n + Vector3(rand_range(0, 0.1), rand_range(0, 0.1), rand_range(0, 0.1)), collision_p, Vector3.ZERO]
 		new_gib.damage(damageArgs[0], damageArgs[1], damageArgs[2], damageArgs[3])
-		
-		new_gib.set_meta("syncData",{
-			"assetPath": gibsPath[gib],
-			"syncProperties": [
-				"global_transform"
-			]
-		})
-		
-		rpc("_spawn_gib",gib,new_gib.name,new_gib.global_transform.origin,damageArgs)
+
+		rpc("_spawn_gib", get_parent().get_path(), gib, new_gib.name, new_gib.global_transform.origin, damageArgs)
 		return new_gib
 
 func add_health(a_health):

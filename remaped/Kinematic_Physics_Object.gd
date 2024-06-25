@@ -80,7 +80,7 @@ remote func _set_collision_mask(numA,numB):
 
 remote func _spawn_fake_gas(pos):
 	var fake_gas_cloud = preload("res://MOD_CONTENT/CruS Online/effects/fake_poison_gas.tscn").instance()
-	get_tree().get_nodes_in_group("Sync")[0].add_child(fake_gas_cloud)
+	get_parent().add_child(fake_gas_cloud)
 	fake_gas_cloud.global_transform.origin = pos
 
 remote func _grill(recivedPos):
@@ -92,7 +92,7 @@ remote func _grill(recivedPos):
 
 remote func _create_blood_decal(collider,recivedTransform,recivedBasis):
 	var new_blood_decal = blood_decal.instance()
-	get_tree().get_nodes_in_group("Sync")[0].add_child(new_blood_decal)
+	get_node(collider).add_child(new_blood_decal)
 	new_blood_decal.global_transform.origin = recivedTransform
 	new_blood_decal.transform.basis = recivedBasis
 
@@ -253,10 +253,12 @@ func _physics_process(delta):
 		if collision and (t < 200 or stay_active):
 			if velocity.length() > 5 and flesh and Global.fps > 30:
 				var new_blood_decal = blood_decal.instance()
-				get_tree().get_nodes_in_group("Sync")[0].add_child(new_blood_decal)
+				#print(collision.collider.get_path())
+				#print(get_node(collision.collider.get_path()))
+				collision.collider.add_child(new_blood_decal)
 				new_blood_decal.global_transform.origin = collision.position
 				new_blood_decal.transform.basis = align_up(new_blood_decal.transform.basis, collision.normal)
-				rpc("_create_blood_decal",collision.collider,new_blood_decal.global_transform.origin,new_blood_decal.transform.basis)
+				rpc("_create_blood_decal",collision.collider.get_path(),new_blood_decal.global_transform.origin,new_blood_decal.transform.basis)
 			if Vector2(velocity.x, velocity.z).length() > 5 and (gun_rotation or glob.implants.arm_implant.throw_bonus > 0):
 				if collision.collider.has_method("damage"):
 					if collision.collider.client.name != str(playerIgnoreId):
@@ -336,7 +338,7 @@ func damage(damage, collision_n, collision_p, shooter_pos):
 		queue_free()
 	if damage < 3:
 		return 
-	randomize()
+	
 	if get_tree().network_peer == null or is_network_master():
 		velocity -= collision_n * damage / mass
 	else:

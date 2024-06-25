@@ -35,9 +35,6 @@ func leave_server(type):
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	
 	parent.dataLoaded = false
-	
-	for child in parent.Sync.get_children():
-		child.queue_free()
-	
+
 	for child in parent.Players.get_children():
 		child.queue_free()

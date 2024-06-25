@@ -52,9 +52,23 @@ onready var NicknameColor = $CenterContainer/TabContainer/Player/VBoxContainer/C
 onready var Multiplayer = get_tree().get_nodes_in_group(\"Multiplayer\")[0]
 
 func _ready():
+	Multiplayer.connect(\"connected_to_server\", self, \"_on_connected\")
+
+func data_init():
 	playerInfo = Multiplayer.my_info
 	
-	Multiplayer.connect(\"connected_to_server\", self, \"_on_connected\")
+	print(Multiplayer.my_info)
+	print(playerInfo)
+	
+	NicknameEdit.text = playerInfo.nickname
+	NicknameColor.color = playerInfo.color
+	
+	$CenterContainer/TabContainer/Player/VBoxContainer/Image.set_texture(playerInfo.image)
+	$CenterContainer/TabContainer/Player/VBoxContainer/Skin.set_texture(playerInfo.skinPath)
+	
+	$CenterContainer/TabContainer/Player/VBoxContainer/Color.r_change(NicknameColor.color.r8)
+	$CenterContainer/TabContainer/Player/VBoxContainer/Color.g_change(NicknameColor.color.g8)
+	$CenterContainer/TabContainer/Player/VBoxContainer/Color.b_change(NicknameColor.color.b8)
 
 func _physics_process(delta):
 	if Global.menu.in_game:
@@ -188,6 +202,9 @@ func _ready():
 func _skin_selected(index):
 	$TextureRect.texture = playerNameImage[index][2]
 	get_tree().get_nodes_in_group(\"MultiplayerMenu\")[0].playerInfo[\"image\"] = playerNameImage[index][1]
+
+func set_texture(path):
+	$TextureRect.texture = load(path)
 "
 
 [sub_resource type="GDScript" id=2]
@@ -202,6 +219,9 @@ func _ready():
 func _skin_selected(index):
 	$TextureRect.texture = playerSkins[index][2]
 	get_tree().get_nodes_in_group(\"MultiplayerMenu\")[0].playerInfo[\"skinPath\"] = playerSkins[index][1]
+
+func set_texture(path):
+	$TextureRect.texture = load(path)
 "
 
 [sub_resource type="GDScript" id=11]
@@ -225,6 +245,8 @@ var mapsName = [
 	\"Test map\"
 ]
 
+var mapSelected = 0
+
 func _ready():
 	for gamemode in gamemodesList:
 		$HBoxContainer/LevelController/GamemodeList.add_item(gamemode[0])
@@ -240,14 +262,16 @@ func _ready():
 
 
 func _gamemode_select(index):
-	get_parent().get_node(\"Main\").set_gamemode_label(gamemodesList[index][0])
 	get_tree().get_nodes_in_group(\"MultiplayerMenu\")[0].hostInfo[\"gamemode\"] = gamemodesList[index][0]
 
 	$HBoxContainer/GamemodeDescription/MapLabel.text = \"Gamemode description:\\n\\n\" + gamemodesList[index][1]
 
 func _map_select(index):
-	get_parent().get_node(\"Main\").set_map_label(mapsList[index])
 	get_tree().get_nodes_in_group(\"MultiplayerMenu\")[0].hostSettings[\"map\"] = mapsList[index]
+	mapSelected = index
+
+func play_button_pressed():
+	get_tree().get_nodes_in_group(\"Multiplayer\")[0].game_init(mapsList[mapSelected])
 "
 
 [sub_resource type="GDScript" id=13]
@@ -899,7 +923,7 @@ size_flags_vertical = 3
 
 [node name="MapLabel" type="Label" parent="CenterContainer/TabContainer/DM/HBoxContainer/GamemodeDescription"]
 margin_right = 306.0
-margin_bottom = 493.0
+margin_bottom = 467.0
 size_flags_horizontal = 3
 size_flags_vertical = 7
 text = "Gamemode description:
@@ -907,6 +931,12 @@ text = "Gamemode description:
 The mode without any special goals, kill each other until you get bored, is the standard mode for playing Deathmatch and CO-OP maps"
 align = 1
 autowrap = true
+
+[node name="Button" type="Button" parent="CenterContainer/TabContainer/DM/HBoxContainer/GamemodeDescription"]
+margin_top = 467.0
+margin_right = 306.0
+margin_bottom = 493.0
+text = "Play"
 
 [node name="Implants" type="PanelContainer" parent="CenterContainer/TabContainer"]
 visible = false
@@ -1109,6 +1139,7 @@ secret = true
 [connection signal="item_selected" from="CenterContainer/TabContainer/Player/VBoxContainer/Skin/ItemList" to="CenterContainer/TabContainer/Player/VBoxContainer/Skin" method="_skin_selected"]
 [connection signal="item_selected" from="CenterContainer/TabContainer/DM/HBoxContainer/LevelController/GamemodeList" to="CenterContainer/TabContainer/DM" method="_gamemode_select"]
 [connection signal="item_selected" from="CenterContainer/TabContainer/DM/HBoxContainer/LevelController/MapList" to="CenterContainer/TabContainer/DM" method="_map_select"]
+[connection signal="pressed" from="CenterContainer/TabContainer/DM/HBoxContainer/GamemodeDescription/Button" to="CenterContainer/TabContainer/DM" method="play_button_pressed"]
 [connection signal="item_selected" from="CenterContainer/TabContainer/Implants/HBoxContainer/ImplantsController/AllowedImplantsList" to="CenterContainer/TabContainer/Implants" method="toggle_implant"]
 [connection signal="pressed" from="CenterContainer/TabContainer/Implants/HBoxContainer/VBoxContainer/Button3" to="CenterContainer/TabContainer/Implants" method="ban_all"]
 [connection signal="pressed" from="CenterContainer/TabContainer/Implants/HBoxContainer/VBoxContainer/Button4" to="CenterContainer/TabContainer/Implants" method="allow_all"]

@@ -17,6 +17,9 @@ var transform_lerp : Transform
 
 onready var animTree = $Puppet/PlayerModel/AnimTree
 
+remote func _set_toxic():
+	Global.player.set_toxic()
+
 remote func _do_damage(damage, collision_n, collision_p, shooter_pos, damagerId):
 	Global.player.set_last_damager_id(damagerId)
 	Global.player.damage(damage, collision_n, collision_p, shooter_pos)
@@ -121,6 +124,9 @@ func _physics_process(delta):
 func do_damage(damage, collision_n, collision_p, shooter_pos):
 	rpc_id(int(self.name),"_do_damage", damage, collision_n, collision_p, shooter_pos, get_tree().get_network_unique_id())
 
+func set_toxic():
+	rpc_id(int(self.name),"_set_toxic")
+
 func drop_weapon():
 	rpc_id(int(self.name),"_drop_weapon")
 
@@ -129,6 +135,12 @@ func setup_puppet(id):
 
 func shoot_play(pitch, soundId = 0):
 	rpc("shoot_commit", pitch, soundId)
+
+func flashlight(state):
+	rpc("set_flashlight", state)
+
+remote func set_flashlight(state):
+	$Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/Flashlight_Mesh/SpotLight.visible = state
 
 remote func shoot_commit(pitch, soundId):
 	weaponsMesh[currentWeaponId].get_child(0).show()

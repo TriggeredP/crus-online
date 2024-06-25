@@ -1,6 +1,6 @@
 extends Node
 
-var version = "Alpha 040624/2323"
+var version = "Alpha 260624/0259"
 
 var player_info = {}
 
@@ -31,7 +31,6 @@ var passwordEntered = false
 
 var dataLoaded = false
 
-onready var Sync = $Sync
 onready var Players = $Players
 onready var Menu = $Menu
 onready var Hint = $Hint
@@ -59,6 +58,8 @@ signal disconnected_from_server(error)
 func _ready():
 	if not load_data():
 		save_data()
+	
+	get_tree().get_nodes_in_group("MultiplayerMenu")[0].data_init()
 
 	get_tree().connect("network_peer_connected", self, "_connected")
 	get_tree().connect("network_peer_disconnected", self, "_disconnected")
@@ -184,9 +185,6 @@ master func host_add_player(info):
 		print("[HOST]: Sync player info")
 		
 		emit_signal("players_update", player_info)
-		
-#		Sync.sync_nodes()
-#		Players.load_players()
 
 master func host_remove_player():
 	var id = get_tree().get_rpc_sender_id()

@@ -100,11 +100,15 @@ func get_near_player(object) -> Dictionary:
 		"distance" : oldDistance
 	}
 
-puppet func set_in_sight(value):
+remote func set_in_sight(value):
 	Global.player.UI.set_in_sight(value)
 
 puppet func set_psychosis(value):
 	Global.player.set_psychosis(value)
+
+puppet func set_animation(anim:String, speed:float)->void :
+	anim_player.play(anim)
+	anim_player.playback_speed = speed
 
 ################################################################################
 
@@ -138,7 +142,7 @@ func _ready()->void :
 	footstep.stream = load("res://Sfx/wood01.wav")
 	footstep.unit_size = 5
 	footstep.bus = "step"
-	randomize()
+	
 	time = round(rand_range(1, 100))
 	set_process(false)
 	if rotate:
@@ -284,7 +288,7 @@ func move()->void :
 					if collision.collider.has_method("damage") and Vector3(velocity.x, 0, velocity.y).length() > 2:
 						collision.collider.damage(100, collision.normal, collision.position, global_transform.origin)
 		velocity = move_and_slide(velocity, Vector3.UP, false, 4, 0.785398)
-		rset("global_transform", global_transform)
+		rset_unreliable("global_transform", global_transform)
 
 func wait_for_player(delta)->void :
 	if is_network_master():
@@ -339,10 +343,6 @@ func wait_for_player(delta)->void :
 
 func anim()->void :
 	pass
-
-puppet func set_animation(anim:String, speed:float)->void :
-	anim_player.play(anim)
-	anim_player.playback_speed = speed
 
 func track_player(delta)->void :
 	if is_network_master():
@@ -416,7 +416,7 @@ master func alert(pos:Vector3)->void :
 	if is_network_master():
 		if player_spotted or alerted or dead or tranq:
 			return 
-		randomize()
+		
 		var new_pos = pos + Vector3(rand_range( - 3, 3), 0, rand_range( - 3, 3))
 		var new_path = NavigationServer.map_get_path(navigation, global_transform.origin, new_pos, true)
 		if new_path.size() > 0:

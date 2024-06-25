@@ -23,18 +23,11 @@ onready var head_gib = preload("res://Entities/Physics_Objects/Head_Gib.tscn")
 # Multiplayer stuff
 ################################################################################
 
-puppet func _spawn_gib_client(collision_n, collision_p, gibName):
+puppet func _spawn_gib_client(parentPath, collision_n, collision_p, gibName):
 	var new_gib = head_gib.instance()
 	new_gib.set_name(gibName)
-		
-	new_gib.set_meta("syncData",{
-		"assetPath": head_gib.resource_path,
-		"syncProperties": [
-			"global_transform"
-		]
-	})
-		
-	get_tree().get_nodes_in_group("Sync")[0].add_child(new_gib)
+
+	get_node(parentPath).add_child(new_gib)
 
 puppet func _client_damage():
 	for child in get_children():
@@ -78,7 +71,7 @@ func cancer():
 			cancerball.dir = cancerball.dir.rotated(Vector3.LEFT, rand_range( - PI, PI))
 			cancerball.dir = cancerball.dir.rotated(Vector3.UP, rand_range( - PI, PI))
 		soul.remove_objective()
-		soul.queue_free()
+		soul.hide()
 
 func _physics_process(delta):
 	if is_network_master():
@@ -136,18 +129,18 @@ master func damage(damage, collision_n, collision_p, shooter_pos):
 			deadhead.already_dead()
 			soul.die(damage, collision_n, collision_p)
 			if not gibflag and gibbable:
-				randomize()
+				
 				var newGibName = int(rand_range(0,1000000))
 				
 				var new_head_gib = head_gib.instance()
 				
 				new_head_gib.set_name(new_head_gib.name + "#" + str(newGibName))
 				
-				get_tree().get_nodes_in_group("Sync")[0].add_child(new_head_gib)
+				soul.add_child(new_head_gib)
 				new_head_gib.global_transform.origin = global_transform.origin
 				new_head_gib.damage(damage, collision_n, collision_p, shooter_pos)
 				
-				rpc("_spawn_gib_client", collision_n, collision_p, new_head_gib.name)
+				rpc("_spawn_gib_client", soul.get_path(), collision_n, collision_p, new_head_gib.name)
 			for child in get_children():
 				child.hide()
 			hide()
@@ -183,17 +176,17 @@ func piercing_damage(damage, collision_n, collision_p, shooter_pos):
 			deadhead.already_dead()
 			soul.die(damage, collision_n, collision_p)
 			if not gibflag:
-				randomize()
+				
 				var newGibName = int(rand_range(0,1000000))
 				
 				var new_head_gib = head_gib.instance()
 				new_head_gib.set_name(new_head_gib.name + "#" + str(newGibName))
-				get_tree().get_nodes_in_group("Sync")[0].add_child(new_head_gib)
+				soul.add_child(new_head_gib)
 				
 				new_head_gib.global_transform.origin = global_transform.origin
 				new_head_gib.damage(damage, collision_n, collision_p, shooter_pos)
 				
-				rpc("_spawn_gib_client", collision_n, collision_p, new_head_gib.name)
+				rpc("_spawn_gib_client", soul.get_path(), collision_n, collision_p, new_head_gib.name)
 			for child in get_children():
 				child.hide()
 			hide()
