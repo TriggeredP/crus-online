@@ -1,18 +1,9 @@
 extends StaticBody
 
-
-
-
-
-
-
-
-func _ready():
-	pass
-
-
-
-
+puppet func remove():
+	queue_free()
 
 func special_destroy():
-	queue_free()
+	if is_network_master():
+		queue_free()
+		rpc("remove")

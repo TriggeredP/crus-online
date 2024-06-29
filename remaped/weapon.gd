@@ -194,9 +194,9 @@ var inMenu = false
 
 onready var playerPuppet = get_tree().get_nodes_in_group("Multiplayer")[0].playerPuppet
 
-remote func _create_drop_weapon(parentPath, recivedTransform,recivedHoldPos,implantThrowBonus,recivedCurrentWeapon,recivedAmmo,playerVelocity,recivdeRandName,playerIgnoreId):
+remote func _create_drop_weapon(parentPath, recivedTransform,recivedHoldPos, implantThrowBonus, recivedCurrentWeapon, recivedAmmo, playerVelocity, recivdeRandName, playerIgnoreId):
 	var new_weapon_drop = weapon_drop.instance()
-	new_weapon_drop.set_name(new_weapon_drop.name + "#" + str(recivdeRandName))
+	new_weapon_drop.set_name(recivdeRandName)
 	get_node(parentPath).add_child(new_weapon_drop)
 	new_weapon_drop.global_transform.origin = recivedTransform - (recivedTransform - recivedHoldPos).normalized()
 	new_weapon_drop.gun.MESH[new_weapon_drop.gun.current_weapon].hide()
@@ -208,7 +208,7 @@ remote func _create_drop_weapon(parentPath, recivedTransform,recivedHoldPos,impl
 	new_weapon_drop.gun.MESH[recivedCurrentWeapon].show()
 	new_weapon_drop.playerIgnoreId = playerIgnoreId
 
-remote func _spawn_object(parentPath, recivedObject,recivedName,recivedTransform):
+remote func _spawn_object(parentPath, recivedObject, recivedName, recivedTransform):
 	var newObject = load(recivedObject).instance()
 	newObject.set_name(recivedName)
 	get_node(parentPath).add_child(newObject)

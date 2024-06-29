@@ -1,4 +1,4 @@
-extends KinematicBody
+extends StaticBody
 
 var PARTICLE = preload("res://Entities/Particles/Destruction_Particle.tscn")
 

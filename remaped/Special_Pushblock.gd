@@ -10,10 +10,29 @@ func _ready():
 puppet func remove():
 	queue_free()
 
-func _process(delta):
+func get_near_player(object) -> Dictionary:
+	var oldDistance = null
+	var checkPlayer = null
+	
+	for selectedPlayer in get_tree().get_nodes_in_group("Player"):
+		var distance = object.global_transform.origin.distance_to(selectedPlayer.global_transform.origin)
+		if oldDistance == null or oldDistance > distance:
+			oldDistance = distance
+			checkPlayer = selectedPlayer
+	
+	return {
+		"player" : checkPlayer,
+		"distance" : oldDistance
+	}
+
+
+func _physics_process(delta):
 	if is_network_master():
-		var space_state = get_world().direct_space_state
 		
+		if get_near_player(self).distance > 3:
+			return 
+		
+		var space_state = get_world().direct_space_state
 		var result_forward = space_state.intersect_ray(global_transform.origin, global_transform.origin + Vector3.FORWARD * 1.1)
 		var result_back = space_state.intersect_ray(global_transform.origin, global_transform.origin + Vector3.BACK * 1.1)
 		var result_left = space_state.intersect_ray(global_transform.origin, global_transform.origin + Vector3.LEFT * 1.1)
@@ -26,17 +45,17 @@ func _process(delta):
 				rset("global_transform", global_transform)
 				
 		if result_back and not result_forward:
-			if result_back.collider == Global.player  or result_forward.collider.has_meta("puppet"):
+			if result_back.collider == Global.player  or result_back.collider.has_meta("puppet"):
 				translate(Vector3.FORWARD * 2)
 				rset("global_transform", global_transform)
 				
 		if result_left and not result_right:
-			if result_left.collider == Global.player  or result_forward.collider.has_meta("puppet"):
+			if result_left.collider == Global.player  or result_left.collider.has_meta("puppet"):
 				translate(Vector3.RIGHT * 2)
 				rset("global_transform", global_transform)
 				
 		if result_right and not result_left:
-			if result_right.collider == Global.player  or result_forward.collider.has_meta("puppet"):
+			if result_right.collider == Global.player  or result_right.collider.has_meta("puppet"):
 				translate(Vector3.LEFT * 2)
 				rset("global_transform", global_transform)
 				

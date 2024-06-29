@@ -257,7 +257,7 @@ func destroy(col_n, col_p):
 "
 
 [sub_resource type="BoxShape" id=58]
-extents = Vector3( 0.346302, 0.144416, 0.780459 )
+extents = Vector3( 0.371759, 0.144416, 0.780459 )
 
 [sub_resource type="GDScript" id=59]
 script/source = "extends StaticBody
@@ -779,7 +779,7 @@ unit_size = 5.0
 bus = "SFX"
 
 [node name="Hand" type="StaticBody" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand"]
-transform = Transform( 0.282236, -0.926445, 0.249082, -0.292867, -0.330449, -0.897237, 0.913549, 0.180284, -0.364591, 0.0964885, 0.186504, -0.0474778 )
+transform = Transform( 0.30019, -0.933696, 0.195184, -0.122482, -0.240657, -0.962852, 0.945982, 0.265131, -0.186604, 0.094125, 0.382889, -0.0529846 )
 collision_layer = 4
 collision_mask = 0
 script = SubResource( 57 )
@@ -875,7 +875,6 @@ pitch_scale = 0.91
 bus = "SFX"
 
 [node name="RatHandler" type="StaticBody" parent="Puppet"]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
 collision_layer = 6
 collision_mask = 0
 script = SubResource( 78 )

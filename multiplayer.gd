@@ -1,6 +1,6 @@
 extends Node
 
-var version = "Alpha 260624/0259"
+var version = "Alpha 290624/0711"
 
 var player_info = {}
 
@@ -25,7 +25,7 @@ var lastConnected = {
 }
 
 var password = ""
-var serverPassword = "12345678"
+var serverPassword = ""
 
 var passwordEntered = false
 
