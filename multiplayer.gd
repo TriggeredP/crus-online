@@ -1,6 +1,6 @@
 extends Node
 
-var version = "Alpha 290624/0711"
+var version = "Alpha 060724/1839"
 
 var player_info = {}
 

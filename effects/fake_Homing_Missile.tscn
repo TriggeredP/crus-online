@@ -1,8 +1,24 @@
-[gd_scene load_steps=6 format=2]
+[gd_scene load_steps=7 format=2]
 
 [ext_resource path="res://Materials/Abraxas_Head.tres" type="Material" id=2]
 [ext_resource path="res://Sfx/Flesh/gibbing_3.wav" type="AudioStream" id=3]
 [ext_resource path="res://Entities/Particles/Blood_Particle2.tscn" type="PackedScene" id=4]
+
+[sub_resource type="GDScript" id=4]
+script/source = "extends KinematicBody
+
+puppet func _set_transform(recivedTransform):
+	global_transform = recivedTransform
+
+puppet func _delete():
+	queue_free()
+
+puppet func _spawn_shrapnel(recivedPath, recivedObject, recivedName, recivedTransform, recivedShrapnel):
+	pass
+
+puppet func _create_object(recivedPath, recivedObject, recivedName ,recivedTransform):
+	pass
+"
 
 [sub_resource type="SphereMesh" id=3]
 
@@ -13,6 +29,7 @@ points = PoolVector3Array( 0, -0.027821, 0.017884, 0, -0.027821, 0.073527, 0.012
 collision_layer = 0
 collision_mask = 19
 collision/safe_margin = 0.002
+script = SubResource( 4 )
 
 [node name="MeshInstance" type="MeshInstance" parent="."]
 material_override = ExtResource( 2 )

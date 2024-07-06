@@ -33,27 +33,32 @@ func _ready():
 	
 	laser.rset_config("global_transform", MultiplayerAPI.RPC_MODE_PUPPET)
 	particle.rset_config("global_transform", MultiplayerAPI.RPC_MODE_PUPPET)
+	
+	rset_config("visible", MultiplayerAPI.RPC_MODE_PUPPET)
 
 puppet func particle_visible(value = true):
 	particle.visible = value
 
-func _process(delta):
+func _physics_process(delta):
 	if is_network_master():
 		t += 1
 		if destroyed:
 			hide()
+			rset_unreliable("visible", false)
 			return 
 		if disabled:
 			particle.hide()
+			rpc_unreliable("particle_visible", false)
 			if laser.scale.z < 3:
 				hide()
 			laser.scale.z = lerp(laser.scale.z, 1, 0.2)
+			laser.rset_unreliable("global_transform", laser.global_transform)
 			return 
 		show()
-		look_towards = lerp(look_towards, get_near_player(self).player.global_transform.origin, follow_speed)
+		look_towards = lerp(look_towards, get_near_player(self).player.global_transform.origin  + Vector3.UP * 1.0, follow_speed)
 		var space = get_world().direct_space_state
 		if not active:
-			var active_result = space.intersect_ray(global_transform.origin, get_near_player(self).player.global_transform.origin + Vector3.UP * 0.5, [self])
+			var active_result = space.intersect_ray(global_transform.origin, get_near_player(self).player.global_transform.origin + Vector3.UP * 1.0, [self])
 			if active_result:
 				if active_result.collider == Global.player or active_result.collider.has_meta("puppet"):
 					active = true
@@ -76,7 +81,7 @@ func _process(delta):
 			rpc_unreliable("particle_visible", false)
 			laser.rset_unreliable("global_transform", laser.global_transform)
 	else:
-		set_process(false)
+		set_physics_process(false)
 
 puppet func died():
 	get_parent().get_node("Particle").show()

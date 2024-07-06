@@ -38,13 +38,18 @@ func _ready():
 func _process(delta):
 	torus.rotate_object_local(Vector3.BACK, deg2rad(1))
 
+puppet func die():
+	anim.play("Die")
+	Global.remove_objective()
+
 func _physics_process(delta):
 	if is_network_master():
 		t += 1
 		
 		if not activated and fmod(t, 20) == 0:
 			var space = get_world().direct_space_state
-			var result = space.intersect_ray(head.global_transform.origin, get_near_player(self).player.global_transform.origin + Vector3.UP * 0.5, [self, head])
+			var result = space.intersect_ray(head.global_transform.origin, get_near_player(self).player.global_transform.origin + Vector3.UP * 1.0, [self, head])
+			print(result)
 			if result:
 				if result.collider == Global.player or result.collider.has_meta("puppet"):
 					activated = true
@@ -57,8 +62,8 @@ func _physics_process(delta):
 		if head.destroyed and laser.destroyed and rocket.destroyed and not kill_flag:
 			kill_flag = true
 			anim.play("Die")
-			rpc("set_animation", "Die", 1)
 			Global.remove_objective()
+			rpc("die")
 		
 		elif not kill_flag:
 			anim.play("Idle")
@@ -99,6 +104,8 @@ func _physics_process(delta):
 			
 			yield (get_tree(), "idle_frame")
 			new_enemy.add_velocity(40, (global_transform.origin - get_near_player(self).player.global_transform.origin).normalized())
+	else:
+		set_physics_process(false)
 
 puppet func spawn_enemy(selectedEnemy, parentPath, enemyName, enemyTransform):
 	var new_enemy = SPAWNS[selectedEnemy].instance()

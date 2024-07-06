@@ -58,6 +58,21 @@ remote func _create_object(recivedPath, recivedObject,recivedName,recivedTransfo
 	get_node(recivedPath).add_child(newObject)
 	newObject.global_transform = recivedTransform
 
+func get_near_player(object) -> Dictionary:
+	var oldDistance = null
+	var checkPlayer = null
+	
+	for selectedPlayer in get_tree().get_nodes_in_group("Player"):
+		var distance = object.global_transform.origin.distance_to(selectedPlayer.global_transform.origin)
+		if oldDistance == null or oldDistance > distance:
+			oldDistance = distance
+			checkPlayer = selectedPlayer
+	
+	return {
+		"player" : checkPlayer,
+		"distance" : oldDistance
+	}
+
 ################################################################################
 
 func _ready():
@@ -86,7 +101,7 @@ func flechette(result)->void :
 
 func _physics_process(delta):
 	if get_tree().network_peer != null:
-		rpc("_set_transform",global_transform)
+		rpc_unreliable("_set_transform", global_transform)
 	
 	if timer != null:
 		if timer.is_stopped():
@@ -109,10 +124,10 @@ func _physics_process(delta):
 			rpc("_delete")
 			queue_free()
 	if home_on_player:
-		current_target = Global.player
+		current_target = get_near_player(self).player
 	if (homing or home_on_player) and current_target != null:
 		gravity = 0
-		velocity = lerp(velocity, - homing_speed * (global_transform.origin - (current_target.global_transform.origin + Vector3(0, 0.5, 0))).normalized(), homing_turn_rate)
+		velocity = lerp(velocity, - homing_speed * (global_transform.origin - (current_target.global_transform.origin + Vector3(0, 1, 0))).normalized(), homing_turn_rate)
 	if homing and velocity.length() < 3:
 		$Boresound.stop()
 	elif homing and not $Boresound.playing:
