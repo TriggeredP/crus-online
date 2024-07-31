@@ -1,4 +1,4 @@
-[gd_scene load_steps=137 format=2]
+[gd_scene load_steps=138 format=2]
 
 [ext_resource path="res://MOD_CONTENT/CruS Online/multiplayer_player.gd" type="Script" id=1]
 [ext_resource path="res://MOD_CONTENT/CruS Online/player_model/player_model.tscn" type="PackedScene" id=2]
@@ -113,11 +113,17 @@ onready var client = get_node(\"../../../../../../\")
 func _ready():
 	set_meta(\"puppet\", -1)
 
+func player_damage(damage, collision_n, collision_p, shooter_pos, weapon_type):
+	client.do_damage(damage * 4, collision_n, collision_p, shooter_pos, weapon_type)
+
 func damage(damage, collision_n, collision_p, shooter_pos):
-	client.do_damage(damage * 2, collision_n, collision_p, shooter_pos)
+	client.do_damage(damage, collision_n, collision_p, shooter_pos)
 
 func set_toxic():
 	client.set_toxic()
+
+func cancer():
+	client.set_cancer()
 "
 
 [sub_resource type="BoxShape" id=64]
@@ -203,6 +209,9 @@ metallic_specular = 0.0
 albedo_texture = ExtResource( 38 )
 metallic_specular = 0.0
 
+[sub_resource type="AudioStreamRandomPitch" id=79]
+audio_stream = ExtResource( 77 )
+
 [sub_resource type="SpatialMaterial" id=12]
 albedo_texture = ExtResource( 39 )
 metallic_specular = 0.0
@@ -267,15 +276,27 @@ onready var client = get_node(\"../../../../../../\")
 func _ready():
 	set_meta(\"puppet\", -1)
 
+func player_damage(damage, collision_n, collision_p, shooter_pos, weapon_type):
+	client.do_damage(damage, collision_n, collision_p, shooter_pos, weapon_type)
+
 func damage(damage, collision_n, collision_p, shooter_pos):
 	client.do_damage(damage, collision_n, collision_p, shooter_pos)
 
 func set_toxic():
 	client.set_toxic()
+
+func cancer():
+	client.set_cancer()
 "
 
 [sub_resource type="BoxShape" id=35]
-extents = Vector3( 1.18106, 0.494403, 0.82258 )
+extents = Vector3( 0.956756, 0.494403, 0.82258 )
+
+[sub_resource type="BoxShape" id=80]
+extents = Vector3( 0.444633, 0.370771, 0.406444 )
+
+[sub_resource type="BoxShape" id=77]
+extents = Vector3( 0.325025, 0.2665, 0.129642 )
 
 [sub_resource type="AudioStreamRandomPitch" id=61]
 audio_stream = ExtResource( 70 )
@@ -285,24 +306,6 @@ audio_stream = ExtResource( 72 )
 
 [sub_resource type="AudioStreamRandomPitch" id=63]
 audio_stream = ExtResource( 74 )
-
-[sub_resource type="GDScript" id=78]
-script/source = "extends StaticBody
-
-onready var client = $\"../..\"
-
-func _ready():
-	set_meta(\"puppet\", -1)
-
-func damage(damage, collision_n, collision_p, shooter_pos):
-	client.do_damage(damage, collision_n, collision_p, shooter_pos)
-
-func set_toxic():
-	client.set_toxic()
-"
-
-[sub_resource type="BoxShape" id=77]
-extents = Vector3( 0.325025, 0.152253, 0.338203 )
 
 [node name="PlayerClient" type="Spatial"]
 script = ExtResource( 1 )
@@ -326,6 +329,11 @@ transform = Transform( -1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0.84
 [node name="Skeleton" parent="Puppet/PlayerModel/Armature" index="0"]
 bones/0/bound_children = [ NodePath("Chest") ]
 bones/6/bound_children = [ NodePath("RightHand") ]
+bones/16/bound_children = [ NodePath("RightThigh") ]
+bones/17/bound_children = [ NodePath("RightCalf") ]
+bones/18/bound_children = [ NodePath("RatHandler") ]
+bones/20/bound_children = [ NodePath("LeftThigh") ]
+bones/21/bound_children = [ NodePath("LeftCalf") ]
 
 [node name="Head" parent="Puppet/PlayerModel/Armature/Skeleton" index="0"]
 transform = Transform( 0.999961, -0.000857431, 0.00875298, 0.000671633, 0.999775, 0.0212139, -0.0087693, -0.0212076, 0.999737, -0.000539565, 0.61256, -0.0279116 )
@@ -399,8 +407,11 @@ visible = false
 mesh = ExtResource( 29 )
 material/0 = SubResource( 3 )
 
+[node name="Placeholder" type="Spatial" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/Baton_Mesh"]
+transform = Transform( 0.733018, -1.63913e-07, -0.680208, 0.680209, 1.11759e-07, 0.733017, 1.88127e-07, -1, -2.90573e-07, 0.0689787, -0.074334, 0.0263803 )
+
 [node name="Batonsound" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/Baton_Mesh" instance=ExtResource( 75 )]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.455319, 1.30754 )
+transform = Transform( 1, -2.08616e-07, 2.23517e-08, -2.98023e-08, 1, 8.9407e-08, 5.96046e-08, 1.49012e-08, 1, -0.10373, -0.103081, 0.112495 )
 stream = ExtResource( 73 )
 unit_db = 7.0
 unit_size = 5.0
@@ -555,6 +566,13 @@ mesh = ExtResource( 17 )
 [node name="Muzzleflash" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/Mauser_Mesh" instance=ExtResource( 3 )]
 transform = Transform( -0.00880968, 0.0208265, -0.399361, -0.0114455, 0.39928, 0.0210748, 0.399739, 0.0118915, -0.008198, -0.0049268, 0.019686, -1.07631 )
 
+[node name="Pistol_Sound" type="AudioStreamPlayer3D" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/Mauser_Mesh"]
+transform = Transform( 1, 1.22935e-07, 9.23872e-07, -2.42144e-08, 1, -4.84288e-07, 0, 1.49012e-08, 1, 0.0349369, 0.0125898, -0.0404422 )
+stream = ExtResource( 4 )
+unit_db = 7.0
+unit_size = 5.0
+bus = "SFX"
+
 [node name="Bore_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
 transform = Transform( -1.62921e-07, -1, 4.9738e-14, 1, -1.62921e-07, 0, 9.9476e-14, 9.9476e-14, 1, 0.00996399, -0.0128468, 0.0250506 )
 visible = false
@@ -564,6 +582,13 @@ mesh = ExtResource( 9 )
 [node name="Placeholder" type="Spatial" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/Bore_Mesh"]
 transform = Transform( 1, 0, 7.45058e-09, 9.31323e-10, 1, 0, -7.45058e-09, 7.45058e-09, 1, 0, 0, 0 )
 
+[node name="Shotgun_Sound" type="AudioStreamPlayer3D" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/Bore_Mesh"]
+transform = Transform( 1, 1.08033e-07, 9.23872e-07, -9.31323e-09, 1, -4.91738e-07, -7.45058e-09, 1.49012e-08, 1, -0.0041768, -0.00562179, -0.00356263 )
+stream = ExtResource( 80 )
+unit_db = 7.0
+unit_size = 5.0
+bus = "SFX"
+
 [node name="MKR_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
 transform = Transform( -1.62921e-07, -1, 5.68434e-14, 1, -1.62921e-07, 0, 1.13687e-13, 1.13687e-13, 1, 0.0252202, -0.025261, 0.0514158 )
 visible = false
@@ -572,6 +597,13 @@ mesh = ExtResource( 15 )
 
 [node name="Muzzleflash" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/MKR_Mesh" instance=ExtResource( 3 )]
 transform = Transform( -0.00524261, 0.0231084, -0.399298, 0.010111, 0.399212, 0.0229707, 0.399837, -0.00979213, -0.00581649, 0.00163668, 0.0142248, -0.397707 )
+
+[node name="Nambu_Sound" type="AudioStreamPlayer3D" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/MKR_Mesh"]
+transform = Transform( 1, 1.35973e-07, 9.08971e-07, -3.72529e-08, 1, -5.06639e-07, 1.49012e-08, 3.72529e-08, 1, 0.0330911, 0.0686851, -0.221819 )
+stream = ExtResource( 85 )
+unit_db = 7.0
+unit_size = 5.0
+bus = "SFX"
 
 [node name="Rad_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
 transform = Transform( -1.62921e-07, -1, 9.9476e-14, 1, -1.62921e-07, -1.42109e-14, 1.7053e-13, 1.98952e-13, 1, 0.0322447, -0.0232374, 0.086473 )
@@ -628,6 +660,13 @@ mesh = ExtResource( 13 )
 [node name="Muzzleflash" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/Zippy_Mesh" instance=ExtResource( 3 )]
 transform = Transform( -0.00433452, 0.0104608, -0.199679, -0.00529047, 0.19965, 0.0105742, 0.199883, 0.00551116, -0.00405023, 0.0036006, 0.0119138, -0.101614 )
 
+[node name="Nambu_Sound" type="AudioStreamPlayer3D" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/Zippy_Mesh"]
+transform = Transform( 1, -1.62981e-07, 9.53674e-07, 5.68107e-08, 1, -6.33299e-07, -5.21541e-08, -6.70552e-08, 1, 0.0256242, 0.0653958, -0.191232 )
+stream = ExtResource( 85 )
+unit_db = 7.0
+unit_size = 5.0
+bus = "SFX"
+
 [node name="AN94_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
 transform = Transform( -1.62921e-07, -1, 4.9738e-14, 1, -1.62921e-07, 0, 9.9476e-14, 9.9476e-14, 1, 0.0205041, -0.0260217, 0.0240001 )
 visible = false
@@ -636,6 +675,13 @@ mesh = ExtResource( 14 )
 
 [node name="Muzzleflash" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/AN94_Mesh" instance=ExtResource( 3 )]
 transform = Transform( -0.00628836, 0.0224675, -0.399319, 0.00386969, 0.399353, 0.0224084, 0.399931, -0.00351074, -0.00649563, -0.00214475, 0.0155928, -0.688621 )
+
+[node name="AN94_Sound" type="AudioStreamPlayer3D" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/AN94_Mesh"]
+transform = Transform( 1, 1.3411e-07, 9.23872e-07, -2.51457e-08, 1, -5.36442e-07, 0, 5.21541e-08, 1, 0.0338517, 0.0639691, -0.194403 )
+stream = SubResource( 79 )
+unit_db = 7.0
+unit_size = 5.0
+bus = "SFX"
 
 [node name="VAG72_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
 transform = Transform( -1.62921e-07, -1, 6.39488e-14, 1, -1.62921e-07, 0, 1.27898e-13, 1.27898e-13, 1, 0.0357013, -0.0203427, 0.0429826 )
@@ -691,6 +737,14 @@ mesh = ExtResource( 28 )
 
 [node name="Placeholder" type="Spatial" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/Rod_Mesh"]
 transform = Transform( 1, 0, 7.45058e-09, 9.31323e-10, 1, 0, -7.45058e-09, 7.45058e-09, 1, 0, 0, 0 )
+
+[node name="Batonsound" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/Rod_Mesh" instance=ExtResource( 75 )]
+transform = Transform( 0.999999, -8.9407e-08, -8.9407e-08, -8.9407e-08, 1, 8.19564e-08, 1.3411e-07, 2.98023e-08, 1, -0.278015, -0.102608, 0.422777 )
+stream = ExtResource( 73 )
+unit_db = 7.0
+unit_size = 5.0
+pitch_scale = 2.43
+bus = "SFX"
 
 [node name="FT_Mesh" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons"]
 transform = Transform( -1.62921e-07, -1, 2.84217e-14, 1, -1.62921e-07, 0, 5.68434e-14, 5.68434e-14, 1, 0.0508103, 1.49012e-08, 0.0863747 )
@@ -802,7 +856,77 @@ script = SubResource( 59 )
 transform = Transform( 0.274, 0.000550867, 5.64335e-06, -0.000242077, 0.618844, 0.0243454, 1.80523e-05, -0.0625738, 0.240772, -0.00855047, 0.362073, 0.0626216 )
 shape = SubResource( 35 )
 
-[node name="Torso_Mesh" parent="Puppet/PlayerModel/Armature/Skeleton" index="4"]
+[node name="RightCalf" type="BoneAttachment" parent="Puppet/PlayerModel/Armature/Skeleton" index="3"]
+transform = Transform( 0.0282174, 0.192418, 0.980906, 0.298006, -0.938295, 0.175487, 0.954146, 0.287365, -0.0838183, 0.131162, -0.310038, -0.0563373 )
+bone_name = "right_calf"
+
+[node name="Leg" type="StaticBody" parent="Puppet/PlayerModel/Armature/Skeleton/RightCalf"]
+transform = Transform( 1, 2.98023e-08, 0, -2.98023e-08, 1, -1.02445e-08, 0, 1.74623e-08, 1, 0, 0, 0 )
+collision_layer = 6
+collision_mask = 0
+script = SubResource( 59 )
+
+[node name="CollisionShape" type="CollisionShape" parent="Puppet/PlayerModel/Armature/Skeleton/RightCalf/Leg"]
+transform = Transform( 0.274, 1.19209e-07, 9.31323e-09, -2.6077e-08, 0.621999, -3.67872e-08, -1.25729e-08, -1.24099e-07, 0.242, 0.0366659, 0.271667, -0.0118095 )
+shape = SubResource( 80 )
+
+[node name="LeftCalf" type="BoneAttachment" parent="Puppet/PlayerModel/Armature/Skeleton" index="4"]
+transform = Transform( 0.000617754, -0.14718, 0.98911, 0.317731, -0.937826, -0.139748, 0.948181, 0.314357, 0.0461845, -0.125994, -0.30774, -0.0770184 )
+bone_name = "left_calf"
+
+[node name="Leg" type="StaticBody" parent="Puppet/PlayerModel/Armature/Skeleton/LeftCalf"]
+transform = Transform( 1, 2.98023e-08, 0, -2.98023e-08, 1, -1.02445e-08, 0, 1.74623e-08, 1, 0, 0, 0 )
+collision_layer = 6
+collision_mask = 0
+script = SubResource( 59 )
+
+[node name="CollisionShape" type="CollisionShape" parent="Puppet/PlayerModel/Armature/Skeleton/LeftCalf/Leg"]
+transform = Transform( 0.274, 1.19209e-07, 9.31323e-09, -2.6077e-08, 0.621999, -3.67872e-08, -1.25729e-08, -1.24099e-07, 0.242, 0.0366659, 0.271667, -0.0118095 )
+shape = SubResource( 80 )
+
+[node name="LeftThigh" type="BoneAttachment" parent="Puppet/PlayerModel/Armature/Skeleton" index="5"]
+transform = Transform( -0.00250654, -0.116156, 0.993228, -0.183986, -0.976222, -0.114632, 0.982926, -0.183028, -0.0189239, -0.0771154, 0.103055, -1.52514e-08 )
+bone_name = "left_thigh"
+
+[node name="Leg" type="StaticBody" parent="Puppet/PlayerModel/Armature/Skeleton/LeftThigh"]
+transform = Transform( 1, 2.98023e-08, 0, -2.98023e-08, 1, -1.02445e-08, 0, 1.74623e-08, 1, 0, 0, 0 )
+collision_layer = 6
+collision_mask = 0
+script = SubResource( 59 )
+
+[node name="CollisionShape" type="CollisionShape" parent="Puppet/PlayerModel/Armature/Skeleton/LeftThigh/Leg"]
+transform = Transform( 0.274, 1.19209e-07, 9.31323e-09, -2.6077e-08, 0.621999, -3.67872e-08, -1.25729e-08, -1.24099e-07, 0.242, 0.0366659, 0.271667, -0.0118095 )
+shape = SubResource( 80 )
+
+[node name="RatHandler" type="BoneAttachment" parent="Puppet/PlayerModel/Armature/Skeleton" index="6"]
+transform = Transform( 0.997423, 0.0253638, 0.0670891, -0.0660827, -0.0386415, 0.997066, 0.027882, -0.998931, -0.0368662, 0.235321, -0.817954, 0.0992183 )
+bone_name = "right_foot"
+
+[node name="Leg" type="StaticBody" parent="Puppet/PlayerModel/Armature/Skeleton/RatHandler"]
+transform = Transform( 1, 2.98023e-08, 0, -2.98023e-08, 1, -1.02445e-08, 0, 1.74623e-08, 1, 0, 0, 0 )
+collision_layer = 6
+collision_mask = 0
+script = SubResource( 59 )
+
+[node name="CollisionShape" type="CollisionShape" parent="Puppet/PlayerModel/Armature/Skeleton/RatHandler/Leg"]
+transform = Transform( 0.998289, 0.00210913, -0.0584443, -0.00220456, 0.999996, -0.00156816, 0.0584406, 0.00169433, 0.99829, -0.227134, 0.0756676, 0.0364959 )
+shape = SubResource( 77 )
+
+[node name="RightThigh" type="BoneAttachment" parent="Puppet/PlayerModel/Armature/Skeleton" index="7"]
+transform = Transform( 0.101562, 0.135566, 0.985549, -0.120648, -0.981681, 0.147467, 0.987486, -0.133881, -0.0833458, 0.0741155, 0.103055, 6.10053e-09 )
+bone_name = "right_thigh"
+
+[node name="Leg" type="StaticBody" parent="Puppet/PlayerModel/Armature/Skeleton/RightThigh"]
+transform = Transform( 1, 2.98023e-08, 0, -2.98023e-08, 1, -1.02445e-08, 0, 1.74623e-08, 1, 0, 0, 0 )
+collision_layer = 6
+collision_mask = 0
+script = SubResource( 59 )
+
+[node name="CollisionShape" type="CollisionShape" parent="Puppet/PlayerModel/Armature/Skeleton/RightThigh/Leg"]
+transform = Transform( 0.274, -6.70552e-08, 9.31323e-09, -4.47035e-08, 0.621999, -3.11993e-08, -5.58794e-09, -7.72998e-08, 0.242, 0.0127361, 0.261024, 0.00377411 )
+shape = SubResource( 80 )
+
+[node name="Torso_Mesh" parent="Puppet/PlayerModel/Armature/Skeleton" index="9"]
 material_override = null
 
 [node name="AnimTree" parent="Puppet/PlayerModel" index="2"]
@@ -873,15 +997,6 @@ unit_db = 1.0
 unit_size = 5.7
 pitch_scale = 0.91
 bus = "SFX"
-
-[node name="RatHandler" type="StaticBody" parent="Puppet"]
-collision_layer = 6
-collision_mask = 0
-script = SubResource( 78 )
-
-[node name="CollisionShape" type="CollisionShape" parent="Puppet/RatHandler"]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.000946999, -0.00517857, -0.000126362 )
-shape = SubResource( 77 )
 
 [node name="FlashBuffer" type="Timer" parent="."]
 wait_time = 0.2

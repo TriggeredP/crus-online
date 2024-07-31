@@ -24,6 +24,9 @@ const diffSetup = {
 	\"he\": [\"Hope Eradicated\",3,false,false,true]
 }
 
+func _ready():
+	hide()
+
 func player_died():
 	show()
 	
@@ -316,6 +319,7 @@ __meta__ = {
 }
 
 [node name="ImplantButton" type="HBoxContainer" parent="."]
+visible = false
 anchor_top = 0.570833
 anchor_right = 1.0
 anchor_bottom = 0.665277

@@ -1,0 +1,45 @@
+[gd_scene load_steps=8 format=2]
+
+[ext_resource path="res://Materials/Fire.tres" type="Material" id=2]
+[ext_resource path="res://Entities/Particles/fire.tres" type="Material" id=3]
+[ext_resource path="res://Sfx/Environment/fire1.wav" type="AudioStream" id=5]
+
+[sub_resource type="GDScript" id=4]
+script/source = "extends Area
+
+remote func _set_transform(recivedTransform):
+	global_transform = recivedTransform
+
+remote func _delete():
+	queue_free()"
+
+[sub_resource type="SphereShape" id=1]
+
+[sub_resource type="QuadMesh" id=2]
+
+[sub_resource type="AudioStreamRandomPitch" id=3]
+audio_stream = ExtResource( 5 )
+random_pitch = 1.56
+
+[node name="Area" type="Area"]
+collision_layer = 1024
+collision_mask = 18
+script = SubResource( 4 )
+
+[node name="CollisionShape" type="CollisionShape" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.813646, 0 )
+shape = SubResource( 1 )
+
+[node name="Particles" type="Particles" parent="."]
+transform = Transform( 2.052, 0, 0, 0, 2.292, 0, 0, 0, 2.02, 0, 0, 0 )
+material_override = ExtResource( 2 )
+amount = 5
+lifetime = 0.27
+fract_delta = false
+process_material = ExtResource( 3 )
+draw_pass_1 = SubResource( 2 )
+
+[node name="AudioStreamPlayer3D" type="AudioStreamPlayer3D" parent="."]
+stream = SubResource( 3 )
+unit_size = 8.3
+autoplay = true

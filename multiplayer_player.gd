@@ -20,8 +20,11 @@ onready var animTree = $Puppet/PlayerModel/AnimTree
 remote func _set_toxic():
 	Global.player.set_toxic()
 
-remote func _do_damage(damage, collision_n, collision_p, shooter_pos, damagerId):
-	Global.player.set_last_damager_id(damagerId)
+remote func _set_cancer():
+	Global.player.cancer()
+
+remote func _do_damage(damage, collision_n, collision_p, shooter_pos, weapon_type, damagerId):
+	Global.player.set_last_damager_id(damagerId, weapon_type)
 	Global.player.damage(damage, collision_n, collision_p, shooter_pos)
 
 remote func _drop_weapon():
@@ -121,11 +124,14 @@ func _physics_process(delta):
 		)
 		hide()
 
-func do_damage(damage, collision_n, collision_p, shooter_pos):
-	rpc_id(int(self.name),"_do_damage", damage, collision_n, collision_p, shooter_pos, get_tree().get_network_unique_id())
+func do_damage(damage, collision_n, collision_p, shooter_pos, weapon_type = null):
+	rpc_id(int(self.name),"_do_damage", damage, collision_n, collision_p, shooter_pos, weapon_type, get_tree().get_network_unique_id())
 
 func set_toxic():
 	rpc_id(int(self.name),"_set_toxic")
+
+func set_cancer():
+	rpc_id(int(self.name),"_set_cancer")
 
 func drop_weapon():
 	rpc_id(int(self.name),"_drop_weapon")

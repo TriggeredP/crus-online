@@ -35,6 +35,16 @@ func player_use():
 		Global.player.UI.notify("zvhvhivj jidv ijvdkjaeui djvhduhekj vduihkeu", Color(1, 0, 0))
 	else :
 		if is_network_master():
+			for i in range(10):
+				var new_gib = GIB.instance()
+				
+				new_gib.set_name(new_gib.name + "#" + str(randi() % 1000000000))
+
+				get_parent().add_child(new_gib)
+				new_gib.global_transform.origin = global_transform.origin
+				new_gib.velocity = Vector3.FORWARD.rotated(Vector3.UP, rand_range( - PI, PI))
+				rpc("spawn_gib", get_parent().get_path(), new_gib.name)
+			
 			remove()
 			rpc("remove")
 		else:
@@ -51,3 +61,8 @@ puppet func remove():
 	set_collision_mask_bit(0,false)
 	set_collision_layer_bit(8, false)
 	hide()
+
+puppet func spawn_gib(recivedPath, recivedName):
+	var new_gib = GIB.instance()
+	get_node(recivedPath).add_child(new_gib)
+	new_gib.set_name(recivedName)

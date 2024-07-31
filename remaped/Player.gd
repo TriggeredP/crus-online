@@ -152,7 +152,8 @@ const deathMessages = {
 		"%s was killed by god",
 		"%s didn't want to live",
 		"%s just lose 500$",
-		"%s decided to start from scratch"
+		"%s decided to start from scratch",
+		"%s died"
 	],
 	"killedByPlayer":[
 		"%s was killed by %s",
@@ -162,23 +163,26 @@ const deathMessages = {
 }
 
 var lastDamagerId = null
+var weaponType = null
 var lastDamagerIdTimer
 
-func set_last_damager_id(id):
+func set_last_damager_id(id, recivedWeaponType):
 	lastDamagerId = id
+	weaponType = recivedWeaponType
 	lastDamagerIdTimer.stop()
 	lastDamagerIdTimer.start()
 
 func reset_last_damager_id():
 	lastDamagerId = null
+	weaponType = null
 
 remote func send_death_nofify(killerId):
-	var deadNickname = get_tree().get_nodes_in_group("Multiplayer")[0].player_info[get_tree().get_rpc_sender_id()].nickname
+	var deadNickname = get_tree().get_nodes_in_group("Multiplayer")[0].players[get_tree().get_rpc_sender_id()].nickname
 	
 	if killerId == null:
 		Global.UI.notify(deathMessages.general[randi() % deathMessages.general.size()] % deadNickname, Color(1, 0, 0))
 	else:
-		var killerNickname = get_tree().get_nodes_in_group("Multiplayer")[0].player_info[killerId].nickname
+		var killerNickname = get_tree().get_nodes_in_group("Multiplayer")[0].players[killerId].nickname
 		Global.UI.notify(deathMessages.killedByPlayer[randi() % deathMessages.killedByPlayer.size()] % [deadNickname,killerNickname], Color(1, 0, 0))
 
 remote func _spawn_gib(parentPath, gib, gibName, gibPos, recivedDamage):
@@ -190,10 +194,10 @@ remote func _spawn_gib(parentPath, gib, gibName, gibPos, recivedDamage):
 
 remote func _play_sound(soundName):
 	var netId = get_tree().get_rpc_sender_id()
-	get_tree().get_nodes_in_group("Multiplayer")[0].player_info[netId].puppet.get_node("Puppet/PlayerModel/SFX/" + soundName).play()
+	get_tree().get_nodes_in_group("Multiplayer")[0].players[netId].puppet.get_node("Puppet/PlayerModel/SFX/" + soundName).play()
 
 remote func _play_death_sound():
-	get_tree().get_nodes_in_group("Multiplayer")[0].player_info[get_tree().get_rpc_sender_id()].puppet.play_death_sound()
+	get_tree().get_nodes_in_group("Multiplayer")[0].players[get_tree().get_rpc_sender_id()].puppet.play_death_sound()
 
 remote func _spawn_explosion(pos):
 	if get_tree().get_network_unique_id() != get_tree().get_rpc_sender_id():
@@ -201,7 +205,7 @@ remote func _spawn_explosion(pos):
 		get_parent().add_child(n_explosion)
 		n_explosion.global_transform.origin = pos
 		
-		get_tree().get_nodes_in_group("Multiplayer")[0].player_info[get_tree().get_rpc_sender_id()].puppet.play_explosion_sound()
+		get_tree().get_nodes_in_group("Multiplayer")[0].players[get_tree().get_rpc_sender_id()].puppet.play_explosion_sound()
 
 ################################################################################
 

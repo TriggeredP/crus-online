@@ -56,8 +56,6 @@ func update_players_info(info):
 		playerNumber += 1
 "
 
-[sub_resource type="StyleBoxEmpty" id=17]
-
 [sub_resource type="GDScript" id=18]
 script/source = "extends Label
 
@@ -167,12 +165,9 @@ func _ready():
 
 
 func _gamemode_select(index):
-	get_tree().get_nodes_in_group(\"MultiplayerMenu\")[0].hostInfo[\"gamemode\"] = gamemodesList[index][0]
-
 	$HBoxContainer/GamemodeDescription/MapLabel.text = \"Gamemode description:\\n\\n\" + gamemodesList[index][1]
 
 func _map_select(index):
-	get_tree().get_nodes_in_group(\"MultiplayerMenu\")[0].hostSettings[\"map\"] = mapsList[index]
 	mapSelected = index
 
 func play_button_pressed():
@@ -286,10 +281,18 @@ func set_password():
 	passwordEdit.text = \"\"
 	
 	Multiplayer.passwordEntered = true
-	Multiplayer.join_to_server(Multiplayer.lastConnected.ip, Multiplayer.lastConnected.port)
+	Multiplayer.join_to_server(Multiplayer.config.lastIp, Multiplayer.config.lastPort)
 
 func password_entered(text):
 	hide()
+"
+
+[sub_resource type="GDScript" id=23]
+script/source = "extends WindowDialog
+
+func _ready():
+	rect_scale = Vector2(Global.resolution[0] / 1280 ,Global.resolution[1] / 720 )
+	popup_centered()
 "
 
 [node name="MultiplayerMenu" type="Control" groups=["MultiplayerMenu"]]
@@ -343,10 +346,11 @@ align = 1
 margin_top = 31.0
 margin_right = 641.0
 margin_bottom = 67.0
+custom_constants/separation = 10
 alignment = 1
 
 [node name="IpEdit" type="LineEdit" parent="CenterContainer/TabContainer/Main/VBoxContainer/IpPort"]
-margin_right = 249.0
+margin_right = 258.0
 margin_bottom = 36.0
 rect_min_size = Vector2( 249, 36 )
 size_flags_horizontal = 3
@@ -356,17 +360,9 @@ align = 1
 max_length = 15
 placeholder_text = "127.0.0.1"
 
-[node name="Label2" type="Label" parent="CenterContainer/TabContainer/Main/VBoxContainer/IpPort"]
-margin_left = 249.0
-margin_top = 5.0
-margin_right = 263.0
-margin_bottom = 31.0
-text = ":"
-align = 1
-
 [node name="PortEdit" type="LineEdit" parent="CenterContainer/TabContainer/Main/VBoxContainer/IpPort"]
-margin_left = 263.0
-margin_right = 431.0
+margin_left = 268.0
+margin_right = 436.0
 margin_bottom = 36.0
 theme = ExtResource( 24 )
 text = "25567"
@@ -374,38 +370,18 @@ align = 1
 max_length = 5
 placeholder_text = "25567"
 
-[node name="Label4" type="Label" parent="CenterContainer/TabContainer/Main/VBoxContainer/IpPort"]
-margin_left = 431.0
-margin_top = 5.0
-margin_right = 446.0
-margin_bottom = 31.0
-text = " "
-
-[node name="Buttons" type="TabContainer" parent="CenterContainer/TabContainer/Main/VBoxContainer/IpPort"]
+[node name="Buttons" type="HBoxContainer" parent="CenterContainer/TabContainer/Main/VBoxContainer/IpPort"]
 margin_left = 446.0
 margin_right = 641.0
 margin_bottom = 36.0
-size_flags_horizontal = 6
-custom_styles/panel = SubResource( 17 )
-tabs_visible = false
+custom_constants/separation = 15
 
-[node name="Main" type="HBoxContainer" parent="CenterContainer/TabContainer/Main/VBoxContainer/IpPort/Buttons"]
-anchor_right = 1.0
-anchor_bottom = 1.0
-
-[node name="JoinButton" type="Button" parent="CenterContainer/TabContainer/Main/VBoxContainer/IpPort/Buttons/Main"]
+[node name="Join" type="Button" parent="CenterContainer/TabContainer/Main/VBoxContainer/IpPort/Buttons"]
 margin_right = 90.0
 margin_bottom = 36.0
 text = " Join "
 
-[node name="Label5" type="Label" parent="CenterContainer/TabContainer/Main/VBoxContainer/IpPort/Buttons/Main"]
-margin_left = 90.0
-margin_top = 5.0
-margin_right = 105.0
-margin_bottom = 31.0
-text = " "
-
-[node name="JoinButton2" type="Button" parent="CenterContainer/TabContainer/Main/VBoxContainer/IpPort/Buttons/Main"]
+[node name="Host" type="Button" parent="CenterContainer/TabContainer/Main/VBoxContainer/IpPort/Buttons"]
 margin_left = 105.0
 margin_right = 195.0
 margin_bottom = 36.0
@@ -413,15 +389,10 @@ text = " Host "
 
 [node name="Leave" type="Button" parent="CenterContainer/TabContainer/Main/VBoxContainer/IpPort/Buttons"]
 visible = false
-anchor_right = 1.0
-anchor_bottom = 1.0
+margin_left = 210.0
+margin_right = 315.0
+margin_bottom = 36.0
 text = " Leave "
-
-[node name="Close" type="Button" parent="CenterContainer/TabContainer/Main/VBoxContainer/IpPort/Buttons"]
-visible = false
-anchor_right = 1.0
-anchor_bottom = 1.0
-text = " Stop "
 
 [node name="Status" type="HBoxContainer" parent="CenterContainer/TabContainer/Main/VBoxContainer"]
 margin_top = 72.0
@@ -518,10 +489,9 @@ margin_right = 641.0
 margin_bottom = 26.0
 size_flags_horizontal = 3
 theme = ExtResource( 24 )
-text = "huizalupa"
 align = 1
 secret = true
-placeholder_text = "123456"
+placeholder_text = "Password"
 
 [node name="Port" type="HBoxContainer" parent="CenterContainer/TabContainer/Host/VBoxContainer"]
 margin_top = 62.0
@@ -761,7 +731,7 @@ visible = false
 anchor_right = 1.0
 anchor_bottom = 1.0
 margin_left = 7.0
-margin_top = 32.0
+margin_top = 39.0
 margin_right = -7.0
 margin_bottom = -7.0
 rect_min_size = Vector2( 647, 499 )
@@ -848,7 +818,7 @@ visible = false
 anchor_right = 1.0
 anchor_bottom = 1.0
 margin_left = 7.0
-margin_top = 32.0
+margin_top = 39.0
 margin_right = -7.0
 margin_bottom = -7.0
 rect_min_size = Vector2( 647, 499 )
@@ -1032,8 +1002,58 @@ theme = ExtResource( 24 )
 align = 1
 secret = true
 
-[connection signal="pressed" from="CenterContainer/TabContainer/Main/VBoxContainer/IpPort/Buttons/Main/JoinButton" to="." method="join"]
-[connection signal="pressed" from="CenterContainer/TabContainer/Main/VBoxContainer/IpPort/Buttons/Main/JoinButton2" to="." method="host"]
+[node name="VersionWarning" type="WindowDialog" parent="."]
+margin_top = 21.0
+margin_right = 721.0
+margin_bottom = 212.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme = ExtResource( 1 )
+custom_colors/title_color = Color( 1, 0, 0, 1 )
+custom_styles/panel = SubResource( 19 )
+window_title = "Cruelty Squad Online"
+script = SubResource( 23 )
+
+[node name="Panel" type="Panel" parent="VersionWarning"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+custom_styles/panel = SubResource( 20 )
+
+[node name="MarginContainer" type="MarginContainer" parent="VersionWarning/Panel"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+custom_constants/margin_right = 10
+custom_constants/margin_top = 10
+custom_constants/margin_left = 10
+custom_constants/margin_bottom = 10
+
+[node name="RichTextLabel" type="RichTextLabel" parent="VersionWarning/Panel/MarginContainer"]
+margin_left = 10.0
+margin_top = 10.0
+margin_right = 711.0
+margin_bottom = 181.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+bbcode_enabled = true
+bbcode_text = "[center]Warning[/center]
+
+This mod is currently in pre-beta testing
+so there might be a lot of bugs and weird shit
+I've warned you [right] - TriggeredP [/right]"
+text = "Warning
+
+This mod is currently in pre-beta testing
+so there might be a lot of bugs and weird shit
+I've warned you  - TriggeredP "
+fit_content_height = true
+scroll_active = false
+__meta__ = {
+"_edit_use_anchors_": true
+}
+
+[connection signal="pressed" from="CenterContainer/TabContainer/Main/VBoxContainer/IpPort/Buttons/Join" to="." method="join"]
+[connection signal="pressed" from="CenterContainer/TabContainer/Main/VBoxContainer/IpPort/Buttons/Host" to="." method="host"]
+[connection signal="pressed" from="CenterContainer/TabContainer/Main/VBoxContainer/IpPort/Buttons/Leave" to="." method="leave"]
 [connection signal="focus_exited" from="CenterContainer/TabContainer/Player/VBoxContainer/Color/Red" to="CenterContainer/TabContainer/Player/VBoxContainer/Color" method="focus_exited"]
 [connection signal="text_entered" from="CenterContainer/TabContainer/Player/VBoxContainer/Color/Red" to="CenterContainer/TabContainer/Player/VBoxContainer/Color" method="r_change"]
 [connection signal="focus_exited" from="CenterContainer/TabContainer/Player/VBoxContainer/Color/Green" to="CenterContainer/TabContainer/Player/VBoxContainer/Color" method="focus_exited"]

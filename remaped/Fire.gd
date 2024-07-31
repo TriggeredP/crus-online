@@ -3,23 +3,16 @@ extends KinematicBody
 var velocity = Vector3.ZERO
 
 var f = preload("res://Entities/Bullets/Fire_Child.tscn")
+var f_fake = preload("res://MOD_CONTENT/CruS Online/effects/fake_Fire_Child.tscn")
 onready var p = $Particles
 var wep
-
-################################################################################
-
-remote func _set_transform(recivedTransform):
-	global_transform = recivedTransform
-
-remote func _delete():
-	queue_free()
-
-################################################################################
 
 func _ready():
 	pass
 
 func _physics_process(delta):
+	rpc_unreliable("_set_transform", global_transform)
+	
 	var col = move_and_collide(velocity * delta)
 	if col:
 		var body = col.collider
@@ -44,11 +37,17 @@ func _physics_process(delta):
 				body.add_child(new_fire_child)
 				new_fire_child.global_transform.origin = global_transform.origin
 		queue_free()
+		rpc("_delete")
 	velocity.y -= 4 * delta
 	velocity *= 0.98
 	p.scale += Vector3(0.1, 0.1, 0.1)
 	if velocity.length() < 6:
 		queue_free()
+		rpc("_delete")
 
 func set_water(value):
 	queue_free()
+	rpc("_delete")
+
+remote func spawn_fake_fire():
+	var new_fire_child = f_fake.instance()

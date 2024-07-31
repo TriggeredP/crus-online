@@ -17,7 +17,12 @@ var wep = 0
 
 func _ready():
 	rset_config("rotation_counter", MultiplayerAPI.RPC_MODE_MASTER)
-	$MeshInstance2.rset_config("rotation/x", MultiplayerAPI.RPC_MODE_PUPPET)
+
+puppet func set_mech_rotation(value):
+	$MeshInstance2.rotation.x = value
+
+puppet func notify(value, color):
+	Global.player.UI.notify(value, color)
 
 puppet func play_audio():
 	$Audio.play()
@@ -30,7 +35,7 @@ func _physics_process(delta):
 				$Audio.play()
 				rpc("play_audio")
 			$MeshInstance2.rotation.x += 1
-			$MeshInstance2.rset_unreliable("rotation/x", $MeshInstance2.rotation.x)
+			rpc_unreliable("set_mech_rotation", $MeshInstance2.rotation.x)
 		if rotation_counter == 0:
 			randomize()
 			if randi() % 500 == 5:
@@ -44,6 +49,7 @@ func _physics_process(delta):
 				wep = 0
 			else :
 				Global.player.UI.notify("You lose", Color(1, 0, 0))
+				rpc("notify", "You lose", Color(1, 0, 0))
 	else:
 		set_physics_process(false)
 
@@ -51,23 +57,37 @@ func spawn_item():
 	var new_weapon_drop = weapon_drop.instance()
 	get_parent().add_child(new_weapon_drop)
 	new_weapon_drop.gun.MESH[new_weapon_drop.gun.current_weapon].hide()
-	new_weapon_drop.gun.current_weapon = weapon_indexes[wep][randi() % weapon_indexes[wep].size()]
+	var wepRand = randi() % weapon_indexes[wep].size()
+	new_weapon_drop.set_name(new_weapon_drop.name + "#" + str(randi() % 100000000))
+	new_weapon_drop.gun.current_weapon = weapon_indexes[wep][wepRand]
 	new_weapon_drop.gun.ammo = Global.player.weapon.MAX_MAG_AMMO[new_weapon_drop.gun.current_weapon]
 	new_weapon_drop.gun.MESH[new_weapon_drop.gun.current_weapon].show()
 	new_weapon_drop.global_transform.origin = $Position3D.global_transform.origin
 	new_weapon_drop.damage(5, (global_transform.origin - ($Forward_Position.global_transform.origin + Vector3(rand_range( - 0.1, 0.1), rand_range( - 0.1, 0.1), rand_range( - 0.1, 0.1)))).normalized(), global_transform.origin, Vector3.ZERO)
+	
+	rpc("client_spawn_item", get_parent().get_path(), new_weapon_drop.name, new_weapon_drop.global_transform, wep, wepRand)
+
+puppet func client_spawn_item(recivedPath, recivedName, recivedTransform, recivedIndexA, recivedIndexB):
+	var new_weapon_drop = weapon_drop.instance()
+	get_node(recivedPath).add_child(new_weapon_drop)
+	new_weapon_drop.set_name(recivedName)
+	new_weapon_drop.gun.MESH[new_weapon_drop.gun.current_weapon].hide()
+	new_weapon_drop.gun.current_weapon = weapon_indexes[recivedIndexA][recivedIndexB]
+	new_weapon_drop.gun.ammo = Global.player.weapon.MAX_MAG_AMMO[new_weapon_drop.gun.current_weapon]
+	new_weapon_drop.gun.MESH[new_weapon_drop.gun.current_weapon].show()
+	new_weapon_drop.global_transform = recivedTransform
 
 func player_use():
 	if is_network_master():
-		check_use()
+		check_use(true)
 	else:
 		rpc("check_use")
 
-master func check_use():
+master func check_use(host = false):
 	if rotation_counter >= 0:
 		return
 	
-	if is_network_master():
+	if host:
 		money_check()
 	else:
 		rpc("money_check")

@@ -12,7 +12,12 @@ var junk_items:Array = [
 
 func _ready():
 	rset_config("rotation_counter", MultiplayerAPI.RPC_MODE_MASTER)
-	$MeshInstance2.rset_config("rotation/x", MultiplayerAPI.RPC_MODE_PUPPET)
+
+puppet func set_mech_rotation(value):
+	$MeshInstance2.rotation.x = value
+
+puppet func notify(value, color):
+	Global.player.UI.notify(value, color)
 
 puppet func play_audio():
 	$Audio.play()
@@ -25,7 +30,7 @@ func _physics_process(delta):
 				$Audio.play()
 				rpc("play_audio")
 			$MeshInstance2.rotation.x += 1
-			$MeshInstance2.rset_unreliable("rotation/x", $MeshInstance2.rotation.x)
+			rpc_unreliable("set_mech_rotation", $MeshInstance2.rotation.x)
 		if rotation_counter == 0:
 			randomize()
 			if randi() % 1000 == 500:
@@ -36,26 +41,36 @@ func _physics_process(delta):
 				spawn_item()
 			else :
 				Global.player.UI.notify("You lose", Color(1, 0, 0))
+				rpc("notify", "You lose", Color(1, 0, 0))
 	else:
 		set_physics_process(false)
 
 func spawn_item():
-	var new_coin = junk_items[randi() % junk_items.size()].instance()
+	var selectedItem = randi() % junk_items.size()
+	var new_coin = junk_items[selectedItem].instance()
+	new_coin.set_name(new_coin.name + "#" + str(randi() % 100000000))
 	add_child(new_coin)
 	new_coin.global_transform.origin = $Position3D.global_transform.origin
 	new_coin.damage(20, (global_transform.origin - ($Forward_Position.global_transform.origin + Vector3(rand_range( - 0.1, 0.1), rand_range( - 0.1, 0.1), rand_range( - 0.1, 0.1)))).normalized(), global_transform.origin, Vector3.ZERO)
-	
+	rpc("client_spawn_item", selectedItem, get_path(), new_coin.name, new_coin.global_transform)
+
+puppet func client_spawn_item(recivedItem, recivedPath, recivedName, recivedTransform):
+	var new_coin = junk_items[recivedItem].instance()
+	new_coin.set_name(recivedName)
+	get_node(recivedPath).add_child(new_coin)
+	new_coin.global_transform = recivedTransform
+
 func player_use():
 	if is_network_master():
-		check_use()
+		check_use(true)
 	else:
 		rpc("check_use")
 
-master func check_use():
+master func check_use(host = false):
 	if rotation_counter >= 0:
 		return
 	
-	if is_network_master():
+	if host:
 		money_check()
 	else:
 		rpc("money_check")

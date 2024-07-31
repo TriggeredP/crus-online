@@ -25,11 +25,16 @@ func get_near_player(object) -> Dictionary:
 func _physics_process(delta):
 	if is_network_master():
 		
+		var space_state = get_world().direct_space_state
+		var result_down = space_state.intersect_ray(global_transform.origin, global_transform.origin + Vector3.DOWN * 1)
+		
+		if not result_down:
+			translate(Vector3.DOWN * 0.1)
+			rset("global_transform", global_transform)
+		
 		if get_near_player(self).distance > 3:
 			return 
 		
-		var space_state = get_world().direct_space_state
-		var result_down = space_state.intersect_ray(global_transform.origin, global_transform.origin + Vector3.DOWN * 1)
 		var result_forward = space_state.intersect_ray(global_transform.origin, global_transform.origin + Vector3.FORWARD * 1.1)
 		var result_back = space_state.intersect_ray(global_transform.origin, global_transform.origin + Vector3.BACK * 1.1)
 		var result_left = space_state.intersect_ray(global_transform.origin, global_transform.origin + Vector3.LEFT * 1.1)
@@ -54,7 +59,3 @@ func _physics_process(delta):
 			if result_right.collider == Global.player or result_right.collider.has_meta("puppet"):
 				translate(Vector3.LEFT * 2)
 				rset("global_transform", global_transform)
-		
-		if not result_down:
-			translate(Vector3.DOWN * 0.1)
-			rset("global_transform", global_transform)

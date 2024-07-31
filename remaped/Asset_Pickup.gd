@@ -10,6 +10,8 @@ func player_use():
 	if Global.STOCKS.ORGANS_FOUND.find(value) == - 1:
 		Global.STOCKS.ORGANS_FOUND.append(value)
 	Global.STOCKS.save_stocks("user://stocks.save")
-	$CollisionShape.disabled = true
-	get_parent().get_node("CollisionShape").disabled = true
-	get_parent().hide()
+	rpc("hide_asset")
+	get_parent().queue_free()
+
+remote func hide_asset():
+	get_parent().queue_free()

@@ -49,7 +49,6 @@ func _physics_process(delta):
 		if not activated and fmod(t, 20) == 0:
 			var space = get_world().direct_space_state
 			var result = space.intersect_ray(head.global_transform.origin, get_near_player(self).player.global_transform.origin + Vector3.UP * 1.0, [self, head])
-			print(result)
 			if result:
 				if result.collider == Global.player or result.collider.has_meta("puppet"):
 					activated = true

@@ -1,9 +1,5 @@
 extends Node
 
-
-
-
-
 var thread
 var enemies
 var player

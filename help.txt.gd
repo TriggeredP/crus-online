@@ -2,13 +2,13 @@ extends Node # extends my balls
 
 # Desine sperare qui hic intras
 
-var frustration_count = 234
+var frustration_count = 236
 
 var objectInstance
 
 func sync_object_spawn(objectParent):
 	var object = objectInstance.instance()
-	object.set_name(object.name + "#" + str(randi() % 100000000))
+	object.set_name(object.name + "#" + str(randi() % 1000000000))
 	objectParent.add_child(object)
 	rpc("_spawn_object", objectParent.get_path(), object.name, object.global_transform)
 

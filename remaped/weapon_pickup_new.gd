@@ -16,7 +16,7 @@ remote func _change_visible(mesh,visibility):
 
 ################################################################################
 
-func syncUpdate():
+remote func syncUpdate():
 	for meshGun in MESH:
 		meshGun.hide()
 	MESH[current_weapon].show()
@@ -66,3 +66,4 @@ func player_use():
 		rpc("_update_vars",current_weapon,ammo)
 		MESH[current_weapon].show()
 		rpc("_change_visible",MESH[current_weapon],true)
+		rpc("syncUpdate")

@@ -1,16 +1,10 @@
 extends Container
 
-var hostSettings = {
-	"gamemode": "Cruelty",
-	"map": "res://MOD_CONTENT/CruS Online/maps/bonesquad_museum.tscn",
-	"bannedImplants": []
-}
-
 func multiplayer_exit():
 	visible = true
 	in_game = false
 	menu[START].show()
-	hide_buttons(menu[START], 3, 5)
+	#hide_buttons(menu[START], 3, 5)
 	
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 
@@ -378,7 +372,7 @@ func _ready():
 
 
 	
-	menu[START].buttons = [B_START, B_MULTIPLAYER_MENU, B_SETTINGS, B_RETRY, B_EX_LEVEL_SELECT, B_EX_MENU, B_QUIT]
+	menu[START].buttons = [B_START, B_MULTIPLAYER_MENU, B_SETTINGS, B_QUIT]
 	menu[SETTINGS].buttons = [B_RETURN]
 	menu[LEVEL_SELECT].buttons = [B_RETURN, B_CHARACTER, B_STOCKS, B_WEAPON_1, B_WEAPON_2, B_MISSION_START]
 	for level in Global.LEVELS:
@@ -400,7 +394,7 @@ func _ready():
 	update_level_info()
 	
 	
-	hide_buttons(menu[START], 3, 5)
+	#hide_buttons(menu[START], 3, 5)
 	set_res(Global.resolution[0], Global.resolution[1])
 	
 	
@@ -424,7 +418,6 @@ func show_buttons(m:Menu, a:int, b:int):
 
 func _on_Multiplayer_Button_Pressed(m:int, button_id:TextureButton):
 	goto_menu(m, SETTINGS, button_id)
-	
 	get_tree().get_nodes_in_group("MultiplayerMenu")[0].enable_menu()
 
 func create_buttons(m:int):
@@ -835,9 +828,6 @@ func _on_Mission_Start_Pressed(m:int, button_id:TextureButton):
 			Global.stock_mode = false
 		print(Global.stock_mode)
 		$Level_Info_Grid / HBoxContainer / Description_Scroll / Description.speech_break = true
-		#Global.goto_scene(Global.LEVELS[Global.CURRENT_LEVEL])
-		
-		#Multiplayer.host_server(8080,hostSettings)
 
 func _on_Level_Pressed(m:int, button_id:TextureButton):
 	
@@ -1336,11 +1326,6 @@ func _on_Retry_Button_Pressed(m:int, b:TextureButton):
 				Global.CURRENT_WEAPONS[w] = true
 			else :
 				Global.CURRENT_WEAPONS[w] = false
-		#Global.goto_scene(Global.LEVELS[Global.CURRENT_LEVEL])
-		
-		hostSettings.map = Global.LEVELS[Global.CURRENT_LEVEL]
-		#Multiplayer.host_server(8080,hostSettings)
-
 
 func _on_Key_List_item_activated(index):
 	wait_for_key = true

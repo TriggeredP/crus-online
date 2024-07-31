@@ -117,9 +117,9 @@ var fireaudio:AudioStreamPlayer3D
 
 var enabled = true
 
-remote func _create_drop_weapon(parentPath, recivedTransform, recivedVelocity, recivedCurrentWeapon, recivedAmmo, recivdeRandName, playerIgnoreId):
+remote func _create_drop_weapon(parentPath, recivedTransform, recivedVelocity, recivedCurrentWeapon, recivedAmmo, recivdeName, playerIgnoreId):
 	var new_weapon_drop = weapon_drop.instance()
-	new_weapon_drop.set_name(new_weapon_drop.name + "#" + str(recivdeRandName))
+	new_weapon_drop.set_name(recivdeName)
 	get_node(parentPath).add_child(new_weapon_drop)
 	new_weapon_drop.global_transform.origin = recivedTransform
 	new_weapon_drop.gun.MESH[new_weapon_drop.gun.current_weapon].hide()
@@ -464,11 +464,9 @@ master func spawn_gib(gib, count, damage, collision_n, collision_p, gibType = "G
 			return
 
 		for i_gib in range(count):
-			
-			var newGibName = int(rand_range(0,1000000))
 			var new_gib = self[gibType][gib].instance()
 			
-			new_gib.set_name(new_gib.name + "#" + str(newGibName))
+			new_gib.set_name(new_gib.name + "#" + str(randi() % 1000000000))
 			
 			get_parent().add_child(new_gib)
 			
@@ -491,9 +489,8 @@ master func remove_weapon():
 			if boneattachment:
 				boneattachment.hide()
 			
-			var randName = int(rand_range(0,1000000))
 			var new_weapon_drop = weapon_drop.instance()
-			new_weapon_drop.set_name(new_weapon_drop.name + "#" + str(randName))
+			new_weapon_drop.set_name(new_weapon_drop.name + "#" + str(randi() % 1000000000))
 			get_parent().add_child(new_weapon_drop)
 			new_weapon_drop.playerIgnoreId = get_tree().get_network_unique_id()
 			new_weapon_drop.global_transform.origin = body.global_transform.origin + Vector3(0, 2, 0)
@@ -503,7 +500,7 @@ master func remove_weapon():
 			new_weapon_drop.gun.ammo = weapon.MAX_MAG_AMMO[weapon.current_weapon]
 			new_weapon_drop.gun.MESH[weapon.current_weapon].show()
 
-			rpc("_create_drop_weapon", get_parent().get_path(), new_weapon_drop.global_transform.origin, new_weapon_drop.velocity, new_weapon_drop.gun.current_weapon, new_weapon_drop.gun.ammo, randName,get_tree().get_network_unique_id())
+			rpc("_create_drop_weapon", get_parent().get_path(), new_weapon_drop.global_transform.origin, new_weapon_drop.velocity, new_weapon_drop.gun.current_weapon, new_weapon_drop.gun.ammo, new_weapon_drop.name, get_tree().get_network_unique_id())
 
 	else:
 		rpc_id(0,"remove_weapon")
@@ -531,10 +528,8 @@ func die(damage, collision_n, collision_p):
 			if not civilian and "current_weapon" in weapon:
 				if "disabled" in weapon:
 					if not weapon.disabled:
-						
-						var randName = int(rand_range(0,1000000))
 						var new_weapon_drop = weapon_drop.instance()
-						new_weapon_drop.set_name(new_weapon_drop.name + "#" + str(randName))
+						new_weapon_drop.set_name(new_weapon_drop.name + "#" + str(randi() % 1000000000))
 						get_parent().add_child(new_weapon_drop)
 						new_weapon_drop.playerIgnoreId = get_tree().get_network_unique_id()
 						new_weapon_drop.global_transform.origin = body.global_transform.origin + Vector3(0, 1, 0)
@@ -543,7 +538,7 @@ func die(damage, collision_n, collision_p):
 						new_weapon_drop.gun.ammo = weapon.MAX_MAG_AMMO[weapon.current_weapon]
 						new_weapon_drop.gun.MESH[weapon.current_weapon].show()
 
-						rpc("_create_drop_weapon", get_parent().get_path(), new_weapon_drop.global_transform.origin, new_weapon_drop.velocity, new_weapon_drop.gun.current_weapon, new_weapon_drop.gun.ammo, randName,get_tree().get_network_unique_id())
+						rpc("_create_drop_weapon", get_parent().get_path(), new_weapon_drop.global_transform.origin, new_weapon_drop.velocity, new_weapon_drop.gun.current_weapon, new_weapon_drop.gun.ammo, new_weapon_drop.name, get_tree().get_network_unique_id())
 			for particle in all_particles:
 				particle.queue_free()
 			body.set_dead()

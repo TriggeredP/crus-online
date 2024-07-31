@@ -100,7 +100,7 @@ func get_near_player(object) -> Dictionary:
 		"distance" : oldDistance
 	}
 
-remote func set_in_sight(value):
+remotesync func set_in_sight(value):
 	Global.player.UI.set_in_sight(value)
 
 puppet func set_psychosis(value):

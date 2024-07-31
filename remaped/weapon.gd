@@ -188,8 +188,6 @@ var melee = false
 onready var stealthMaterial = preload("res://Materials/seethrough.tres")
 
 ########################################
-# Островок спокойствия
-
 var inMenu = false
 
 onready var playerPuppet = get_tree().get_nodes_in_group("Multiplayer")[0].playerPuppet
@@ -216,7 +214,7 @@ remote func _spawn_object(parentPath, recivedObject, recivedName, recivedTransfo
 
 remote func _play_sound(soundName):
 	var netId = get_tree().get_rpc_sender_id()
-	get_tree().get_nodes_in_group("Multiplayer")[0].player_info[netId].puppet.get_node("Puppet/PlayerModel/SFX/" + soundName).play()
+	get_tree().get_nodes_in_group("Multiplayer")[0].players[netId].puppet.get_node("Puppet/PlayerModel/SFX/" + soundName).play()
 
 func update_implants():
 	if Global.implants.torso_implant.orbsuit:
@@ -638,7 +636,7 @@ func _process(delta)->void :
 		if Input.is_action_just_pressed("drop") and current_weapon != null:
 			
 			var new_weapon_drop = weapon_drop.instance()
-			new_weapon_drop.set_name(new_weapon_drop.name + "#" + str(randi() % 100000000))
+			new_weapon_drop.set_name(new_weapon_drop.name + "#" + str(randi() % 1000000000))
 			glob.player.get_parent().add_child(new_weapon_drop)
 			new_weapon_drop.global_transform.origin = global_transform.origin - (global_transform.origin - hold_pos.global_transform.origin).normalized()
 			new_weapon_drop.gun.MESH[new_weapon_drop.gun.current_weapon].hide()
@@ -1159,8 +1157,6 @@ func _process(delta)->void :
 			yield (get_tree().create_timer(0.4), "timeout")
 			$Shotgun_Pump.pitch_scale = 0.4
 			$Shotgun_Pump.play()
-			
-
 
 		if Input.is_action_just_pressed("weapon5") and reload_timer.is_stopped() and glob.debug:
 			if current_weapon == W_SILENCED_SMG:
@@ -1179,18 +1175,7 @@ func _process(delta)->void :
 			weapon1 = current_weapon
 			set_UI_ammo()
 		
-		
-				
-				
-	
-
-	
-		
-	
-
-		
 func reload()->void :
-	
 	ammo[current_weapon] -= MAX_MAG_AMMO[current_weapon] - magazine_ammo[current_weapon]
 	magazine_ammo[current_weapon] += MAX_MAG_AMMO[current_weapon] - magazine_ammo[current_weapon]
 	if ammo[current_weapon] <= 0:
@@ -2310,9 +2295,7 @@ func flamethrower():
 			magazine_ammo[current_weapon] -= 1
 			var missile_new = FIRE.instance()
 			
-			
-			var randName = int(rand_range(0,1000000))
-			missile_new.set_name(missile_new.name + "#" + str(randName))
+			missile_new.set_name(missile_new.name + "#" + str(randi() % 1000000000))
 			
 			var missleParent = null
 			
@@ -2334,7 +2317,7 @@ func flamethrower():
 			missile_new.velocity = - (global_transform.origin - $Front_Pos_Helper.global_transform.origin).normalized() * 40
 			missile_new.velocity += Global.player.player_velocity
 
-			rpc("_spawn_object", missleParent.get_path(),"res://Entities/Bullets/Fire.tscn",missile_new.name,missile_new.global_transform)
+			rpc("_spawn_object", missleParent.get_path(), "res://MOD_CONTENT/CruS Online/effects/fake_Fire.tscn", missile_new.name, missile_new.global_transform)
 			
 func bore()->void :
 		if timer.is_stopped():
@@ -2570,10 +2553,20 @@ func shoot()->void :
 			nailer()
 	set_UI_ammo()
 
-func do_damage(collider:Spatial)->void :
+func do_damage(collider:Spatial, damageType = null)->void :
 	if not is_instance_valid(collider):
 		return 
-	if collider.has_method("damage"):
+	
+	if collider.has_method("player_damage"):
+		var col_p = raycast.get_collision_point()
+		if current_weapon != null:
+			collider.player_damage(damage[current_weapon], - global_transform.origin.direction_to(col_p), col_p, global_transform.origin, damageType)
+		else :
+			collider.player_damage(damage[0], raycast.get_collision_normal(), col_p, global_transform.origin, damageType)
+		damage_particle(collider, col_p)
+		if player:
+			glob.player.reticle.hit()
+	elif collider.has_method("damage"):
 		var col_p = raycast.get_collision_point()
 		if current_weapon != null:
 			collider.damage(damage[current_weapon], - global_transform.origin.direction_to(col_p), col_p, global_transform.origin)
@@ -2582,7 +2575,6 @@ func do_damage(collider:Spatial)->void :
 		damage_particle(collider, col_p)
 		if player:
 			glob.player.reticle.hit()
-		
 
 func flechette(collider:Spatial)->void :
 	if collider.get_collision_layer_bit(0):

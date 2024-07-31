@@ -1,15 +1,27 @@
-[gd_scene load_steps=4 format=2]
+[gd_scene load_steps=5 format=2]
 
 [ext_resource path="res://Materials/Fire.tres" type="Material" id=2]
 [ext_resource path="res://Entities/Particles/fire.tres" type="Material" id=3]
 
+[sub_resource type="GDScript" id=3]
+script/source = "extends Spatial
+
+remote func _set_transform(recivedTransform):
+	global_transform = recivedTransform
+
+remote func _delete():
+	queue_free()
+"
+
 [sub_resource type="QuadMesh" id=2]
 
 [node name="Fire" type="Spatial"]
+script = SubResource( 3 )
 
 [node name="Particles" type="Particles" parent="."]
 transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0 )
 material_override = ExtResource( 2 )
+emitting = false
 fixed_fps = 30
 fract_delta = false
 process_material = ExtResource( 3 )
