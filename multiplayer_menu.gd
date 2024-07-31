@@ -29,28 +29,47 @@ func _ready():
 	if modloaderVersion != null:
 		modloaderVersion.hide()
 	
-	data_init()
-	$CenterContainer.hide()
-	$CenterContainer/TabContainer.set_tab_hidden(4, true)
+	IpEdit.text = Multiplayer.config.lastIp
+	PortEdit.text = str(Multiplayer.config.lastPort)
 	
-	Multiplayer.connect("connected_to_server", self, "_on_connected")
-
-func data_init():
+	$CenterContainer/TabContainer/Host/VBoxContainer/Port/PortEdit.text = str(Multiplayer.config.hostPort)
+	$CenterContainer/TabContainer/Host/VBoxContainer/Password/PasswordEdit.text = Multiplayer.config.hostPassword
+	
 	NicknameEdit.text = Multiplayer.playerInfo.nickname
 	NicknameColor.color = Multiplayer.playerInfo.color
 	
 	$CenterContainer/TabContainer/Player/VBoxContainer/Image.set_texture(Multiplayer.playerInfo.image)
 	$CenterContainer/TabContainer/Player/VBoxContainer/Skin.set_texture(Multiplayer.playerInfo.skinPath)
 	
-	$CenterContainer/TabContainer/Player/VBoxContainer/Color.r_change(NicknameColor.color.r8)
-	$CenterContainer/TabContainer/Player/VBoxContainer/Color.g_change(NicknameColor.color.g8)
-	$CenterContainer/TabContainer/Player/VBoxContainer/Color.b_change(NicknameColor.color.b8)
+	$CenterContainer/TabContainer/Player/VBoxContainer/Color.r_change(str(NicknameColor.color.r8))
+	$CenterContainer/TabContainer/Player/VBoxContainer/Color.g_change(str(NicknameColor.color.g8))
+	$CenterContainer/TabContainer/Player/VBoxContainer/Color.b_change(str(NicknameColor.color.b8))
+	
+	$CenterContainer.hide()
+	$CenterContainer/TabContainer.set_tab_hidden(4, true)
+	$CenterContainer/TabContainer.current_tab = 0
+	
+	Multiplayer.connect("connected_to_server", self, "_on_connected")
 
 func _physics_process(delta):
 	if Global.menu.in_game:
 		hide()
 	else:
 		show()
+
+func save_player():
+	Multiplayer.playerInfo.nickname = NicknameEdit.text
+	Multiplayer.playerInfo.color = NicknameColor.color.to_html(false)
+	Multiplayer.playerInfo.image = $CenterContainer/TabContainer/Player/VBoxContainer/Image.get_texture()
+	Multiplayer.playerInfo.skinPath = $CenterContainer/TabContainer/Player/VBoxContainer/Skin.get_texture()
+	
+	save_data("player.save", Multiplayer.playerInfo)
+
+func save_host():
+	Multiplayer.config.hostPort = int($CenterContainer/TabContainer/Host/VBoxContainer/Port/PortEdit.text)
+	Multiplayer.config.hostPassword = $CenterContainer/TabContainer/Host/VBoxContainer/Password/PasswordEdit.text
+	
+	save_data("config.save", Multiplayer.config)
 
 func get_data():
 	ip = IpEdit.text

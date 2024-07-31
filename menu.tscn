@@ -1,4 +1,4 @@
-[gd_scene load_steps=38 format=2]
+[gd_scene load_steps=41 format=2]
 
 [ext_resource path="res://Menu/menu_theme.tres" type="Theme" id=1]
 [ext_resource path="res://Textures/Misc/mainguy_clothes.png" type="Texture" id=2]
@@ -32,7 +32,7 @@ onready var playersList = $VBoxContainer/PlayersList/PlayersListLabel
 onready var status = $VBoxContainer/Status/StatusLabel
 
 func _ready():
-	playersList.clear()
+	playersList.bbcode_text = \"\"
 	
 	get_tree().get_nodes_in_group(\"Multiplayer\")[0].connect(\"status_update\", self, \"update_status\")
 	get_tree().get_nodes_in_group(\"Multiplayer\")[0].connect(\"players_update\", self, \"update_players_info\")
@@ -42,16 +42,16 @@ func update_status(new_status):
 
 func update_players_info(info):
 	var playerNumber = 1
-	playersList.clear()
+	playersList.bbcode_text = \"\"
 	
 	for player in info:
 		print(info[player])
-		playersList.text += str(playerNumber) + \": \" + info[player].nickname
+		playersList.bbcode_text += str(playerNumber) + \": [color=#\" + info[player].color + \"]\" + info[player].nickname + \"[/color]\"
 		
 		if player == 1:
-			playersList.text += \" (host)\\n\"
+			playersList.bbcode_text += \" (host)\\n\"
 		else:
-			playersList.text += \"\\n\"
+			playersList.bbcode_text += \"\\n\"
 		
 		playerNumber += 1
 "
@@ -61,6 +61,17 @@ script/source = "extends Label
 
 func _ready():
 	text = get_tree().get_nodes_in_group(\"Multiplayer\")[0].version
+"
+
+[sub_resource type="GDScript" id=25]
+script/source = "extends Button
+
+func button_pressed():
+	text = \"  Settings saved  \"
+	$Timer.start()
+
+func button_reset():
+	text = \"  Save  \"
 "
 
 [sub_resource type="GDScript" id=16]
@@ -98,16 +109,21 @@ script/source = "extends HBoxContainer
 
 export (Array,Array) var playerNameImage
 
+var selected = 0
+
 func _ready():
 	for image in playerNameImage:
 		$ItemList.add_item(image[0])
 
 func _skin_selected(index):
 	$TextureRect.texture = playerNameImage[index][2]
-	get_tree().get_nodes_in_group(\"MultiplayerMenu\")[0].playerInfo[\"image\"] = playerNameImage[index][1]
+	selected = index
 
 func set_texture(path):
 	$TextureRect.texture = load(path)
+
+func get_texture():
+	return playerNameImage[selected][1]
 "
 
 [sub_resource type="GDScript" id=2]
@@ -115,16 +131,32 @@ script/source = "extends HBoxContainer
 
 export (Array,Array) var playerSkins
 
+var selected = 0
+
 func _ready():
 	for skin in playerSkins:
 		$ItemList.add_item(skin[0])
 
 func _skin_selected(index):
 	$TextureRect.texture = playerSkins[index][2]
-	get_tree().get_nodes_in_group(\"MultiplayerMenu\")[0].playerInfo[\"skinPath\"] = playerSkins[index][1]
+	selected = index
 
 func set_texture(path):
 	$TextureRect.texture = load(path)
+
+func get_texture():
+	return playerSkins[selected][1]
+"
+
+[sub_resource type="GDScript" id=26]
+script/source = "extends Button
+
+func button_pressed():
+	text = \"  Settings saved  \"
+	$Timer.start()
+
+func button_reset():
+	text = \"  Save  \"
 "
 
 [sub_resource type="GDScript" id=11]
@@ -223,6 +255,13 @@ func ban_all():
 [sub_resource type="AudioStreamRandomPitch" id=14]
 audio_stream = ExtResource( 25 )
 
+[sub_resource type="GDScript" id=24]
+script/source = "extends PanelContainer
+
+func meta_clicked(meta):
+	OS.shell_open(str(meta))
+"
+
 [sub_resource type="StyleBoxFlat" id=19]
 bg_color = Color( 0.15863, 0.441406, 0, 0.470588 )
 expand_margin_top = 20.0
@@ -292,6 +331,8 @@ script/source = "extends WindowDialog
 
 func _ready():
 	rect_scale = Vector2(Global.resolution[0] / 1280 ,Global.resolution[1] / 720 )
+
+func popup_warning():
 	popup_centered()
 "
 
@@ -313,25 +354,26 @@ margin_bottom = 720.0
 
 [node name="TabContainer" type="TabContainer" parent="CenterContainer"]
 margin_left = 195.0
-margin_top = 87.0
+margin_top = 85.0
 margin_right = 856.0
-margin_bottom = 632.0
+margin_bottom = 634.0
+rect_min_size = Vector2( 661, 549 )
 
 [node name="Main" type="PanelContainer" parent="CenterContainer/TabContainer"]
+visible = false
 anchor_right = 1.0
 anchor_bottom = 1.0
 margin_left = 7.0
 margin_top = 39.0
 margin_right = -7.0
 margin_bottom = -7.0
-rect_min_size = Vector2( 647, 499 )
 script = SubResource( 12 )
 
 [node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/TabContainer/Main"]
 margin_left = 3.0
 margin_top = 3.0
 margin_right = 644.0
-margin_bottom = 496.0
+margin_bottom = 500.0
 size_flags_horizontal = 3
 size_flags_vertical = 3
 custom_constants/separation = 5
@@ -415,7 +457,7 @@ align = 2
 [node name="PlayersList" type="PanelContainer" parent="CenterContainer/TabContainer/Main/VBoxContainer"]
 margin_top = 103.0
 margin_right = 641.0
-margin_bottom = 462.0
+margin_bottom = 466.0
 size_flags_vertical = 3
 custom_styles/panel = ExtResource( 11 )
 
@@ -423,16 +465,15 @@ custom_styles/panel = ExtResource( 11 )
 margin_left = 10.0
 margin_top = 5.0
 margin_right = 631.0
-margin_bottom = 354.0
+margin_bottom = 358.0
 size_flags_horizontal = 3
 size_flags_vertical = 3
-text = "1: TriggeredP (Host)
-2: Xuesos"
+bbcode_enabled = true
 
 [node name="HBoxContainer" type="HBoxContainer" parent="CenterContainer/TabContainer/Main/VBoxContainer"]
-margin_top = 467.0
+margin_top = 471.0
 margin_right = 641.0
-margin_bottom = 493.0
+margin_bottom = 497.0
 
 [node name="CruSOnline" type="Label" parent="CenterContainer/TabContainer/Main/VBoxContainer/HBoxContainer"]
 margin_right = 299.0
@@ -448,20 +489,18 @@ text = "Alpha 000000/0000"
 script = SubResource( 18 )
 
 [node name="Host" type="PanelContainer" parent="CenterContainer/TabContainer"]
-visible = false
 anchor_right = 1.0
 anchor_bottom = 1.0
 margin_left = 7.0
 margin_top = 39.0
 margin_right = -7.0
 margin_bottom = -7.0
-rect_min_size = Vector2( 647, 499 )
 
 [node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/TabContainer/Host"]
 margin_left = 3.0
 margin_top = 3.0
 margin_right = 644.0
-margin_bottom = 496.0
+margin_bottom = 500.0
 size_flags_horizontal = 3
 size_flags_vertical = 3
 custom_constants/separation = 5
@@ -483,7 +522,7 @@ margin_right = 134.0
 margin_bottom = 26.0
 text = "Password:"
 
-[node name="addres" type="LineEdit" parent="CenterContainer/TabContainer/Host/VBoxContainer/Password"]
+[node name="PasswordEdit" type="LineEdit" parent="CenterContainer/TabContainer/Host/VBoxContainer/Password"]
 margin_left = 134.0
 margin_right = 641.0
 margin_bottom = 26.0
@@ -491,7 +530,7 @@ size_flags_horizontal = 3
 theme = ExtResource( 24 )
 align = 1
 secret = true
-placeholder_text = "Password"
+placeholder_text = "No password"
 
 [node name="Port" type="HBoxContainer" parent="CenterContainer/TabContainer/Host/VBoxContainer"]
 margin_top = 62.0
@@ -510,48 +549,24 @@ margin_left = 473.0
 margin_right = 641.0
 margin_bottom = 26.0
 theme = ExtResource( 24 )
-text = "8080"
+text = "25567"
 align = 1
-max_length = 4
+max_length = 5
 placeholder_text = "8080"
 
-[node name="UPnP" type="HBoxContainer" parent="CenterContainer/TabContainer/Host/VBoxContainer"]
-margin_top = 93.0
-margin_right = 641.0
-margin_bottom = 119.0
-alignment = 1
+[node name="Save" type="Button" parent="CenterContainer/TabContainer/Host"]
+margin_left = 263.0
+margin_top = 474.0
+margin_right = 383.0
+margin_bottom = 500.0
+size_flags_horizontal = 4
+size_flags_vertical = 8
+text = "  Save  "
+icon_align = 1
+script = SubResource( 25 )
 
-[node name="Label" type="Label" parent="CenterContainer/TabContainer/Host/VBoxContainer/UPnP"]
-margin_right = 491.0
-margin_bottom = 26.0
-size_flags_horizontal = 3
-text = "UPnP:"
-
-[node name="Button" type="Button" parent="CenterContainer/TabContainer/Host/VBoxContainer/UPnP"]
-margin_left = 491.0
-margin_right = 641.0
-margin_bottom = 26.0
-text = " Do magic "
-
-[node name="UPnPStatus" type="HBoxContainer" parent="CenterContainer/TabContainer/Host/VBoxContainer"]
-margin_top = 124.0
-margin_right = 641.0
-margin_bottom = 150.0
-alignment = 1
-
-[node name="Label" type="Label" parent="CenterContainer/TabContainer/Host/VBoxContainer/UPnPStatus"]
-margin_right = 320.0
-margin_bottom = 26.0
-size_flags_horizontal = 3
-text = "UPnP status:"
-
-[node name="Label2" type="Label" parent="CenterContainer/TabContainer/Host/VBoxContainer/UPnPStatus"]
-margin_left = 320.0
-margin_right = 641.0
-margin_bottom = 26.0
-size_flags_horizontal = 3
-text = "Not activated"
-align = 2
+[node name="Timer" type="Timer" parent="CenterContainer/TabContainer/Host/Save"]
+one_shot = true
 
 [node name="Player" type="PanelContainer" parent="CenterContainer/TabContainer"]
 visible = false
@@ -561,13 +576,12 @@ margin_left = 7.0
 margin_top = 39.0
 margin_right = -7.0
 margin_bottom = -7.0
-rect_min_size = Vector2( 647, 499 )
 
 [node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/TabContainer/Player"]
 margin_left = 3.0
 margin_top = 3.0
 margin_right = 644.0
-margin_bottom = 496.0
+margin_bottom = 500.0
 custom_constants/separation = 5
 
 [node name="ClientSettings" type="Label" parent="CenterContainer/TabContainer/Player/VBoxContainer"]
@@ -726,6 +740,19 @@ margin_right = 641.0
 margin_bottom = 256.0
 texture = ExtResource( 2 )
 
+[node name="Save" type="Button" parent="CenterContainer/TabContainer/Player/VBoxContainer"]
+margin_left = 260.0
+margin_top = 471.0
+margin_right = 380.0
+margin_bottom = 497.0
+size_flags_horizontal = 4
+text = "  Save  "
+icon_align = 1
+script = SubResource( 26 )
+
+[node name="Timer" type="Timer" parent="CenterContainer/TabContainer/Player/VBoxContainer/Save"]
+one_shot = true
+
 [node name="DM" type="PanelContainer" parent="CenterContainer/TabContainer"]
 visible = false
 anchor_right = 1.0
@@ -734,7 +761,6 @@ margin_left = 7.0
 margin_top = 39.0
 margin_right = -7.0
 margin_bottom = -7.0
-rect_min_size = Vector2( 647, 499 )
 size_flags_horizontal = 3
 size_flags_vertical = 3
 script = SubResource( 11 )
@@ -743,12 +769,12 @@ script = SubResource( 11 )
 margin_left = 3.0
 margin_top = 3.0
 margin_right = 644.0
-margin_bottom = 496.0
+margin_bottom = 500.0
 alignment = 1
 
 [node name="LevelController" type="VBoxContainer" parent="CenterContainer/TabContainer/DM/HBoxContainer"]
 margin_right = 305.0
-margin_bottom = 493.0
+margin_bottom = 497.0
 size_flags_horizontal = 3
 size_flags_vertical = 3
 alignment = 2
@@ -762,43 +788,43 @@ align = 1
 [node name="GamemodeList" type="ItemList" parent="CenterContainer/TabContainer/DM/HBoxContainer/LevelController"]
 margin_top = 26.0
 margin_right = 305.0
-margin_bottom = 246.0
+margin_bottom = 248.0
 rect_pivot_offset = Vector2( -843, 287 )
 size_flags_vertical = 3
 allow_reselect = true
 
 [node name="MapLabel" type="Label" parent="CenterContainer/TabContainer/DM/HBoxContainer/LevelController"]
-margin_top = 246.0
+margin_top = 248.0
 margin_right = 305.0
-margin_bottom = 272.0
+margin_bottom = 274.0
 text = "Maps:"
 align = 1
 
 [node name="MapList" type="ItemList" parent="CenterContainer/TabContainer/DM/HBoxContainer/LevelController"]
-margin_top = 272.0
+margin_top = 274.0
 margin_right = 305.0
-margin_bottom = 493.0
+margin_bottom = 497.0
 rect_pivot_offset = Vector2( -843, 287 )
 size_flags_vertical = 3
 allow_reselect = true
 
 [node name="Label" type="Label" parent="CenterContainer/TabContainer/DM/HBoxContainer"]
 margin_left = 305.0
-margin_top = 233.0
+margin_top = 235.0
 margin_right = 335.0
-margin_bottom = 259.0
+margin_bottom = 261.0
 text = "  "
 
 [node name="GamemodeDescription" type="VBoxContainer" parent="CenterContainer/TabContainer/DM/HBoxContainer"]
 margin_left = 335.0
 margin_right = 641.0
-margin_bottom = 493.0
+margin_bottom = 497.0
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
 [node name="MapLabel" type="Label" parent="CenterContainer/TabContainer/DM/HBoxContainer/GamemodeDescription"]
 margin_right = 306.0
-margin_bottom = 467.0
+margin_bottom = 471.0
 size_flags_horizontal = 3
 size_flags_vertical = 7
 text = "Gamemode description:
@@ -808,9 +834,9 @@ align = 1
 autowrap = true
 
 [node name="Button" type="Button" parent="CenterContainer/TabContainer/DM/HBoxContainer/GamemodeDescription"]
-margin_top = 467.0
+margin_top = 471.0
 margin_right = 306.0
-margin_bottom = 493.0
+margin_bottom = 497.0
 text = "Play"
 
 [node name="Implants" type="PanelContainer" parent="CenterContainer/TabContainer"]
@@ -821,19 +847,18 @@ margin_left = 7.0
 margin_top = 39.0
 margin_right = -7.0
 margin_bottom = -7.0
-rect_min_size = Vector2( 647, 499 )
 script = SubResource( 13 )
 
 [node name="HBoxContainer" type="HBoxContainer" parent="CenterContainer/TabContainer/Implants"]
 margin_left = 3.0
 margin_top = 3.0
 margin_right = 644.0
-margin_bottom = 496.0
+margin_bottom = 500.0
 alignment = 1
 
 [node name="ImplantsController" type="VBoxContainer" parent="CenterContainer/TabContainer/Implants/HBoxContainer"]
 margin_right = 431.0
-margin_bottom = 493.0
+margin_bottom = 497.0
 size_flags_horizontal = 3
 size_flags_vertical = 3
 alignment = 2
@@ -847,7 +872,7 @@ align = 1
 [node name="AllowedImplantsList" type="ItemList" parent="CenterContainer/TabContainer/Implants/HBoxContainer/ImplantsController"]
 margin_top = 26.0
 margin_right = 431.0
-margin_bottom = 493.0
+margin_bottom = 497.0
 rect_pivot_offset = Vector2( -843, 287 )
 size_flags_vertical = 3
 allow_reselect = true
@@ -855,15 +880,15 @@ fixed_icon_size = Vector2( 32, 32 )
 
 [node name="Label" type="Label" parent="CenterContainer/TabContainer/Implants/HBoxContainer"]
 margin_left = 431.0
-margin_top = 233.0
+margin_top = 235.0
 margin_right = 446.0
-margin_bottom = 259.0
+margin_bottom = 261.0
 text = " "
 
 [node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/TabContainer/Implants/HBoxContainer"]
 margin_left = 446.0
 margin_right = 641.0
-margin_bottom = 493.0
+margin_bottom = 497.0
 custom_constants/separation = 10
 
 [node name="Label" type="Label" parent="CenterContainer/TabContainer/Implants/HBoxContainer/VBoxContainer"]
@@ -908,6 +933,45 @@ stream = SubResource( 14 )
 
 [node name="Unequip" type="AudioStreamPlayer" parent="CenterContainer/TabContainer/Implants"]
 stream = ExtResource( 26 )
+
+[node name="Credits" type="PanelContainer" parent="CenterContainer/TabContainer"]
+visible = false
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_left = 7.0
+margin_top = 39.0
+margin_right = -7.0
+margin_bottom = -7.0
+script = SubResource( 24 )
+
+[node name="RichTextLabel" type="RichTextLabel" parent="CenterContainer/TabContainer/Credits"]
+margin_left = 3.0
+margin_top = 3.0
+margin_right = 644.0
+margin_bottom = 500.0
+bbcode_enabled = true
+bbcode_text = "[center]Cruelty Squad Online
+Created by TriggeredP
+
+[color=blue][url=https://www.youtube.com/@triggeredp]YouTube[/url][/color]    >.<    [color=blue][url=https://boosty.to/triggeredp]Boosty[/url][/color]
+
+Special thanks:[/center]
+DX: [color=maroon]Helped with animations for the player[/color]
+Keith Mason: [color=maroon]creator of Construct map[/color]
+Xuesos: [color=maroon]My IRL friend who helped me with CruS Online testing[/color]
+
+"
+text = "Cruelty Squad Online
+Created by TriggeredP
+
+YouTube    >.<    Boosty
+
+Special thanks:
+DX: Helped with animations for the player
+Keith Mason: creator of Construct map
+Xuesos: My IRL friend who helped me with CruS Online testing
+
+"
 
 [node name="ErrorHandler" type="WindowDialog" parent="."]
 margin_top = 21.0
@@ -1004,8 +1068,8 @@ secret = true
 
 [node name="VersionWarning" type="WindowDialog" parent="."]
 margin_top = 21.0
-margin_right = 721.0
-margin_bottom = 212.0
+margin_right = 728.0
+margin_bottom = 211.0
 size_flags_horizontal = 3
 size_flags_vertical = 3
 theme = ExtResource( 1 )
@@ -1030,16 +1094,16 @@ custom_constants/margin_bottom = 10
 [node name="RichTextLabel" type="RichTextLabel" parent="VersionWarning/Panel/MarginContainer"]
 margin_left = 10.0
 margin_top = 10.0
-margin_right = 711.0
-margin_bottom = 181.0
+margin_right = 718.0
+margin_bottom = 180.0
 size_flags_horizontal = 3
 size_flags_vertical = 3
 bbcode_enabled = true
-bbcode_text = "[center]Warning[/center]
+bbcode_text = "[center]Warning
 
 This mod is currently in pre-beta testing
 so there might be a lot of bugs and weird shit
-I've warned you [right] - TriggeredP [/right]"
+I've warned you [/center][right] - TriggeredP [/right]"
 text = "Warning
 
 This mod is currently in pre-beta testing
@@ -1051,9 +1115,16 @@ __meta__ = {
 "_edit_use_anchors_": true
 }
 
+[node name="Timer" type="Timer" parent="VersionWarning"]
+one_shot = true
+autostart = true
+
 [connection signal="pressed" from="CenterContainer/TabContainer/Main/VBoxContainer/IpPort/Buttons/Join" to="." method="join"]
 [connection signal="pressed" from="CenterContainer/TabContainer/Main/VBoxContainer/IpPort/Buttons/Host" to="." method="host"]
 [connection signal="pressed" from="CenterContainer/TabContainer/Main/VBoxContainer/IpPort/Buttons/Leave" to="." method="leave"]
+[connection signal="pressed" from="CenterContainer/TabContainer/Host/Save" to="." method="save_host"]
+[connection signal="pressed" from="CenterContainer/TabContainer/Host/Save" to="CenterContainer/TabContainer/Host/Save" method="button_pressed"]
+[connection signal="timeout" from="CenterContainer/TabContainer/Host/Save/Timer" to="CenterContainer/TabContainer/Host/Save" method="button_reset"]
 [connection signal="focus_exited" from="CenterContainer/TabContainer/Player/VBoxContainer/Color/Red" to="CenterContainer/TabContainer/Player/VBoxContainer/Color" method="focus_exited"]
 [connection signal="text_entered" from="CenterContainer/TabContainer/Player/VBoxContainer/Color/Red" to="CenterContainer/TabContainer/Player/VBoxContainer/Color" method="r_change"]
 [connection signal="focus_exited" from="CenterContainer/TabContainer/Player/VBoxContainer/Color/Green" to="CenterContainer/TabContainer/Player/VBoxContainer/Color" method="focus_exited"]
@@ -1062,11 +1133,16 @@ __meta__ = {
 [connection signal="text_entered" from="CenterContainer/TabContainer/Player/VBoxContainer/Color/Blue" to="CenterContainer/TabContainer/Player/VBoxContainer/Color" method="b_change"]
 [connection signal="item_selected" from="CenterContainer/TabContainer/Player/VBoxContainer/Image/ItemList" to="CenterContainer/TabContainer/Player/VBoxContainer/Image" method="_skin_selected"]
 [connection signal="item_selected" from="CenterContainer/TabContainer/Player/VBoxContainer/Skin/ItemList" to="CenterContainer/TabContainer/Player/VBoxContainer/Skin" method="_skin_selected"]
+[connection signal="pressed" from="CenterContainer/TabContainer/Player/VBoxContainer/Save" to="." method="save_player"]
+[connection signal="pressed" from="CenterContainer/TabContainer/Player/VBoxContainer/Save" to="CenterContainer/TabContainer/Player/VBoxContainer/Save" method="button_pressed"]
+[connection signal="timeout" from="CenterContainer/TabContainer/Player/VBoxContainer/Save/Timer" to="CenterContainer/TabContainer/Player/VBoxContainer/Save" method="button_reset"]
 [connection signal="item_selected" from="CenterContainer/TabContainer/DM/HBoxContainer/LevelController/GamemodeList" to="CenterContainer/TabContainer/DM" method="_gamemode_select"]
 [connection signal="item_selected" from="CenterContainer/TabContainer/DM/HBoxContainer/LevelController/MapList" to="CenterContainer/TabContainer/DM" method="_map_select"]
 [connection signal="pressed" from="CenterContainer/TabContainer/DM/HBoxContainer/GamemodeDescription/Button" to="CenterContainer/TabContainer/DM" method="play_button_pressed"]
 [connection signal="item_selected" from="CenterContainer/TabContainer/Implants/HBoxContainer/ImplantsController/AllowedImplantsList" to="CenterContainer/TabContainer/Implants" method="toggle_implant"]
 [connection signal="pressed" from="CenterContainer/TabContainer/Implants/HBoxContainer/VBoxContainer/Button3" to="CenterContainer/TabContainer/Implants" method="ban_all"]
 [connection signal="pressed" from="CenterContainer/TabContainer/Implants/HBoxContainer/VBoxContainer/Button4" to="CenterContainer/TabContainer/Implants" method="allow_all"]
+[connection signal="meta_clicked" from="CenterContainer/TabContainer/Credits/RichTextLabel" to="CenterContainer/TabContainer/Credits" method="meta_clicked"]
 [connection signal="popup_hide" from="PasswordInput" to="PasswordInput" method="set_password"]
 [connection signal="text_entered" from="PasswordInput/Panel/MarginContainer/RichTextLabel/PasswordEdit" to="PasswordInput" method="password_entered"]
+[connection signal="timeout" from="VersionWarning/Timer" to="VersionWarning" method="popup_warning"]

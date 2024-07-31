@@ -1,6 +1,6 @@
 extends Node
 
-var version = "Alpha 310724/1847"
+var version = "Alpha 310724/2210"
 
 enum errorType {UNKNOW, TIME_OUT, WRONG_PASSWORD, WRONG_VERSION, PASSWORD_REQUIRE}
 
@@ -17,7 +17,8 @@ var hostSettings = {
 
 var config = {
 	"lastIp": "127.0.0.1",
-	"lastPort": "25567",
+	"lastPort": 25567,
+	"hostPort": 25567,
 	"hostPassword": ""
 }
 
@@ -322,7 +323,7 @@ func disable_menu():
 
 func game_init(level) -> bool:
 	if get_tree().network_peer == null:
-		host_server(25567)
+		host_server(config.hostPort)
 	
 	if get_tree().is_network_server():
 		goto_scene_host(level)
