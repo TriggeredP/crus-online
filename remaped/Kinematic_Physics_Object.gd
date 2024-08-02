@@ -48,7 +48,7 @@ var first_col = true
 
 var change_transform = true
 
-# 3===D
+onready var Multiplayer = Global.get_node("Multiplayer")
 
 ################################################################################
 
@@ -96,21 +96,30 @@ remote func _create_blood_decal(collider,recivedTransform,recivedBasis):
 	new_blood_decal.global_transform.origin = recivedTransform
 	new_blood_decal.transform.basis = recivedBasis
 
-remote func _set_transform(recivedTransform):
-	global_transform = recivedTransform
-	if disabled:
-		rpc("_remove")
-
 remote func _remove():
 	queue_free()
-
-################################################################################
 
 func syncUpdate():
 	if gun != null:
 		gun.syncUpdate()
 
-func _ready():
+var lerp_transform : Transform
+var last_transform : Transform
+
+func host_tick():
+	if not global_transform.is_equal_approx(last_transform):
+		rset_unreliable("lerp_transform", global_transform)
+		last_transform = global_transform
+
+################################################################################
+
+func _ready()->void :
+	lerp_transform = global_transform
+	
+	Multiplayer.connect("host_tick", self, "host_tick")
+	rset_config("lerp_transform", MultiplayerAPI.RPC_MODE_PUPPET)
+	rset_config("global_transform", MultiplayerAPI.RPC_MODE_PUPPET)
+
 	rset_config("holdId",MultiplayerAPI.RPC_MODE_REMOTE)
 	rset_config("disabled",MultiplayerAPI.RPC_MODE_REMOTE)
 	rset_config("usable",MultiplayerAPI.RPC_MODE_REMOTE)
@@ -121,11 +130,8 @@ func _ready():
 	rset_config("velocity",MultiplayerAPI.RPC_MODE_REMOTE)
 	rset_config("stay_active",MultiplayerAPI.RPC_MODE_REMOTE)
 	rset_config("finished",MultiplayerAPI.RPC_MODE_REMOTE)
-	
-	rset_config("global_transform",MultiplayerAPI.RPC_MODE_REMOTE)
 
 	glob = Global
-	set_process(false)
 	if particle:
 		particle_node = get_node_or_null("Particle")
 	new_alert_sphere = alert_sphere.instance()
@@ -159,7 +165,12 @@ func _ready():
 		rpc("_get_transform")
 
 master func _get_transform():
+	rset_unreliable("lerp_transform", lerp_transform)
 	rset_unreliable("global_transform", global_transform)
+
+func _process(delta):
+	if get_tree().network_peer != null and not is_network_master():
+		global_transform = global_transform.interpolate_with(lerp_transform, delta * 10.0)
 
 func _physics_process(delta):
 	if disabled:
@@ -171,18 +182,11 @@ func _physics_process(delta):
 	
 	if held and get_tree().get_network_unique_id() == holdId:
 		self.global_transform.origin = Global.player.weapon.hold_pos.global_transform.origin
-		rset_unreliable("global_transform", global_transform)
-	elif is_network_master() and change_transform:
-		rset_unreliable("global_transform", global_transform)
 
 	if is_network_master():
 		
 		if fmod(t, 300) == 0 and (velocity.x < 0.01 and velocity.y < 0.01):
-			rset_unreliable("global_transform", global_transform)
 			change_transform = false
-		elif fmod(t, 1200) == 0:
-			rset_unreliable("global_transform", global_transform)
-		
 		if velocity.x > 0.05 or velocity.y > 0.05:
 			change_transform = true
 		

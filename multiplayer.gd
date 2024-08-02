@@ -1,6 +1,6 @@
 extends Node
 
-var version = "Alpha 310724/2210"
+var version = "Alpha 020824/1155"
 
 enum errorType {UNKNOW, TIME_OUT, WRONG_PASSWORD, WRONG_VERSION, PASSWORD_REQUIRE}
 
@@ -19,7 +19,8 @@ var config = {
 	"lastIp": "127.0.0.1",
 	"lastPort": 25567,
 	"hostPort": 25567,
-	"hostPassword": ""
+	"hostPassword": "",
+	"tickRate": 3
 }
 
 var password = ""
@@ -39,26 +40,28 @@ var playerPuppet = null
 signal status_update(status)
 signal players_update(data)
 
+signal host_tick()
+
 signal connected_to_server()
 signal disconnected_from_server(error)
 
-#signal host_tick
-#
-#var is_ticking = false
-#var tick = 0
-#
-#func _physics_process(delta):
-#	if is_ticking and tick % 2 == 0:
-#		print("host tick")
-#		emit_signal("host_tick")
-#		tick = 0
-#	tick += 1
-
 func _ready():
+	pause_mode = Node.PAUSE_MODE_PROCESS
+	
 	get_tree().get_nodes_in_group("MultiplayerMenu")[0].data_init()
 
 	get_tree().connect("network_peer_connected", self, "_connected")
 	get_tree().connect("network_peer_disconnected", self, "_disconnected")
+	
+	Global.connect("scene_loaded", self, "_scene_loaded")
+
+var tick = 0
+
+func _physics_process(delta):
+	if get_tree().network_peer != null and is_network_master() and tick % config.tickRate == 0:
+		emit_signal("host_tick")
+		tick = 0
+	tick += 1
 
 func clear_connection(recivedError):
 	emit_signal("disconnected_from_server", recivedError)
@@ -211,6 +214,8 @@ func goto_menu_host(levelFinished = false):
 	if levelFinished:
 		menuPath = level_finished()
 	
+	get_tree().paused = false
+	
 	Global.cutscene = false
 	Global.border.show()
 	
@@ -228,6 +233,8 @@ puppet func goto_menu_client(levelFinished = false):
 	
 	if levelFinished:
 		menuPath = level_finished()
+	
+	get_tree().paused = false
 	
 	Global.cutscene = false
 	Global.border.show()
@@ -284,7 +291,15 @@ func level_finished():
 
 ################################################################################
 
+signal scene_loaded()
+
+var loaded_players = []
+var player_scene_loaded = true
+
 func goto_scene_host(scene):
+	loaded_players = []
+	player_scene_loaded = false
+	
 	Global.cutscene = false
 	Global.border.show()
 	
@@ -297,6 +312,8 @@ func goto_scene_host(scene):
 	Players.load_players()
 
 puppet func goto_scene_client(scene, level):
+	player_scene_loaded = false
+	
 	Global.cutscene = false
 	Global.border.show()
 	
@@ -306,6 +323,40 @@ puppet func goto_scene_client(scene, level):
 	print("[CLIENT]: Goto to scene [" + scene + "]")
 	
 	Players.load_players()
+
+func _scene_loaded():
+	if not player_scene_loaded:
+		player_scene_loaded = true
+		get_tree().paused = true
+		
+		if is_network_master():
+			loaded_players.append(1)
+			connect("host_tick", self, "check_players_load")
+		else:
+			rpc("load_check")
+
+func check_players_load():
+	var is_players_loaded = true
+
+	for player in players:
+		if not loaded_players.has(player):
+			is_players_loaded = false
+	
+	if is_players_loaded:
+		disconnect("host_tick", self, "check_players_load")
+		
+		print("[HOST]: Players loaded")
+		
+		get_tree().paused = false
+		emit_signal("scene_loaded")
+		rpc("scene_loaded_signal")
+
+master func load_check():
+	loaded_players.append(get_tree().get_rpc_sender_id())
+
+puppet func scene_loaded_signal():
+	get_tree().paused = false
+	emit_signal("scene_loaded")
 
 ################################################################################
 

@@ -554,6 +554,29 @@ align = 1
 max_length = 5
 placeholder_text = "8080"
 
+[node name="TickRate" type="HBoxContainer" parent="CenterContainer/TabContainer/Host/VBoxContainer"]
+margin_top = 93.0
+margin_right = 641.0
+margin_bottom = 119.0
+alignment = 1
+
+[node name="Label" type="Label" parent="CenterContainer/TabContainer/Host/VBoxContainer/TickRate"]
+margin_right = 457.0
+margin_bottom = 26.0
+size_flags_horizontal = 3
+text = "Tick Rate:"
+
+[node name="TickEdit" type="SpinBox" parent="CenterContainer/TabContainer/Host/VBoxContainer/TickRate"]
+margin_left = 457.0
+margin_right = 641.0
+margin_bottom = 26.0
+theme = ExtResource( 24 )
+min_value = 1.0
+max_value = 60.0
+value = 3.0
+allow_greater = true
+align = 1
+
 [node name="Save" type="Button" parent="CenterContainer/TabContainer/Host"]
 margin_left = 263.0
 margin_top = 474.0

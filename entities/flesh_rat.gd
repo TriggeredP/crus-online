@@ -21,6 +21,8 @@ var chatter_sound
 var chatter_on = false
 var DEATH_ANIMS = ["Death1", "Death2"]
 
+onready var Multiplayer = Global.get_node("Multiplayer")
+
 ################################################################################
 
 func get_near_player() -> Dictionary:
@@ -45,12 +47,22 @@ puppet func set_animation(anim:String, speed:float)->void :
 puppet func play_chatter():
 	chatter_sound.play()
 
+var lerp_transform : Transform
+var last_transform : Transform
+
+func host_tick():
+	if not global_transform.is_equal_approx(last_transform):
+		rset_unreliable("lerp_transform", global_transform)
+		last_transform = global_transform
+
 ################################################################################
 
 func _ready():
-	rset_config("global_transform", MultiplayerAPI.RPC_MODE_PUPPET)
+	lerp_transform = global_transform
 	
-	set_process(false)
+	Multiplayer.connect("host_tick", self, "host_tick")
+	rset_config("lerp_transform", MultiplayerAPI.RPC_MODE_PUPPET)
+	
 	if immortal:
 		get_parent().immortal = true
 	weapon = $Rotation_Helper / Weapon
@@ -65,9 +77,13 @@ func _ready():
 	look_at(global_transform.origin + Vector3(velocity.x, 0, velocity.z), Vector3.UP)
 	yield (get_tree(), "idle_frame")
 	get_parent().new_alert_sphere.get_node("CollisionShape").disabled = true
-	
+
+func _process(delta):
+	if get_tree().network_peer != null and not is_network_master():
+		global_transform = global_transform.interpolate_with(lerp_transform, delta * 10.0)
+
 func _physics_process(delta):
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		if get_near_player().distance > Global.draw_distance + 10:
 			return 
 		if immortal and dead:
@@ -131,7 +147,6 @@ func _physics_process(delta):
 			velocity.x *= 0.9
 			velocity.z *= 0.9
 		var collision = move_and_collide(velocity * delta)
-		rset_unreliable("global_transform", global_transform)
 		if collision:
 			if collision.normal.y > 0.9:
 				velocity = velocity.slide(collision.normal)

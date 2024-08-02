@@ -362,6 +362,7 @@ func _ready()->void :
 
 func alert_body_entered(b):
 	nearby.append(b)
+
 func alert_body_exited(b):
 	nearby.remove(nearby.find(b))
 

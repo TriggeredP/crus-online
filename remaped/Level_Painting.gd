@@ -19,7 +19,7 @@ func _on_Area_body_entered(body):
 			Global.save_game()
 			Multiplayer.goto_scene_host(Global.LEVELS[level_index])
 		else:
-			Global.UI.notify("It's weird, it feels like a normal painting...", Color(1, 0, 0))
+			Global.UI.notify("It feels like a normal painting", Color(1, 0, 0))
 
 puppet func unlock_level():
 	if Global.BONUS_UNLOCK.find(level_name) == -1:

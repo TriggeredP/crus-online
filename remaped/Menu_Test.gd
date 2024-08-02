@@ -69,7 +69,8 @@ const BUTTON_TEXTURES:Array = [preload("res://Textures/Menu/start_normal.png"),
 									preload("res://Textures/Menu/return_normal.png"), 
 									preload("res://Textures/Menu/retry_normal.png"), 
 									preload("res://Textures/Menu/retry_normal.png"),
-									preload("res://Textures/Menu/retry_normal.png")
+									preload("res://Textures/Menu/retry_normal.png"),
+									preload("res://MOD_CONTENT/CruS Online/icon.png")
 								]
 const WEAPON_PROFILES:Array = [preload("res://Textures/Menu/Weapon_Profiles/Pistol.png"), 
 								preload("res://Textures/Menu/Weapon_Profiles/SMG.png"), 
@@ -434,7 +435,7 @@ func create_buttons(m:int):
 				level += 1
 			
 			B_MULTIPLAYER_MENU:
-				create_button(m, "Cruelty Squad Online", "_on_Multiplayer_Button_Pressed", menu[m].buttons[i])
+				create_button(m, "Cruelty Squad Online", "_on_Multiplayer_Button_Pressed", 44)
 			
 			B_SETTINGS:
 				create_button(m, "Settings", "_on_Settings_Button_Pressed", menu[m].buttons[i])

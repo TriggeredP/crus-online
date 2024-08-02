@@ -1,7 +1,5 @@
 extends KinematicBody
 
-
-
 var rotation_helper:Spatial
 var player_ray:RayCast
 var held = false
@@ -82,6 +80,8 @@ var stealthed
 var nearby:Array = []
 var glob
 
+onready var Multiplayer = Global.get_node("Multiplayer")
+
 # Multiplayer stuff
 ################################################################################
 
@@ -110,10 +110,21 @@ puppet func set_animation(anim:String, speed:float)->void :
 	anim_player.play(anim)
 	anim_player.playback_speed = speed
 
+var lerp_transform : Transform
+var last_transform : Transform
+
+func host_tick():
+	if not global_transform.is_equal_approx(last_transform):
+		rset_unreliable("lerp_transform", global_transform)
+		last_transform = global_transform
+
 ################################################################################
 
 func _ready()->void :
-	rset_config("global_transform", MultiplayerAPI.RPC_MODE_PUPPET)
+	lerp_transform = global_transform
+	
+	Multiplayer.connect("host_tick", self, "host_tick")
+	rset_config("lerp_transform", MultiplayerAPI.RPC_MODE_PUPPET)
 	
 	glob = Global
 	forward_helper = Position3D.new()
@@ -144,7 +155,6 @@ func _ready()->void :
 	footstep.bus = "step"
 	
 	time = round(rand_range(1, 100))
-	set_process(false)
 	if rotate:
 		look_at(global_transform.origin + Vector3(rand_range( - 1, 1), 0, rand_range( - 1, 1)), Vector3.UP)
 	player = glob.player
@@ -190,8 +200,12 @@ puppet func hide_muzzleflash(hideFlash):
 	if hideFlash:
 		muzzleflash.hide()
 
+func _process(delta):
+	if get_tree().network_peer != null and not is_network_master():
+		global_transform = global_transform.interpolate_with(lerp_transform, delta * 10.0)
+
 func _physics_process(delta)->void :
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		var nearest_player = get_near_player(self)
 		
 		player = nearest_player.player
@@ -288,7 +302,6 @@ func move()->void :
 					if collision.collider.has_method("damage") and Vector3(velocity.x, 0, velocity.y).length() > 2:
 						collision.collider.damage(100, collision.normal, collision.position, global_transform.origin)
 		velocity = move_and_slide(velocity, Vector3.UP, false, 4, 0.785398)
-		rset_unreliable("global_transform", global_transform)
 
 func wait_for_player(delta)->void :
 	if is_network_master():

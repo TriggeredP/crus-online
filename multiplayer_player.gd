@@ -17,6 +17,8 @@ var transform_lerp : Transform
 
 onready var animTree = $Puppet/PlayerModel/AnimTree
 
+onready var Multiplayer = Global.get_node("Multiplayer")
+
 remote func _set_toxic():
 	Global.player.set_toxic()
 
@@ -84,6 +86,8 @@ func _ready():
 	$Puppet/Nickname.text = nickname
 	$Puppet/Nickname.modulate = Color(color)
 	
+	Multiplayer.connect("host_tick", self, "host_tick")
+	
 	rset_config("transform_lerp", MultiplayerAPI.RPC_MODE_REMOTE)
 	
 	if is_network_master():
@@ -107,9 +111,13 @@ func _process(delta):
 	if $Puppet/PlayerModel/SFX/IED_alert.playing:
 		$Puppet/PlayerModel/SFX/IED_alert.pitch_scale += 0.025
 
-	global_transform = global_transform.interpolate_with(transform_lerp, delta * 15.0)
+	global_transform = global_transform.interpolate_with(transform_lerp, delta * 10.0)
 
-func _physics_process(delta):
+func host_tick():
+	rpc("tick_update")
+	tick_update()
+
+remote func tick_update():
 	if is_network_master():
 		rset_unreliable("transform_lerp", Global.player.global_transform)
 		

@@ -48,6 +48,8 @@ var glob
 var soul
 var tranqtimer:Timer
 
+onready var Multiplayer = Global.get_node("Multiplayer")
+
 # Multiplayer stuff
 ################################################################################
 
@@ -66,19 +68,36 @@ func get_near_player() -> Dictionary:
 		"distance" : oldDistance
 	}
 
-puppet func set_npc_transform(recivedTransform,recivedMeshTransform):
-	global_transform = recivedTransform
-	mesh.global_transform = recivedMeshTransform
-
 puppet func play_anim(anim,blend = -1.0,speed = 1.0):
 	anim_player.play(anim,blend,speed)
 
 puppet func stop_anim():
 	anim_player.stop()
 
+var lerp_mesh_rotation
+var last_mesh_rotation
+
+var lerp_transform : Transform
+var last_transform : Transform
+
+func host_tick():
+	if not global_transform.is_equal_approx(last_transform):
+		rset_unreliable("lerp_transform", global_transform)
+		last_transform = global_transform
+	
+	if not mesh.rotation.is_equal_approx(last_mesh_rotation):
+		rset_unreliable("lerp_mesh_rotation", mesh.rotation)
+		last_mesh_rotation = mesh.rotation
+
 ################################################################################
 
 func _ready():
+	lerp_transform = global_transform
+	
+	Multiplayer.connect("host_tick", self, "host_tick")
+	rset_config("lerp_transform", MultiplayerAPI.RPC_MODE_PUPPET)
+	rset_config("lerp_mesh_rotation", MultiplayerAPI.RPC_MODE_PUPPET)
+	
 	soul = get_parent()
 	glob = Global
 	tranqtimer = Timer.new()
@@ -86,7 +105,6 @@ func _ready():
 	tranqtimer.wait_time = 60
 	tranqtimer.one_shot = true
 	tranqtimer.connect("timeout", self, "tranq_timeout")
-	set_process(false)
 	random_line = randi() % glob.DIALOGUE.DIALOGUE[glob.CURRENT_LEVEL].size()
 	last_pos = global_transform.origin
 	objective = get_parent().objective
@@ -95,6 +113,9 @@ func _ready():
 	time += round(rand_range(0, 50))
 	anim_player = get_parent().get_node_or_null("Nemesis/AnimationPlayer")
 	mesh = get_parent().get_node_or_null("Nemesis/Armature/Skeleton")
+	
+	lerp_mesh_rotation = mesh.rotation
+	
 	visibility_notifier = VisibilityNotifier.new()
 	visibility_notifier.connect("screen_entered", self, "_on_Screen_Entered")
 	visibility_notifier.connect("screen_exited", self, "_on_Screen_Exited")
@@ -121,10 +142,13 @@ func _on_Screen_Exited():
 #		return 
 #	active = false
 
+func _process(delta):
+	if get_tree().network_peer != null and not is_network_master():
+		global_transform = global_transform.interpolate_with(lerp_transform, delta * 10.0)
+		mesh.rotation = lerp(mesh.rotation, lerp_mesh_rotation, delta * 10.0)
+
 func _physics_process(delta):
-	if is_network_master():
-		rpc_unreliable("set_npc_transform",global_transform,mesh.global_transform)
-		
+	if get_tree().network_peer != null and is_network_master():
 		var playerData = get_near_player()
 		
 		if playerData.distance > glob.draw_distance + 10:

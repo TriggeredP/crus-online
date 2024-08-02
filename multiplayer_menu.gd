@@ -1,7 +1,7 @@
 extends Control
 
 var ip = "127.0.0.1"
-var port = 8080
+var port = 25567
 
 onready var IpEdit = $CenterContainer/TabContainer/Main/VBoxContainer/IpPort/IpEdit
 onready var PortEdit = $CenterContainer/TabContainer/Main/VBoxContainer/IpPort/PortEdit
@@ -23,6 +23,8 @@ func _ready():
 		save_data("config.save", Multiplayer.config)
 	else:
 		Multiplayer.config = loadedConfigData
+	
+	Multiplayer.config.tickRate = int(Multiplayer.config.tickRate)
 	
 	var modloaderVersion = Global.get_node_or_null("Menu/ModLoaderVersion")
 	
@@ -68,6 +70,7 @@ func save_player():
 func save_host():
 	Multiplayer.config.hostPort = int($CenterContainer/TabContainer/Host/VBoxContainer/Port/PortEdit.text)
 	Multiplayer.config.hostPassword = $CenterContainer/TabContainer/Host/VBoxContainer/Password/PasswordEdit.text
+	Multiplayer.config.tickRate = int($CenterContainer/TabContainer/Host/VBoxContainer/TickRate/TickEdit.value)
 	
 	save_data("config.save", Multiplayer.config)
 
@@ -83,6 +86,7 @@ func get_data():
 		Multiplayer.playerInfo.nickname = NicknameEdit.text
 
 func host():
+	get_data()
 	Multiplayer.hostSettings.bannedImplants = []
 
 	for implant in $CenterContainer/TabContainer/Implants.bannedImplants:
@@ -95,6 +99,7 @@ func host():
 	$CenterContainer/TabContainer.current_tab = 0
 
 func join():
+	get_data()
 	Multiplayer.join_to_server(ip, port)
 	
 	disable_tabs()

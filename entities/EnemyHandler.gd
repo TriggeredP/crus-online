@@ -112,6 +112,8 @@ var tranqtimer:Timer
 var poisontimer:Timer
 var fireaudio:AudioStreamPlayer3D
 
+var Multiplayer = Global.get_node("Multiplayer")
+
 # Multiplayer stuff
 ################################################################################
 
@@ -167,21 +169,15 @@ puppet func _hide_npc_client():
 	gib_sfx.play()
 	hide()
 
-master func cleanup():
-	if is_network_master():
-		enabled = false
-		hide()
-		dead = true
-		global_transform.origin = Vector3(1000,1000,1000)
-
-puppet func cleanup_client():
+puppet func cleanup():
+	enabled = false
 	hide()
 	dead = true
 	global_transform.origin = Vector3(1000,1000,1000)
 
 master func check_npc():
 	if not enabled:
-		rpc_id(get_tree().get_rpc_sender_id(),"cleanup_client")
+		rpc_id(get_tree().get_rpc_sender_id(),"cleanup")
 
 puppet func set_stealth():
 	if not stealth:
@@ -204,40 +200,41 @@ func _ready():
 		nodamage.unit_size = 10
 	set_process(false)
 	glob = Global
-	if hell_objective and not glob.hope_discarded:
-		cleanup() 
-	elif hell_objective and (glob.hope_discarded):
-		objective = true
-	if (chaos_objective and not glob.chaos_mode):
-		cleanup() 
-	if chaos_objective and rand_range(0, 100) > 25:
-		cleanup() 
-	if glob.chaos_mode:
-		if rand_range(0, 100) < 10:
-			stealth_random = true
-		if chaos_objective:
+	
+	if is_network_master():
+		if hell_objective and not glob.hope_discarded:
+			cleanup() 
+		elif hell_objective and (glob.hope_discarded):
 			objective = true
-		if rand_range(0, 100) < 10:
-			poison_death = true
-		if rand_range(0, 100) < 10:
-			healthy_random = true
-		if rand_range(0, 100) < 10:
-			armored_random = true
-	if not civilian and glob.hope_discarded:
-		if health < 70 and health > 20:
-			health = 70
-	if glob.DEAD_CIVS.find(npc_name) != - 1:
-		cleanup()
-	if glob.hope_discarded:
-		pass
-	elif (glob.ending_1 or glob.punishment_mode) and random_spawn:
-		
-		if randi() % 25 != 4:
+		if (chaos_objective and not glob.chaos_mode):
+			cleanup() 
+		if chaos_objective and rand_range(0, 100) > 25:
+			cleanup() 
+		if glob.chaos_mode:
+			if rand_range(0, 100) < 10:
+				stealth_random = true
+			if chaos_objective:
+				objective = true
+			if rand_range(0, 100) < 10:
+				poison_death = true
+			if rand_range(0, 100) < 10:
+				healthy_random = true
+			if rand_range(0, 100) < 10:
+				armored_random = true
+		if not civilian and glob.hope_discarded:
+			if health < 70 and health > 20:
+				health = 70
+		if glob.DEAD_CIVS.find(npc_name) != - 1:
 			cleanup()
-	elif random_spawn:
-		
-		if randi() % 250 != 4:
-			cleanup()
+		if glob.hope_discarded:
+			pass
+		elif (glob.ending_1 or glob.punishment_mode) and random_spawn:
+			if randi() % 25 != 4:
+				cleanup()
+		elif random_spawn:
+			if randi() % 250 != 4:
+				cleanup()
+	
 	deathtimer = Timer.new()
 	add_child(deathtimer)
 	deathtimer.wait_time = 25

@@ -327,7 +327,13 @@ font = SubResource( 34 )
 transform = Transform( -1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0.84536, 0 )
 
 [node name="Skeleton" parent="Puppet/PlayerModel/Armature" index="0"]
-bones/2/bound_children = [  ]
+bones/0/bound_children = [ NodePath("Chest") ]
+bones/6/bound_children = [ NodePath("RightHand") ]
+bones/16/bound_children = [ NodePath("RightThigh") ]
+bones/17/bound_children = [ NodePath("RightCalf") ]
+bones/18/bound_children = [ NodePath("RatHandler") ]
+bones/20/bound_children = [ NodePath("LeftThigh") ]
+bones/21/bound_children = [ NodePath("LeftCalf") ]
 
 [node name="Head" parent="Puppet/PlayerModel/Armature/Skeleton" index="0"]
 transform = Transform( 0.999961, -0.000857431, 0.00875298, 0.000671633, 0.999775, 0.0212139, -0.0087693, -0.0212076, 0.999737, -0.000539565, 0.61256, -0.0279116 )
