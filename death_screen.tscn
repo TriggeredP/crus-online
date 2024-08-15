@@ -17,6 +17,8 @@ script/source = "extends Control
 
 var deathCount = 0
 
+var Multiplayer = Global.get_node(\"Multiplayer\")
+
 const diffSetup = {
 	\"dl\": [\"Divine Light\",1,true,false,false],
 	\"fa\": [\"Flesh Automaton\",0,false,false,false],
@@ -27,10 +29,23 @@ const diffSetup = {
 func _ready():
 	hide()
 
+func set_death_label():
+	$HelpLabel.text = \"All players are dead\\n\\nRestarting...\"
+
 func player_died():
+	if Multiplayer.hostSettings.canRespawn:
+		$RespawnButton.show()
+		$HelpLabel.hide()
+	else:
+		$RespawnButton.hide()
+		$HelpLabel.text = \"Wait until someone helps you\"
+		$HelpLabel.show()
+		
+		Multiplayer.player_died()
+	
 	show()
 	
-	if get_tree().network_peer == null:
+	if Multiplayer.hostSettings.changeModeOnDeath:
 		var diff = get_diff()
 	
 		if diff == \"dl\":
@@ -65,21 +80,52 @@ func get_diff() -> String:
 
 func _restart(event):
 	if event is InputEventMouseButton and event.pressed:
-		var respawnPoint = get_tree().get_nodes_in_group(\"Respawn\")
-		respawnPoint.shuffle()
-		print(Global.player.global_transform.origin)
-		Global.player.health = 100
-		Global.player.UI.set_health(100)
-		Global.player.global_transform.origin = respawnPoint[0].global_transform.origin
+		respawn()
+
+func respawn():
+	if Global.player.died:
+		if Multiplayer.hostSettings.canRespawn:
+			Global.player.health = 100
+			Global.player.UI.set_health(100)
+				
+			var respawnPoint = get_tree().get_nodes_in_group(\"Respawn\")
+			respawnPoint.shuffle()
+				
+			Global.player.global_transform.origin = respawnPoint[0].global_transform.origin
+		else:
+			Global.player.health = 20
+			Global.player.UI.set_health(20)
+			
+			Multiplayer.player_respawn()
+			
 		Global.player.dead = false
 		Global.player.died = false
 		Global.player.weapon.show()
 		Global.player.weapon.set_process(true)
 		Global.player.UI.show()
 		Global.player.UI.set_death_timer(5.0,false)
-		Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
-		self.hide()
+			
+		Global.player.toxic = false
+		Global.player.UI.toxic = false
+		Global.player.toxic_damage_count = 0
+		Global.player.set_move_speed()
+			
+		Global.player.psychosis = false
+			
+		Global.player.weapon.grapple_flag = false
+		Global.player.weapon.grapple_point = null
+		Global.player.weapon.grapple_target = null
 		
+		for o in Global.player.grapple_orbs:
+			o.queue_free()
+			Global.player.grapple_orbs = []
+			
+		Global.player.player_velocity = Vector3.ZERO
+			
+		Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+			
+		hide()
+			
 		Global.player.update_implants()
 		Global.player.weapon.update_implants()
 
@@ -242,9 +288,9 @@ use_filter = true
 font_data = SubResource( 7 )
 
 [node name="DeathScreen" type="Control"]
-visible = false
 anchor_right = 1.0
 anchor_bottom = 1.0
+mouse_filter = 1
 script = SubResource( 2 )
 __meta__ = {
 "_edit_use_anchors_": true
@@ -253,6 +299,7 @@ __meta__ = {
 [node name="Label" type="Label" parent="."]
 anchor_right = 1.0
 anchor_bottom = 0.548611
+mouse_filter = 1
 custom_colors/font_color = Color( 1, 0, 0, 1 )
 custom_colors/font_outline_modulate = Color( 0, 0, 0, 1 )
 custom_colors/font_color_shadow = Color( 0, 0, 0, 1 )
@@ -265,6 +312,7 @@ __meta__ = {
 }
 
 [node name="RespawnButton" type="HBoxContainer" parent="."]
+visible = false
 anchor_top = 0.454167
 anchor_right = 1.0
 anchor_bottom = 0.548611
@@ -276,6 +324,7 @@ __meta__ = {
 [node name="Label2" type="Label" parent="RespawnButton"]
 margin_right = 546.0
 margin_bottom = 67.0
+mouse_filter = 1
 size_flags_horizontal = 3
 size_flags_vertical = 5
 custom_colors/font_color = Color( 1, 0, 0, 1 )
@@ -306,6 +355,7 @@ __meta__ = {
 margin_left = 734.0
 margin_right = 1280.0
 margin_bottom = 67.0
+mouse_filter = 1
 size_flags_horizontal = 3
 size_flags_vertical = 3
 custom_colors/font_color = Color( 1, 0, 0, 1 )
@@ -313,6 +363,24 @@ custom_colors/font_outline_modulate = Color( 0, 0, 0, 1 )
 custom_colors/font_color_shadow = Color( 0, 0, 0, 1 )
 custom_fonts/font = SubResource( 1 )
 text = "to respawn"
+valign = 1
+__meta__ = {
+"_edit_use_anchors_": true
+}
+
+[node name="HelpLabel" type="Label" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+custom_colors/font_color = Color( 1, 0, 0, 1 )
+custom_colors/font_outline_modulate = Color( 0, 0, 0, 1 )
+custom_colors/font_color_shadow = Color( 0, 0, 0, 1 )
+custom_fonts/font = SubResource( 1 )
+text = "All players are dead
+
+Restarting..."
+align = 1
 valign = 1
 __meta__ = {
 "_edit_use_anchors_": true
@@ -331,6 +399,7 @@ __meta__ = {
 [node name="Label2" type="Label" parent="ImplantButton"]
 margin_right = 546.0
 margin_bottom = 67.0
+mouse_filter = 1
 size_flags_horizontal = 3
 size_flags_vertical = 5
 custom_colors/font_color = Color( 1, 0, 0, 1 )
@@ -361,6 +430,7 @@ __meta__ = {
 margin_left = 734.0
 margin_right = 1280.0
 margin_bottom = 67.0
+mouse_filter = 1
 size_flags_horizontal = 3
 size_flags_vertical = 3
 custom_colors/font_color = Color( 1, 0, 0, 1 )
@@ -397,7 +467,6 @@ margin_top = 104.0
 margin_right = 1152.0
 margin_bottom = 616.0
 rect_pivot_offset = Vector2( 512, 256 )
-mouse_filter = 0
 custom_constants/separation = 0
 alignment = 1
 
@@ -1094,6 +1163,7 @@ visible = false
 margin_right = 468.0
 margin_bottom = 339.0
 rect_min_size = Vector2( 468, 0 )
+mouse_filter = 1
 custom_styles/panel = SubResource( 6 )
 
 [node name="VBoxContainer" type="VBoxContainer" parent="ImplantMenu/HoverInfo"]
@@ -1114,6 +1184,7 @@ stretch_mode = 5
 margin_top = 132.0
 margin_right = 468.0
 margin_bottom = 157.0
+mouse_filter = 1
 custom_colors/font_color = Color( 0, 1, 0.0392157, 1 )
 custom_fonts/font = SubResource( 8 )
 text = "Life sensor"
@@ -1122,6 +1193,7 @@ text = "Life sensor"
 margin_top = 161.0
 margin_right = 468.0
 margin_bottom = 178.0
+mouse_filter = 1
 custom_colors/font_color = Color( 0.521569, 1, 0, 1 )
 custom_fonts/font = SubResource( 9 )
 text = "Slot: Head"
@@ -1130,6 +1202,7 @@ text = "Slot: Head"
 margin_top = 182.0
 margin_right = 468.0
 margin_bottom = 339.0
+mouse_filter = 1
 custom_colors/font_color = Color( 0.521569, 1, 0, 1 )
 custom_fonts/font = SubResource( 9 )
 text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."

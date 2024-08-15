@@ -5,6 +5,8 @@ onready var parent = get_parent()
 func load_players():
 	print("[LOCAL]: Load players")
 	
+	reload_players()
+	
 	var puppetsNames = []
 	for puppetNode in get_children():
 		puppetsNames.append(int(puppetNode.name))
@@ -22,8 +24,12 @@ func load_players():
 			add_child(player)
 			parent.players[key]["puppet"] = player
 			player.global_transform.origin = Vector3(-1000,-1000,-1000)
-	print(parent.players)
+			player.transform_lerp.origin = Vector3(-1000,-1000,-1000)
+
+func reload_players():
+	for player in get_children():
+		player.player_restart()
 
 func remove_players():
-	for child in get_children():
-		child.queue_free()
+	for player in get_children():
+		player.queue_free()

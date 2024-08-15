@@ -200,98 +200,97 @@ puppet func hide_muzzleflash(hideFlash):
 	if hideFlash:
 		muzzleflash.hide()
 
-func _process(delta):
-	if get_tree().network_peer != null and not is_network_master():
-		global_transform = global_transform.interpolate_with(lerp_transform, delta * 10.0)
-
 func _physics_process(delta)->void :
-	if get_tree().network_peer != null and is_network_master():
-		var nearest_player = get_near_player(self)
-		
-		player = nearest_player.player
-		player_distance = nearest_player.distance
-		
-		if player == null:
-			return 
-		if player_distance > glob.draw_distance + 10:
-			return 
-		if Global.every_20:
-			stealthed = glob.implants.torso_implant.stealth and player_distance > 20
-		if civ_killer:
-			player_spotted = true
-		var fps = Global.fps
-		if fps < 30:
-			if Global.every_2:
+	if get_tree().network_peer != null:
+		if is_network_master():
+			var nearest_player = get_near_player(self)
+			
+			player = nearest_player.player
+			player_distance = nearest_player.distance
+			
+			if player == null:
 				return 
-			if player_distance > 30:
+			if player_distance > glob.draw_distance + 10:
 				return 
-		height_difference = player.global_transform.origin.y > global_transform.origin.y and abs(player.global_transform.origin.y - global_transform.origin.y) > 21
-		anim_counter += 1
-		time += 1
-		if muzzleflash:
-			muzzleflash.hide()
-			rpc("hide_muzzleflash", true)
-		if player_distance > ai_distance:
-			return 
-		if player_distance > 50 and Global.every_2:
-			return 
-		elif player_distance > 50 and not Global.every_2:
-			delta *= 2
-		if Global.every_55:
-			if randi() % 2 == 1:
+			if Global.every_20:
+				stealthed = glob.implants.torso_implant.stealth and player_distance > 20
+			if civ_killer:
+				player_spotted = true
+			var fps = Global.fps
+			if fps < 30:
+				if Global.every_2:
+					return 
+				if player_distance > 30:
+					return 
+			height_difference = player.global_transform.origin.y > global_transform.origin.y and abs(player.global_transform.origin.y - global_transform.origin.y) > 21
+			anim_counter += 1
+			time += 1
+			if muzzleflash:
+				muzzleflash.hide()
+				rpc("hide_muzzleflash", true)
+			if player_distance > ai_distance:
+				return 
+			if player_distance > 50 and Global.every_2:
+				return 
+			elif player_distance > 50 and not Global.every_2:
+				delta *= 2
+			if Global.every_55:
+				if randi() % 2 == 1:
+					shoot_mode = true
+				elif not civ_killer:
+					shoot_mode = false
+			if move_speed == 0:
+				if player_spotted and not dead and not tranq:
+					rotate_towards = lerp(rotate_towards, player.global_transform.origin, 6 * delta)
+					look_at(rotate_towards, Vector3.UP)
+					rotation.x = 0
 				shoot_mode = true
-			elif not civ_killer:
-				shoot_mode = false
-		if move_speed == 0:
-			if player_spotted and not dead and not tranq:
-				rotate_towards = lerp(rotate_towards, player.global_transform.origin, 6 * delta)
-				look_at(rotate_towards, Vector3.UP)
-				rotation.x = 0
-			shoot_mode = true
-		if not player_spotted and not dead and not tranq and (player_distance < 40 or move_speed != 0):
-			wait_for_player(delta)
-		track_player(delta)
-		if not sight_potential and player_distance > 20 and fmod(time, 20) != 0 and not alerted and not player_spotted:
-			return 
-		if fmod(time, 5) == 0 and sight_potential:
-			heading = - Vector3(player.global_transform.origin.x, 0, player.global_transform.origin.z).direction_to(Vector3(global_transform.origin.x, 0, global_transform.origin.z))
-			line_of_sight = global_transform.origin.direction_to(forward_helper.global_transform.origin).dot(heading)
-			heading_y = (player.global_transform.origin - global_transform.origin).normalized()
-			line_of_sight_y = transform.basis.xform(Vector3.UP).dot(heading_y)
-		if fmod(time, 20) == 0 and player_distance < 30:
-			if velocity_ray.is_colliding():
-				var collider = velocity_ray.get_collider()
-				var normal = velocity_ray.get_collision_normal()
-				var point = velocity_ray.get_collision_point()
-				if is_instance_valid(collider):
-					if collider.has_method("use") and collider.has_method("destroy") and not collider.get_collision_layer_bit(6) and (alerted or player_spotted):
-						collider.destroy(normal, point)
-					elif rand_patroller and collider.has_method("destroy") and collider.has_method("use") and ( not alerted and not player_spotted) and not pos_flag:
-						if pos_flag:
-							path = NavigationServer.map_get_path(navigation, global_transform.origin, pos2, true)
-							pos_flag = not pos_flag
-						else :
-							path = NavigationServer.map_get_path(navigation, global_transform.origin, pos1, true)
-							pos_flag = not pos_flag
-					elif collider.has_method("use") and not collider.has_method("destroy") and not collider.get_collision_layer_bit(6) and Vector2(velocity.x, velocity.z).length() > 0.2:
-						collider.use()
-					elif collider.has_method("piercing_damage") and player_spotted:
-						collider.piercing_damage(200, normal, point, global_transform.origin)
-		velocity.y -= gravity * delta
-		if not dead and not tranq:
-			if player_spotted:
-				player_spotted()
-			if path.size() > 0 and ((player_distance > engage_distance and ( not shoot_mode or melee)) or not in_sight) and player_spotted:
-					find_path(delta)
-			else :
-				if in_sight:
-					active(delta)
+			if not player_spotted and not dead and not tranq and (player_distance < 40 or move_speed != 0):
+				wait_for_player(delta)
+			track_player(delta)
+			if not sight_potential and player_distance > 20 and fmod(time, 20) != 0 and not alerted and not player_spotted:
+				return 
+			if fmod(time, 5) == 0 and sight_potential:
+				heading = - Vector3(player.global_transform.origin.x, 0, player.global_transform.origin.z).direction_to(Vector3(global_transform.origin.x, 0, global_transform.origin.z))
+				line_of_sight = global_transform.origin.direction_to(forward_helper.global_transform.origin).dot(heading)
+				heading_y = (player.global_transform.origin - global_transform.origin).normalized()
+				line_of_sight_y = transform.basis.xform(Vector3.UP).dot(heading_y)
+			if fmod(time, 20) == 0 and player_distance < 30:
+				if velocity_ray.is_colliding():
+					var collider = velocity_ray.get_collider()
+					var normal = velocity_ray.get_collision_normal()
+					var point = velocity_ray.get_collision_point()
+					if is_instance_valid(collider):
+						if collider.has_method("use") and collider.has_method("destroy") and not collider.get_collision_layer_bit(6) and (alerted or player_spotted):
+							collider.destroy(normal, point)
+						elif rand_patroller and collider.has_method("destroy") and collider.has_method("use") and ( not alerted and not player_spotted) and not pos_flag:
+							if pos_flag:
+								path = NavigationServer.map_get_path(navigation, global_transform.origin, pos2, true)
+								pos_flag = not pos_flag
+							else :
+								path = NavigationServer.map_get_path(navigation, global_transform.origin, pos1, true)
+								pos_flag = not pos_flag
+						elif collider.has_method("use") and not collider.has_method("destroy") and not collider.get_collision_layer_bit(6) and Vector2(velocity.x, velocity.z).length() > 0.2:
+							collider.use()
+						elif collider.has_method("piercing_damage") and player_spotted:
+							collider.piercing_damage(200, normal, point, global_transform.origin)
+			velocity.y -= gravity * delta
+			if not dead and not tranq:
+				if player_spotted:
+					player_spotted()
+				if path.size() > 0 and ((player_distance > engage_distance and ( not shoot_mode or melee)) or not in_sight) and player_spotted:
+						find_path(delta)
 				else :
-					reaction_timer = clamp(reaction_timer, 0, reaction_time + 1) - 5 * delta
-		elif is_on_floor():
-				velocity.x *= 0.95
-				velocity.z *= 0.95
-		move()
+					if in_sight:
+						active(delta)
+					else :
+						reaction_timer = clamp(reaction_timer, 0, reaction_time + 1) - 5 * delta
+			elif is_on_floor():
+					velocity.x *= 0.95
+					velocity.z *= 0.95
+			move()
+		else:
+			global_transform = global_transform.interpolate_with(lerp_transform, delta * 10.0)
 
 func move()->void :
 	if is_network_master():

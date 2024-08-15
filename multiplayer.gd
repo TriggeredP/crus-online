@@ -1,6 +1,6 @@
 extends Node
 
-var version = "Alpha 020824/1155"
+var version = "Alpha 150824/1725"
 
 enum errorType {UNKNOW, TIME_OUT, WRONG_PASSWORD, WRONG_VERSION, PASSWORD_REQUIRE}
 
@@ -12,7 +12,11 @@ var playerInfo = {
 }
 
 var hostSettings = {
-	"bannedImplants" : []
+	"bannedImplants" : [],
+	"map" : null,
+	"helpTimer": 15,
+	"canRespawn": false,
+	"changeModeOnDeath": true
 }
 
 var config = {
@@ -20,7 +24,10 @@ var config = {
 	"lastPort": 25567,
 	"hostPort": 25567,
 	"hostPassword": "",
-	"tickRate": 3
+	"tickRate": 3,
+	"helpTimer": 15,
+	"canRespawn": false,
+	"changeModeOnDeath": true
 }
 
 var password = ""
@@ -31,11 +38,13 @@ var dataLoaded = false
 
 var players = {}
 
+var playerPuppet = null
+
+onready var DeathScreen = Global.get_node('DeathScreen')
+
 onready var Players = $Players
 onready var Menu = $Menu
 onready var Hint = $Hint
-
-var playerPuppet = null
 
 signal status_update(status)
 signal players_update(data)
@@ -70,6 +79,10 @@ func clear_connection(recivedError):
 	get_tree().network_peer = null
 
 func host_server(port):
+	hostSettings.helpTimer = config.helpTimer
+	hostSettings.canRespawn = config.canRespawn
+	hostSettings.changeModeOnDeath = config.changeModeOnDeath
+	
 	var server = NetworkedMultiplayerENet.new()
 	server.create_server(port,16)
 	get_tree().set_network_peer(server)
@@ -162,13 +175,14 @@ master func connect_init(recivedPassword, recivedVersion):
 		rpc_id(id, "disconnect_client", errorType.WRONG_VERSION)
 	else:
 		if recivedPassword == config.hostPassword:
-			rpc_id(id, "client_connect_init", players, Global.CURRENT_LEVEL)
+			rpc_id(id, "client_connect_init", hostSettings, players, Global.CURRENT_LEVEL)
 			print("[HOST]: Client Connect Init")
 		else:
 			rpc_id(id, "disconnect_client", errorType.WRONG_PASSWORD)
 
-puppet func client_connect_init(recivedPlayerInfo, level):
+puppet func client_connect_init(recivedHostSettings, recivedPlayerInfo, level):
 	players = recivedPlayerInfo
+	hostSettings = recivedHostSettings
 	
 	passwordEntered = false
 	password = ""
@@ -297,6 +311,9 @@ var loaded_players = []
 var player_scene_loaded = true
 
 func goto_scene_host(scene):
+	hostSettings.map = scene
+	
+	died_players = []
 	loaded_players = []
 	player_scene_loaded = false
 	
@@ -326,6 +343,8 @@ puppet func goto_scene_client(scene, level):
 
 func _scene_loaded():
 	if not player_scene_loaded:
+		$SyncLoad.rect_scale = Vector2(Global.resolution[0] / 1280 ,Global.resolution[1] / 720 )
+		$SyncLoad.show()
 		player_scene_loaded = true
 		get_tree().paused = true
 		
@@ -348,6 +367,7 @@ func check_players_load():
 		print("[HOST]: Players loaded")
 		
 		get_tree().paused = false
+		$SyncLoad.hide()
 		emit_signal("scene_loaded")
 		rpc("scene_loaded_signal")
 
@@ -356,7 +376,63 @@ master func load_check():
 
 puppet func scene_loaded_signal():
 	get_tree().paused = false
+	$SyncLoad.hide()
 	emit_signal("scene_loaded")
+
+################################################################################
+
+var died_players = []
+
+func player_died():
+	if is_network_master():
+		_player_died(true)
+	else:
+		rpc("_player_died")
+
+master func _player_died(host = false):
+	if host:
+		if not died_players.has(1):
+			died_players.append(1)
+	else:
+		if not died_players.has(get_tree().get_rpc_sender_id()):
+			died_players.append(get_tree().get_rpc_sender_id())
+	
+	var all_player_died = true
+
+	for player in players:
+		if not died_players.has(player):
+			all_player_died = false
+	
+	if all_player_died:
+		print("[HOST]: All players is dead lol")
+		$RestartTimer.start()
+		set_death_label()
+		rpc("set_death_label")
+
+puppet func set_death_label():
+	DeathScreen.set_death_label()
+
+func restart_map():
+	hide_death_screen()
+	rpc("hide_death_screen")
+	goto_scene_host(hostSettings.map)
+
+puppet func hide_death_screen():
+	DeathScreen.hide()
+
+func player_respawn():
+	if is_network_master():
+		_player_respawn(true)
+	else:
+		rpc("_player_respawn")
+
+master func _player_respawn(host = false):
+	if host:
+		if died_players.has(1):
+			died_players.erase(1)
+	else:
+		if not died_players.has(get_tree().get_rpc_sender_id()):
+			died_players.erase(get_tree().get_rpc_sender_id())
 
 ################################################################################
 

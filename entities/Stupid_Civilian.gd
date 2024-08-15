@@ -142,105 +142,104 @@ func _on_Screen_Exited():
 #		return 
 #	active = false
 
-func _process(delta):
-	if get_tree().network_peer != null and not is_network_master():
-		global_transform = global_transform.interpolate_with(lerp_transform, delta * 10.0)
-		mesh.rotation = lerp(mesh.rotation, lerp_mesh_rotation, delta * 10.0)
-
 func _physics_process(delta):
-	if get_tree().network_peer != null and is_network_master():
-		var playerData = get_near_player()
-		
-		if playerData.distance > glob.draw_distance + 10:
-			return 
-		
-		var fps = Global.fps
-		
-		if fmod(time, 22) == 0:
-			player_distance = playerData.distance
-			look_at_player = (player_distance < 4 or player_distance > 100)
-		
-		time += 1
-		
-		if player_distance > 40 and not dead and not tranq and not objective:
-			anim_player.play("Idle")
-			rpc("play_anim","Idle")
-			return 
-		
-		if fps < 30:
-			if Global.every_2:
+	if get_tree().network_peer != null:
+		if is_network_master():
+			var playerData = get_near_player()
+			
+			if playerData.distance > glob.draw_distance + 10:
 				return 
-		
-		var pos = global_transform.origin
-		var player_pos = playerData.player.global_transform.origin
-		
-		if not active and not dead and not flee and not free and not tranq:
-			return 
-		
-		setup = false
+			
+			var fps = Global.fps
+			
+			if fmod(time, 22) == 0:
+				player_distance = playerData.distance
+				look_at_player = (player_distance < 4 or player_distance > 100)
+			
+			time += 1
+			
+			if player_distance > 40 and not dead and not tranq and not objective:
+				anim_player.play("Idle")
+				rpc("play_anim","Idle")
+				return 
+			
+			if fps < 30:
+				if Global.every_2:
+					return 
+			
+			var pos = global_transform.origin
+			var player_pos = playerData.player.global_transform.origin
+			
+			if not active and not dead and not flee and not free and not tranq:
+				return 
+			
+			setup = false
 
-		if (look_at_player and not flee and not dead and not free and not tranq):
-			mesh.look_at(player_pos, Vector3.UP)
-			mesh.rotation.x = 0
+			if (look_at_player and not flee and not dead and not free and not tranq):
+				mesh.look_at(player_pos, Vector3.UP)
+				mesh.rotation.x = 0
 
-			velocity.x = 0
-			velocity.z = 0
-			anim_player.play("Idle")
-			rpc("play_anim","Idle")
-			return 
+				velocity.x = 0
+				velocity.z = 0
+				anim_player.play("Idle")
+				rpc("play_anim","Idle")
+				return 
 
-		if fmod(time, 200) == 0 and not flee and not tranq:
-			var rand = randi() % 3
-			match rand:
-				1:
-					velocity.x = 0
-					velocity.z = 0
-				2:
-					velocity = Vector3(move_speed, velocity.y, velocity.z).rotated(Vector3.UP, rand_range(0, deg2rad(360)))
-					mesh.look_at(pos + Vector3(velocity.x, 0, velocity.z) + Vector3(0.0001, 0, 0), Vector3.UP)
-					mesh.rotation.x = 0
-				3:
-					pass
-		if Vector3(velocity.x, 0, velocity.z).length() > 0.5 and not dead and not tranq:
-			if not flee:
-				anim_player.play("Walk")
-				rpc("play_anim","Walk")
+			if fmod(time, 200) == 0 and not flee and not tranq:
+				var rand = randi() % 3
+				match rand:
+					1:
+						velocity.x = 0
+						velocity.z = 0
+					2:
+						velocity = Vector3(move_speed, velocity.y, velocity.z).rotated(Vector3.UP, rand_range(0, deg2rad(360)))
+						mesh.look_at(pos + Vector3(velocity.x, 0, velocity.z) + Vector3(0.0001, 0, 0), Vector3.UP)
+						mesh.rotation.x = 0
+					3:
+						pass
+			if Vector3(velocity.x, 0, velocity.z).length() > 0.5 and not dead and not tranq:
+				if not flee:
+					anim_player.play("Walk")
+					rpc("play_anim","Walk")
+				else :
+					anim_player.play("Run", - 1, 2)
+					rpc("play_anim","Run", -1, 2)
+			elif not dead and not tranq:
+				anim_player.play("Idle")
+				rpc("play_anim","Idle")
+			if water:
+				if not dead:
+					GRAVITY = - 4
+				else :
+					GRAVITY = 1
 			else :
-				anim_player.play("Run", - 1, 2)
-				rpc("play_anim","Run", -1, 2)
-		elif not dead and not tranq:
-			anim_player.play("Idle")
-			rpc("play_anim","Idle")
-		if water:
-			if not dead:
-				GRAVITY = - 4
-			else :
-				GRAVITY = 1
-		else :
-			GRAVITY = 22
+				GRAVITY = 22
+				if glob.CURRENT_LEVEL == 2000 and not objective:
+					GRAVITY = 22 * optimization_multiplier
+			velocity.y -= GRAVITY * delta
+			var a = 1
+			if not fmod(time, 3) == 0 and glob.CURRENT_LEVEL == 2000 and not objective:
+				return 
 			if glob.CURRENT_LEVEL == 2000 and not objective:
-				GRAVITY = 22 * optimization_multiplier
-		velocity.y -= GRAVITY * delta
-		var a = 1
-		if not fmod(time, 3) == 0 and glob.CURRENT_LEVEL == 2000 and not objective:
-			return 
-		if glob.CURRENT_LEVEL == 2000 and not objective:
-			a = 1.5
-		var collision = move_and_collide(velocity * delta)
-		if collision:
-			if velocity.y < - 5 * optimization_multiplier and abs(global_transform.origin.y - last_pos.y) > 7 and not immune_to_fall_damage:
-				get_parent().damage(50, collision.normal, collision.position, collision.position)
-			elif collision.normal.y > 0.9:
-				velocity = velocity.slide(collision.normal)
-				if dead or tranq:
-					velocity.x *= 0.95
-					velocity.z *= 0.95
-			else :
-				velocity = velocity.bounce(collision.normal)
-				if Vector3(velocity.x, 0, velocity.z).length() > 0.5:
-					mesh.look_at(pos + Vector3(velocity.x, 0, velocity.z) + Vector3(0.0001, 0, 0), Vector3.UP)
-					mesh.rotation.x = 0
-			last_pos = global_transform.origin
+				a = 1.5
+			var collision = move_and_collide(velocity * delta)
+			if collision:
+				if velocity.y < - 5 * optimization_multiplier and abs(global_transform.origin.y - last_pos.y) > 7 and not immune_to_fall_damage:
+					get_parent().damage(50, collision.normal, collision.position, collision.position)
+				elif collision.normal.y > 0.9:
+					velocity = velocity.slide(collision.normal)
+					if dead or tranq:
+						velocity.x *= 0.95
+						velocity.z *= 0.95
+				else :
+					velocity = velocity.bounce(collision.normal)
+					if Vector3(velocity.x, 0, velocity.z).length() > 0.5:
+						mesh.look_at(pos + Vector3(velocity.x, 0, velocity.z) + Vector3(0.0001, 0, 0), Vector3.UP)
+						mesh.rotation.x = 0
+				last_pos = global_transform.origin
+		else:
+			global_transform = global_transform.interpolate_with(lerp_transform, delta * 10.0)
+			mesh.rotation = lerp(mesh.rotation, lerp_mesh_rotation, delta * 10.0)
 
 master func add_velocity(increase_velocity):
 	if is_network_master():

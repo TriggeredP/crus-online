@@ -25,6 +25,7 @@ func _ready():
 		Multiplayer.config = loadedConfigData
 	
 	Multiplayer.config.tickRate = int(Multiplayer.config.tickRate)
+	Multiplayer.config.helpTimer = int(Multiplayer.config.helpTimer)
 	
 	var modloaderVersion = Global.get_node_or_null("Menu/ModLoaderVersion")
 	
@@ -71,6 +72,10 @@ func save_host():
 	Multiplayer.config.hostPort = int($CenterContainer/TabContainer/Host/VBoxContainer/Port/PortEdit.text)
 	Multiplayer.config.hostPassword = $CenterContainer/TabContainer/Host/VBoxContainer/Password/PasswordEdit.text
 	Multiplayer.config.tickRate = int($CenterContainer/TabContainer/Host/VBoxContainer/TickRate/TickEdit.value)
+	
+	Multiplayer.config.canRespawn = $CenterContainer/TabContainer/Host/VBoxContainer/CanRespawn/TickEdit.pressed
+	Multiplayer.config.changeModeOnDeath = $CenterContainer/TabContainer/Host/VBoxContainer/ChangeModeOnDeath/TickEdit.pressed
+	Multiplayer.config.helpTimer = int($CenterContainer/TabContainer/Host/VBoxContainer/HelpTimer/HelpEdit.value)
 	
 	save_data("config.save", Multiplayer.config)
 

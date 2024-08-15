@@ -78,88 +78,87 @@ func _ready():
 	yield (get_tree(), "idle_frame")
 	get_parent().new_alert_sphere.get_node("CollisionShape").disabled = true
 
-func _process(delta):
-	if get_tree().network_peer != null and not is_network_master():
-		global_transform = global_transform.interpolate_with(lerp_transform, delta * 10.0)
-
 func _physics_process(delta):
-	if get_tree().network_peer != null and is_network_master():
-		if get_near_player().distance > Global.draw_distance + 10:
-			return 
-		if immortal and dead:
-			immortal_death_time -= 1
-			if immortal_death_time == 0:
-				get_parent().dead = false
-				get_parent().dead_body.get_node("CollisionShape").disabled = true
-				get_parent().torso.get_node("CollisionShape").disabled = false
-				get_parent().health = 50
-				dead = false
-				immortal_death_time = 200
-				anim_player.play("Undie")
-				rpc("set_animation", "Undie", 1)
-				yield (get_tree(), "idle_frame")
-		if get_near_player().distance > 20:
-			velocity.x = 0
-			velocity.z = 0
-		elif not dead:
-			if chatter_on:
-				
-				if not chatter_sound.playing:
-					chatter_sound.play()
-					rpc("play_chatter")
-		time += 1
-		if get_near_player().distance < 3 and not dead and _floor and get_near_player().distance > 1 and jumper:
-			velocity *= 2
-			velocity.y += 5
-		if (get_near_player().distance < attack_distance or get_near_player().distance > 20) and not flee and not dead and not anim_player.current_animation == "Undie":
-			look_at(get_near_player().player.global_transform.origin, Vector3.UP)
-			rotation.x = 0
-
-			velocity.x = 0
-			velocity.z = 0
-			
-			if get_near_player().distance < attack_distance:
-				weapon.AI_shoot()
-				anim_player.play("Attack", - 1, 1)
-				rpc("set_animation", "Attack", 1)
-		else :
-			if fmod(time, 20) == 0 and not dead and not anim_player.current_animation == "Undie":
-				velocity = - move_speed * (global_transform.origin - get_near_player().player.global_transform.origin).normalized()
-				look_at(global_transform.origin + velocity, Vector3.UP)
+	if get_tree().network_peer != null:
+		if is_network_master():
+			if get_near_player().distance > Global.draw_distance + 10:
+				return 
+			if immortal and dead:
+				immortal_death_time -= 1
+				if immortal_death_time == 0:
+					get_parent().dead = false
+					get_parent().dead_body.get_node("CollisionShape").disabled = true
+					get_parent().torso.get_node("CollisionShape").disabled = false
+					get_parent().health = 50
+					dead = false
+					immortal_death_time = 200
+					anim_player.play("Undie")
+					rpc("set_animation", "Undie", 1)
+					yield (get_tree(), "idle_frame")
+			if get_near_player().distance > 20:
+				velocity.x = 0
+				velocity.z = 0
+			elif not dead:
+				if chatter_on:
+					
+					if not chatter_sound.playing:
+						chatter_sound.play()
+						rpc("play_chatter")
+			time += 1
+			if get_near_player().distance < 3 and not dead and _floor and get_near_player().distance > 1 and jumper:
+				velocity *= 2
+				velocity.y += 5
+			if (get_near_player().distance < attack_distance or get_near_player().distance > 20) and not flee and not dead and not anim_player.current_animation == "Undie":
+				look_at(get_near_player().player.global_transform.origin, Vector3.UP)
 				rotation.x = 0
-			if Vector3(velocity.x, 0, velocity.z).length() > 0.4 and not dead and not anim_player.current_animation == "Undie":
-				if not flee:
-					anim_player.play("Walk", - 1, anim_speed)
-					rpc("set_animation", "Walk", anim_speed)
-				else :
-					anim_player.play("Run", - 1, 2)
-					rpc("set_animation", "Walk", 2)
-			elif not dead and not anim_player.current_animation == "Undie":
-				anim_player.play("Idle")
-				rpc("set_animation", "Idle", 1)
-		if water:
-			GRAVITY = 2
-		else :
-			GRAVITY = 22
-		velocity.y -= GRAVITY * delta
 
-		if dead or anim_player.current_animation == "Undie":
-			velocity.x *= 0.9
-			velocity.z *= 0.9
-		var collision = move_and_collide(velocity * delta)
-		if collision:
-			if collision.normal.y > 0.9:
-				velocity = velocity.slide(collision.normal)
-				_floor = true
+				velocity.x = 0
+				velocity.z = 0
+				
+				if get_near_player().distance < attack_distance:
+					weapon.AI_shoot()
+					anim_player.play("Attack", - 1, 1)
+					rpc("set_animation", "Attack", 1)
+			else :
+				if fmod(time, 20) == 0 and not dead and not anim_player.current_animation == "Undie":
+					velocity = - move_speed * (global_transform.origin - get_near_player().player.global_transform.origin).normalized()
+					look_at(global_transform.origin + velocity, Vector3.UP)
+					rotation.x = 0
+				if Vector3(velocity.x, 0, velocity.z).length() > 0.4 and not dead and not anim_player.current_animation == "Undie":
+					if not flee:
+						anim_player.play("Walk", - 1, anim_speed)
+						rpc("set_animation", "Walk", anim_speed)
+					else :
+						anim_player.play("Run", - 1, 2)
+						rpc("set_animation", "Walk", 2)
+				elif not dead and not anim_player.current_animation == "Undie":
+					anim_player.play("Idle")
+					rpc("set_animation", "Idle", 1)
+			if water:
+				GRAVITY = 2
+			else :
+				GRAVITY = 22
+			velocity.y -= GRAVITY * delta
+
+			if dead or anim_player.current_animation == "Undie":
+				velocity.x *= 0.9
+				velocity.z *= 0.9
+			var collision = move_and_collide(velocity * delta)
+			if collision:
+				if collision.normal.y > 0.9:
+					velocity = velocity.slide(collision.normal)
+					_floor = true
+				else :
+					_floor = false
+					velocity = velocity.bounce(collision.normal)
+					if Vector3(velocity.x, 0, velocity.z).length() > 0.4:
+						look_at(global_transform.origin + Vector3(velocity.x, 0, velocity.z) + Vector3(0.0001, 0, 0), Vector3.UP)
+						rotation.x = 0
 			else :
 				_floor = false
-				velocity = velocity.bounce(collision.normal)
-				if Vector3(velocity.x, 0, velocity.z).length() > 0.4:
-					look_at(global_transform.origin + Vector3(velocity.x, 0, velocity.z) + Vector3(0.0001, 0, 0), Vector3.UP)
-					rotation.x = 0
-		else :
-			_floor = false
-		
+		else:
+			global_transform = global_transform.interpolate_with(lerp_transform, delta * 10.0)
+
 master func add_velocity(increase_velocity):
 	if is_network_master():
 		velocity -= increase_velocity

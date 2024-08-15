@@ -1,6 +1,7 @@
-[gd_scene load_steps=29 format=2]
+[gd_scene load_steps=33 format=2]
 
 [ext_resource path="res://MOD_CONTENT/CruS Online/multiplayer.gd" type="Script" id=1]
+[ext_resource path="res://Maps/textures/trauma/bugs.png" type="Texture" id=2]
 [ext_resource path="res://MOD_CONTENT/CruS Online/Players.gd" type="Script" id=3]
 [ext_resource path="res://MOD_CONTENT/CruS Online/Button.tscn" type="PackedScene" id=4]
 [ext_resource path="res://Textures/Menu/start_normal.png" type="Texture" id=5]
@@ -64,6 +65,32 @@ font_path = "res://Fonts/MingLiU-ExtB-01.ttf"
 size = 48
 use_filter = true
 font_data = SubResource( 7 )
+
+[sub_resource type="Shader" id=1]
+code = "shader_type canvas_item;
+
+
+uniform float size_x = 0.001;
+uniform float size_y = 0.001;
+
+void fragment(){
+	vec2 uv = SCREEN_UV;
+	uv.x = cos(SCREEN_UV.y * 2.0 + TIME) * 0.02;
+	uv.y = sin(SCREEN_UV.x * 4.0 + TIME) * 0.03;
+	COLOR = texture(TEXTURE, UV + uv);
+	}"
+
+[sub_resource type="ShaderMaterial" id=16]
+shader = SubResource( 1 )
+shader_param/size_x = 0.001
+shader_param/size_y = 0.001
+
+[sub_resource type="GDScript" id=15]
+script/source = "extends TextureRect
+
+func _ready():
+	hide()
+"
 
 [node name="Multiplayer" type="Node" groups=["Multiplayer"]]
 script = ExtResource( 1 )
@@ -306,6 +333,36 @@ custom_colors/font_color = Color( 0.101961, 1, 0, 1 )
 custom_fonts/font = SubResource( 8 )
 text = "Cruelty Squad Online"
 
+[node name="SyncLoad" type="TextureRect" parent="."]
+visible = false
+material = SubResource( 16 )
+margin_right = 1280.0
+margin_bottom = 720.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+texture = ExtResource( 2 )
+expand = true
+stretch_mode = 2
+script = SubResource( 15 )
+
+[node name="Center" type="CenterContainer" parent="SyncLoad"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme = ExtResource( 11 )
+
+[node name="Label" type="Label" parent="SyncLoad/Center"]
+margin_left = 437.0
+margin_top = 332.0
+margin_right = 842.0
+margin_bottom = 387.0
+text = "Multiplayer synchronization
+Please wait"
+align = 1
+
+[node name="RestartTimer" type="Timer" parent="."]
+wait_time = 5.0
+one_shot = true
+
 [connection signal="button_pressed" from="Menu/Start" to="Menu" method="hide_menu"]
 [connection signal="button_pressed" from="Menu/Disconnect" to="Menu" method="leave_server"]
 [connection signal="button_pressed" from="Menu/OpenChat" to="Menu/ChatBox" method="open_chat"]
@@ -313,6 +370,7 @@ text = "Cruelty Squad Online"
 [connection signal="button_pressed" from="Menu/OpenStats" to="Menu/Stats" method="open_stats"]
 [connection signal="button_pressed" from="Menu/CloseStats" to="Menu/Stats" method="close_stats"]
 [connection signal="text_entered" from="Menu/ChatBox/VBoxContainer/LineEdit" to="Menu/ChatBox" method="_text_entered"]
+[connection signal="timeout" from="RestartTimer" to="." method="restart_map"]
 
 [editable path="Menu/CloseChat"]
 [editable path="Menu/CloseStats"]

@@ -14,6 +14,14 @@ use_mipmaps = true
 use_filter = true
 font_data = SubResource( 12 )
 
+[sub_resource type="StyleBoxTexture" id=3]
+texture = ExtResource( 1 )
+region_rect = Rect2( 0, 0, 256, 256 )
+margin_top = 5.0
+margin_bottom = 5.0
+axis_stretch_vertical = 1
+modulate_color = Color( 0.356863, 0.054902, 0.054902, 1 )
+
 [sub_resource type="DynamicFontData" id=14]
 font_path = "res://Fonts/gamefont(1).ttf"
 
@@ -30,14 +38,6 @@ outline_color = Color( 0, 0, 0, 1 )
 use_mipmaps = true
 use_filter = true
 font_data = SubResource( 1 )
-
-[sub_resource type="StyleBoxTexture" id=3]
-texture = ExtResource( 1 )
-region_rect = Rect2( 0, 0, 256, 256 )
-margin_top = 5.0
-margin_bottom = 5.0
-axis_stretch_vertical = 1
-modulate_color = Color( 0.356863, 0.054902, 0.054902, 1 )
 
 [sub_resource type="DynamicFontData" id=4]
 font_path = "res://Fonts/gamefont(1).ttf"
@@ -84,6 +84,11 @@ CheckBox/colors/font_color_hover = Color( 0.14902, 1, 0, 1 )
 CheckBox/colors/font_color_hover_pressed = Color( 0.0784314, 0.619608, 0, 1 )
 CheckBox/colors/font_color_pressed = Color( 1, 0, 0, 1 )
 CheckBox/fonts/font = SubResource( 13 )
+CheckBox/styles/focus = SubResource( 3 )
+CheckBox/styles/hover = SubResource( 3 )
+CheckBox/styles/hover_pressed = SubResource( 3 )
+CheckBox/styles/normal = SubResource( 3 )
+CheckBox/styles/pressed = SubResource( 3 )
 CheckButton/colors/font_color = Color( 1, 0, 0, 1 )
 CheckButton/colors/font_color_focus = Color( 0, 1, 0.0627451, 1 )
 CheckButton/colors/font_color_hover = Color( 0.101961, 1, 0, 1 )

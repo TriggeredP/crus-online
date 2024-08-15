@@ -168,130 +168,129 @@ master func _get_transform():
 	rset_unreliable("lerp_transform", lerp_transform)
 	rset_unreliable("global_transform", global_transform)
 
-func _process(delta):
-	if get_tree().network_peer != null and not is_network_master():
-		global_transform = global_transform.interpolate_with(lerp_transform, delta * 10.0)
-
 func _physics_process(delta):
-	if disabled:
-		$CollisionShape.disabled = true
-		set_physics_process(false)
-		return 
-
-	t += 1
-	
-	if held and get_tree().get_network_unique_id() == holdId:
-		self.global_transform.origin = Global.player.weapon.hold_pos.global_transform.origin
-
-	if is_network_master():
-		
-		if fmod(t, 300) == 0 and (velocity.x < 0.01 and velocity.y < 0.01):
-			change_transform = false
-		if velocity.x > 0.05 or velocity.y > 0.05:
-			change_transform = true
-		
-#		if Global.fps < 30 and not player_head:
-#			if global_transform.origin.distance_to(glob.player.global_transform.origin) > 20:
-#				return 
-
-		if not stay_active and not gun_rotation or global_transform.origin.distance_to(glob.player.global_transform.origin) > 30:
-			if fmod(t, 2) == 0:
-				return 
-			else :
-				delta *= 2
-		if grillable and grill:
-			usable = false
-			grill_health -= 1
-		
-		if grill_health <= 0 and not grill_flag:
-			grill_flag = true
-			$Gib.get_child(0).material_override = load("res://Materials/grilled.tres")
-			var new_healing = grill_healing_item.instance()
-			add_child(new_healing)
-			new_healing.global_transform.origin = global_transform.origin
-			rpc("_grill",new_healing.global_transform.origin)
-		
-		if collidable:
-			if Vector2(velocity.x, velocity.z).length() > 5:
-				set_collision_layer_bit(0, 0)
-				set_collision_mask_bit(2, 1)
-				set_collision_mask_bit(3, 1)
-				rpc("_set_collision",0,1)
-			elif not held:
-				set_collision_layer_bit(0, 1)
-				set_collision_mask_bit(2, 0)
-				set_collision_mask_bit(3, 0)
-				rpc("_set_collision",1,0)
-		
-		if player_head:
-			rot_towards = lerp(rot_towards, global_transform.origin - velocity, 5 * delta)
-			if rot_towards.length() > 0.5:
-				look_at(Vector3(rot_towards.x + 1e-06, global_transform.origin.y, rot_towards.z), Vector3.UP)
-		
-		if water:
-			gravity = 2
-		else :
-			gravity = 22
-
-		if finished:
+	if get_tree().network_peer != null:
+		if disabled:
+			$CollisionShape.disabled = true
+			set_physics_process(false)
 			return 
-		
-		if gun_rotation:
-			rotation.y += angular_velocity
-		
-		if not player_head and rotate_b:
-			rotation.z = lerp(rotation.z, rot_towards_z, 0.5)
-			rotation.x = lerp(rotation.x, rot_towards_x, 0.5)
-		if Vector3(velocity.x, 0, velocity.z).length() > 0.4 and rotate_b:
-			rot_towards_x -= velocity.length()
-		elif not player_head and not no_rot and not gun_rotation and not gas:
-			rotation = rot_changed
-		
-		var collision = move_and_collide(velocity * delta)
 
-		if collision and alerter and velocity.length() > 7:
-			sphere_collision.disabled = false
-		elif sphere_collision.disabled == false:
-			sphere_collision.disabled = true
+		t += 1
+		
+		if held and get_tree().get_network_unique_id() == holdId:
+			lerp_transform.origin = Global.player.weapon.hold_pos.global_transform.origin
+
+		if is_network_master():
 			
-		if collision and (t < 200 or stay_active):
-			if velocity.length() > 5 and flesh and Global.fps > 30:
-				var new_blood_decal = blood_decal.instance()
-				#print(collision.collider.get_path())
-				#print(get_node(collision.collider.get_path()))
-				collision.collider.add_child(new_blood_decal)
-				new_blood_decal.global_transform.origin = collision.position
-				new_blood_decal.transform.basis = align_up(new_blood_decal.transform.basis, collision.normal)
-				rpc("_create_blood_decal",collision.collider.get_path(),new_blood_decal.global_transform.origin,new_blood_decal.transform.basis)
-			if Vector2(velocity.x, velocity.z).length() > 5 and (gun_rotation or glob.implants.arm_implant.throw_bonus > 0):
-				if collision.collider.has_method("damage"):
-					if collision.collider.client.name != str(playerIgnoreId):
-						damager = false
-						print(collision.collider.client.name,"/",playerIgnoreId)
-						collision.collider.damage(100, collision.normal, collision.position, global_transform.origin)
-			elif sounds and abs(velocity.length()) > 2 and Global.fps > 30:
-				var current_sound = 0
-				impact_sound[current_sound].pitch_scale += rand_range( - 0.1, 0.1)
-				impact_sound[current_sound].pitch_scale = clamp(impact_sound[current_sound].pitch_scale, 0.8, 1.2)
-				impact_sound[current_sound].unit_db = velocity.length() * 0.1 - 1
-				impact_sound[current_sound].play()
-			if gas and velocity.length() > 4:
-				var new_gas_cloud = gas_cloud.instance()
-				get_parent().add_child(new_gas_cloud)
-				new_gas_cloud.global_transform.origin = global_transform.origin
-				rpc("_spawn_fake_gas",new_gas_cloud.global_transform.origin)
-				rpc("_remove")
-				queue_free()
-			velocity = velocity.bounce(collision.normal) * 0.6
-			angular_velocity = Vector2(velocity.x, velocity.z).length()
+			if fmod(t, 300) == 0 and (velocity.x < 0.01 and velocity.y < 0.01):
+				change_transform = false
+			if velocity.x > 0.05 or velocity.y > 0.05:
+				change_transform = true
+			
+	#		if Global.fps < 30 and not player_head:
+	#			if global_transform.origin.distance_to(glob.player.global_transform.origin) > 20:
+	#				return 
 
-		if collision and t >= 200 and not player_head:
-			if not stay_active:
-				finished = true
-			if particle:
-				particle_node.emitting = false
-				particle_node.hide()
-		velocity.y -= gravity * delta
+			if not stay_active and not gun_rotation or global_transform.origin.distance_to(glob.player.global_transform.origin) > 30:
+				if fmod(t, 2) == 0:
+					return 
+				else :
+					delta *= 2
+			if grillable and grill:
+				usable = false
+				grill_health -= 1
+			
+			if grill_health <= 0 and not grill_flag:
+				grill_flag = true
+				$Gib.get_child(0).material_override = load("res://Materials/grilled.tres")
+				var new_healing = grill_healing_item.instance()
+				add_child(new_healing)
+				new_healing.global_transform.origin = global_transform.origin
+				rpc("_grill",new_healing.global_transform.origin)
+			
+			if collidable:
+				if Vector2(velocity.x, velocity.z).length() > 5:
+					set_collision_layer_bit(0, 0)
+					set_collision_mask_bit(2, 1)
+					set_collision_mask_bit(3, 1)
+					rpc("_set_collision",0,1)
+				elif not held:
+					set_collision_layer_bit(0, 1)
+					set_collision_mask_bit(2, 0)
+					set_collision_mask_bit(3, 0)
+					rpc("_set_collision",1,0)
+			
+			if player_head:
+				rot_towards = lerp(rot_towards, global_transform.origin - velocity, 5 * delta)
+				if rot_towards.length() > 0.5:
+					look_at(Vector3(rot_towards.x + 1e-06, global_transform.origin.y, rot_towards.z), Vector3.UP)
+			
+			if water:
+				gravity = 2
+			else :
+				gravity = 22
+
+			if finished:
+				return 
+			
+			if gun_rotation:
+				rotation.y += angular_velocity
+			
+			if not player_head and rotate_b:
+				rotation.z = lerp(rotation.z, rot_towards_z, 0.5)
+				rotation.x = lerp(rotation.x, rot_towards_x, 0.5)
+			if Vector3(velocity.x, 0, velocity.z).length() > 0.4 and rotate_b:
+				rot_towards_x -= velocity.length()
+			elif not player_head and not no_rot and not gun_rotation and not gas:
+				rotation = rot_changed
+			
+			var collision = move_and_collide(velocity * delta)
+
+			if collision and alerter and velocity.length() > 7:
+				sphere_collision.disabled = false
+			elif sphere_collision.disabled == false:
+				sphere_collision.disabled = true
+				
+			if collision and (t < 200 or stay_active):
+				if velocity.length() > 5 and flesh and Global.fps > 30:
+					var new_blood_decal = blood_decal.instance()
+					#print(collision.collider.get_path())
+					#print(get_node(collision.collider.get_path()))
+					collision.collider.add_child(new_blood_decal)
+					new_blood_decal.global_transform.origin = collision.position
+					new_blood_decal.transform.basis = align_up(new_blood_decal.transform.basis, collision.normal)
+					rpc("_create_blood_decal",collision.collider.get_path(),new_blood_decal.global_transform.origin,new_blood_decal.transform.basis)
+				if Vector2(velocity.x, velocity.z).length() > 5 and (gun_rotation or glob.implants.arm_implant.throw_bonus > 0):
+					if collision.collider.has_method("damage"):
+						if collision.collider.client.name != str(playerIgnoreId):
+							damager = false
+							print(collision.collider.client.name,"/",playerIgnoreId)
+							collision.collider.damage(100, collision.normal, collision.position, global_transform.origin)
+				elif sounds and abs(velocity.length()) > 2 and Global.fps > 30:
+					var current_sound = 0
+					impact_sound[current_sound].pitch_scale += rand_range( - 0.1, 0.1)
+					impact_sound[current_sound].pitch_scale = clamp(impact_sound[current_sound].pitch_scale, 0.8, 1.2)
+					impact_sound[current_sound].unit_db = velocity.length() * 0.1 - 1
+					impact_sound[current_sound].play()
+				if gas and velocity.length() > 4:
+					var new_gas_cloud = gas_cloud.instance()
+					get_parent().add_child(new_gas_cloud)
+					new_gas_cloud.global_transform.origin = global_transform.origin
+					rpc("_spawn_fake_gas",new_gas_cloud.global_transform.origin)
+					rpc("_remove")
+					queue_free()
+				velocity = velocity.bounce(collision.normal) * 0.6
+				angular_velocity = Vector2(velocity.x, velocity.z).length()
+
+			if collision and t >= 200 and not player_head:
+				if not stay_active:
+					finished = true
+				if particle:
+					particle_node.emitting = false
+					particle_node.hide()
+			velocity.y -= gravity * delta
+		else:
+			global_transform = global_transform.interpolate_with(lerp_transform, delta * 10.0)
 
 func align_up(node_basis, normal)->Basis:
 	var result = Basis()
@@ -346,7 +345,7 @@ func damage(damage, collision_n, collision_p, shooter_pos):
 	if get_tree().network_peer == null or is_network_master():
 		velocity -= collision_n * damage / mass
 	else:
-		rset("velocity",velocity - collision_n * damage / mass)
+		rset("velocity", velocity - collision_n * damage / mass)
 	if not no_rot:
 		look_at((global_transform.origin - collision_n * damage + Vector3(1e-05, 0, 0)), Vector3.UP)
 		rot_changed = Vector3(0, rand_range( - PI, PI), rand_range( - PI, PI))

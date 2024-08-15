@@ -39,7 +39,7 @@ remote func _set_death(death):
 		animTree.set("parameters/DEATH1/active", false)
 		animTree.active = true
 
-remote func _update_puppet(weaponId,playerIsDead,playerOnFloor,playerMovement,playerAim,playerKick,playerCrouch):
+remote func _update_puppet(weaponId,playerIsDead,playerOnFloor,playerMovement,playerAim,playerKick,playerCrouch,playerGravity):
 	jumpBlend = lerp(jumpBlend,abs(floor(playerOnFloor) - 1),0.1)
 	movementBlend[0] = lerp(movementBlend[0],playerMovement[0],0.1)
 	movementBlend[1] = lerp(movementBlend[1],playerMovement[1],0.1)
@@ -76,6 +76,11 @@ remote func _update_puppet(weaponId,playerIsDead,playerOnFloor,playerMovement,pl
 		weaponsMesh[weaponId].get_child(0).hide()
 		currentWeaponId = weaponId
 	
+	if playerGravity:
+		$Puppet/PlayerModel.rotation.z = deg2rad(0)
+	else:
+		$Puppet/PlayerModel.rotation.z = deg2rad(180)
+	
 	animTree.set("parameters/ARMS_BLEND/blend_amount", weaponBlend)
 
 func _ready():
@@ -83,15 +88,20 @@ func _ready():
 	var skinMaterial = SpatialMaterial.new()
 	skinMaterial.albedo_texture = load(skinPath)
 	$Puppet/PlayerModel/Armature/Skeleton/Torso_Mesh.material_override = skinMaterial
-	$Puppet/Nickname.text = nickname
-	$Puppet/Nickname.modulate = Color(color)
+	$Puppet/PlayerModel/Nickname.text = nickname
+	$Puppet/PlayerModel/Nickname.modulate = Color(color)
 	
-	Multiplayer.connect("host_tick", self, "host_tick")
+#	Multiplayer.connect("host_tick", self, "host_tick")
 	
 	rset_config("transform_lerp", MultiplayerAPI.RPC_MODE_REMOTE)
 	
 	if is_network_master():
 		get_tree().get_nodes_in_group("Multiplayer")[0].playerPuppet = self
+
+func player_restart():
+	$Puppet/PlayerModel/HelpLabel.hide()
+	$Puppet/PlayerModel/Armature/Skeleton/Chest/Body.set_collision_layer_bit(8, false)
+	$Puppet/PlayerModel/HelpTimer.stop()
 
 func play_death_sound():
 	$Puppet/PlayerModel/SFX/IED1.play()
@@ -106,19 +116,33 @@ func play_explosion_sound():
 	$Puppet/PlayerModel/SFX/IED_alert.pitch_scale = 1
 	
 	animTree.set("parameters/DEATH1/active", true)
+	
+	if not Multiplayer.hostSettings.canRespawn:
+		$Puppet/PlayerModel/HelpTimer.wait_time = Multiplayer.hostSettings.helpTimer
+		
+		$Puppet/PlayerModel/HelpLabel.show()
+		$Puppet/PlayerModel/HelpTimer.start()
+
+func can_respawn():
+	$Puppet/PlayerModel/HelpLabel.text = "Press (Use) to help"
+	$Puppet/PlayerModel/Armature/Skeleton/Chest/Body.set_collision_layer_bit(8, true)
 
 func _process(delta):
+	if not $Puppet/PlayerModel/HelpTimer.is_stopped():
+		$Puppet/PlayerModel/HelpLabel.text =  "Wait " + str(floor($Puppet/PlayerModel/HelpTimer.time_left * 10.0)/10.0) + " to help"
+	
 	if $Puppet/PlayerModel/SFX/IED_alert.playing:
 		$Puppet/PlayerModel/SFX/IED_alert.pitch_scale += 0.025
 
 	global_transform = global_transform.interpolate_with(transform_lerp, delta * 10.0)
 
-func host_tick():
-	rpc("tick_update")
-	tick_update()
+#func host_tick():
+#	rpc("tick_update")
+#	tick_update()
 
-remote func tick_update():
+func _physics_process(delta):
 	if is_network_master():
+		
 		rset_unreliable("transform_lerp", Global.player.global_transform)
 		
 		rpc("_update_puppet",
@@ -128,7 +152,8 @@ remote func tick_update():
 			[Global.player.cmd.forward_move,Global.player.cmd.right_move],
 			Global.player.rotation_helper.rotation.x,
 			Global.player.weapon.kickflag,
-			Global.player.crouch_flag
+			Global.player.crouch_flag,
+			Global.player.max_gravity > 0
 		)
 		hide()
 
@@ -143,6 +168,19 @@ func set_cancer():
 
 func drop_weapon():
 	rpc_id(int(self.name),"_drop_weapon")
+
+func respawn_player():
+	rpc_id(int(self.name),"_respawn_player")
+	hideHelpLabel()
+	rpc("hideHelpLabel")
+
+remote func _respawn_player():
+	if Global.player.died:
+		Global.get_node('DeathScreen').respawn()
+
+remote func hideHelpLabel():
+	$Puppet/PlayerModel/HelpSound.play()
+	$Puppet/PlayerModel/HelpLabel.hide()
 
 func setup_puppet(id):
 	$Puppet/PlayerModel/Armature/Skeleton/Chest/Body.set_meta("puppetId",id)

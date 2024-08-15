@@ -1,4 +1,4 @@
-[gd_scene load_steps=138 format=2]
+[gd_scene load_steps=139 format=2]
 
 [ext_resource path="res://MOD_CONTENT/CruS Online/multiplayer_player.gd" type="Script" id=1]
 [ext_resource path="res://MOD_CONTENT/CruS Online/player_model/player_model.tscn" type="PackedScene" id=2]
@@ -91,19 +91,13 @@
 [ext_resource path="res://Sfx/WeaponsPickups/flamethrower.wav" type="AudioStream" id=89]
 [ext_resource path="res://flashlight.tscn" type="PackedScene" id=90]
 [ext_resource path="res://Textures/Particles/shine.png" type="Texture" id=91]
+[ext_resource path="res://Sfx/Player/IED_hollow_laughter-old1.wav" type="AudioStream" id=92]
 
 [sub_resource type="GDScript" id=66]
 script/source = "extends Spatial
 
 onready var aim_point = $AimPoint
 "
-
-[sub_resource type="DynamicFontData" id=33]
-font_path = "res://Fonts/Envy Code R.ttf"
-
-[sub_resource type="DynamicFont" id=34]
-use_mipmaps = true
-font_data = SubResource( 33 )
 
 [sub_resource type="GDScript" id=65]
 script/source = "extends StaticBody
@@ -287,6 +281,10 @@ func set_toxic():
 
 func cancer():
 	client.set_cancer()
+
+func player_use():
+	set_collision_layer_bit(8, false)
+	client.respawn_player()
 "
 
 [sub_resource type="BoxShape" id=35]
@@ -297,6 +295,14 @@ extents = Vector3( 0.444633, 0.370771, 0.406444 )
 
 [sub_resource type="BoxShape" id=77]
 extents = Vector3( 0.325025, 0.2665, 0.129642 )
+
+[sub_resource type="DynamicFontData" id=33]
+font_path = "res://Fonts/Envy Code R.ttf"
+
+[sub_resource type="DynamicFont" id=34]
+outline_size = 2
+use_mipmaps = true
+font_data = SubResource( 33 )
 
 [sub_resource type="AudioStreamRandomPitch" id=61]
 audio_stream = ExtResource( 70 )
@@ -315,13 +321,6 @@ script = SubResource( 66 )
 
 [node name="AimPoint" type="Position3D" parent="Puppet"]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.16905, 0 )
-
-[node name="Nickname" type="Label3D" parent="Puppet"]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.88065, 0 )
-billboard = 2
-modulate = Color( 1, 0, 0, 1 )
-text = "Placeholder"
-font = SubResource( 34 )
 
 [node name="PlayerModel" parent="Puppet" instance=ExtResource( 2 )]
 transform = Transform( -1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0.84536, 0 )
@@ -932,6 +931,33 @@ material_override = null
 [node name="AnimTree" parent="Puppet/PlayerModel" index="2"]
 parameters/ARMS_BLEND/blend_amount = 1.0
 
+[node name="Nickname" type="Label3D" parent="Puppet/PlayerModel"]
+transform = Transform( -1, 0, 8.74228e-08, 0, 1, 0, -8.74228e-08, 0, -1, 0, 1.03529, 0 )
+billboard = 2
+modulate = Color( 1, 0, 0, 1 )
+text = "Placeholder"
+font = SubResource( 34 )
+
+[node name="HelpLabel" type="Label3D" parent="Puppet/PlayerModel"]
+transform = Transform( -1, 0, 8.74228e-08, 0, 1, 0, -8.74228e-08, 0, -1, 0, -0.11608, 0 )
+visible = false
+billboard = 2
+modulate = Color( 1, 0, 0, 1 )
+text = "Wait 99.99 to help"
+font = SubResource( 34 )
+
+[node name="HelpTimer" type="Timer" parent="Puppet/PlayerModel"]
+wait_time = 99.0
+one_shot = true
+
+[node name="HelpSound" type="AudioStreamPlayer3D" parent="Puppet/PlayerModel"]
+transform = Transform( -1, 0, 8.74228e-08, 0, 1, 0, -8.74228e-08, 0, -1, 0, -0.84536, 0 )
+stream = ExtResource( 92 )
+unit_db = 9.0
+unit_size = 6.0
+pitch_scale = 0.8
+bus = "SFX"
+
 [node name="SFX" type="Spatial" parent="Puppet/PlayerModel"]
 transform = Transform( 1, 0, 2.13163e-14, 0, 1, 0, -2.13163e-14, 0, 1, 0, -0.00320655, 0 )
 
@@ -1001,6 +1027,7 @@ bus = "SFX"
 [node name="FlashBuffer" type="Timer" parent="."]
 wait_time = 0.2
 
+[connection signal="timeout" from="Puppet/PlayerModel/HelpTimer" to="." method="can_respawn"]
 [connection signal="timeout" from="FlashBuffer" to="." method="flash_hide"]
 
 [editable path="Puppet/PlayerModel"]

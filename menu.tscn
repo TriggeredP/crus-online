@@ -364,7 +364,7 @@ visible = false
 anchor_right = 1.0
 anchor_bottom = 1.0
 margin_left = 7.0
-margin_top = 39.0
+margin_top = 32.0
 margin_right = -7.0
 margin_bottom = -7.0
 script = SubResource( 12 )
@@ -503,7 +503,7 @@ margin_right = 644.0
 margin_bottom = 500.0
 size_flags_horizontal = 3
 size_flags_vertical = 3
-custom_constants/separation = 5
+custom_constants/separation = 10
 
 [node name="Label" type="Label" parent="CenterContainer/TabContainer/Host/VBoxContainer"]
 margin_right = 641.0
@@ -512,9 +512,9 @@ text = "Host settings"
 align = 1
 
 [node name="Password" type="HBoxContainer" parent="CenterContainer/TabContainer/Host/VBoxContainer"]
-margin_top = 31.0
+margin_top = 36.0
 margin_right = 641.0
-margin_bottom = 57.0
+margin_bottom = 62.0
 alignment = 1
 
 [node name="Label" type="Label" parent="CenterContainer/TabContainer/Host/VBoxContainer/Password"]
@@ -533,14 +533,15 @@ secret = true
 placeholder_text = "No password"
 
 [node name="Port" type="HBoxContainer" parent="CenterContainer/TabContainer/Host/VBoxContainer"]
-margin_top = 62.0
+margin_top = 72.0
 margin_right = 641.0
-margin_bottom = 88.0
+margin_bottom = 98.0
 alignment = 1
 
 [node name="Label" type="Label" parent="CenterContainer/TabContainer/Host/VBoxContainer/Port"]
 margin_right = 473.0
 margin_bottom = 26.0
+rect_pivot_offset = Vector2( -179, -28 )
 size_flags_horizontal = 3
 text = "Port:"
 
@@ -555,16 +556,16 @@ max_length = 5
 placeholder_text = "8080"
 
 [node name="TickRate" type="HBoxContainer" parent="CenterContainer/TabContainer/Host/VBoxContainer"]
-margin_top = 93.0
+margin_top = 108.0
 margin_right = 641.0
-margin_bottom = 119.0
+margin_bottom = 134.0
 alignment = 1
 
 [node name="Label" type="Label" parent="CenterContainer/TabContainer/Host/VBoxContainer/TickRate"]
 margin_right = 457.0
 margin_bottom = 26.0
 size_flags_horizontal = 3
-text = "Tick Rate:"
+text = "Tick rate:"
 
 [node name="TickEdit" type="SpinBox" parent="CenterContainer/TabContainer/Host/VBoxContainer/TickRate"]
 margin_left = 457.0
@@ -574,6 +575,70 @@ theme = ExtResource( 24 )
 min_value = 1.0
 max_value = 60.0
 value = 3.0
+allow_greater = true
+align = 1
+
+[node name="CanRespawn" type="HBoxContainer" parent="CenterContainer/TabContainer/Host/VBoxContainer"]
+margin_top = 144.0
+margin_right = 641.0
+margin_bottom = 170.0
+
+[node name="Label" type="Label" parent="CenterContainer/TabContainer/Host/VBoxContainer/CanRespawn"]
+margin_right = 591.0
+margin_bottom = 26.0
+rect_pivot_offset = Vector2( -179, -28 )
+size_flags_horizontal = 3
+text = "Can respawn:"
+
+[node name="TickEdit" type="CheckBox" parent="CenterContainer/TabContainer/Host/VBoxContainer/CanRespawn"]
+margin_left = 591.0
+margin_right = 641.0
+margin_bottom = 26.0
+rect_min_size = Vector2( 50, 0 )
+theme = ExtResource( 24 )
+text = "<<"
+
+[node name="ChangeModeOnDeath" type="HBoxContainer" parent="CenterContainer/TabContainer/Host/VBoxContainer"]
+margin_top = 180.0
+margin_right = 641.0
+margin_bottom = 206.0
+
+[node name="Label" type="Label" parent="CenterContainer/TabContainer/Host/VBoxContainer/ChangeModeOnDeath"]
+margin_right = 591.0
+margin_bottom = 26.0
+rect_pivot_offset = Vector2( -179, -28 )
+size_flags_horizontal = 3
+text = "change difficulty on death:"
+
+[node name="TickEdit" type="CheckBox" parent="CenterContainer/TabContainer/Host/VBoxContainer/ChangeModeOnDeath"]
+margin_left = 591.0
+margin_right = 641.0
+margin_bottom = 26.0
+rect_min_size = Vector2( 50, 0 )
+theme = ExtResource( 24 )
+pressed = true
+text = "<<"
+
+[node name="HelpTimer" type="HBoxContainer" parent="CenterContainer/TabContainer/Host/VBoxContainer"]
+margin_top = 216.0
+margin_right = 641.0
+margin_bottom = 242.0
+alignment = 1
+
+[node name="Label" type="Label" parent="CenterContainer/TabContainer/Host/VBoxContainer/HelpTimer"]
+margin_right = 457.0
+margin_bottom = 26.0
+size_flags_horizontal = 3
+text = "Help timer:"
+
+[node name="HelpEdit" type="SpinBox" parent="CenterContainer/TabContainer/Host/VBoxContainer/HelpTimer"]
+margin_left = 457.0
+margin_right = 641.0
+margin_bottom = 26.0
+theme = ExtResource( 24 )
+min_value = 1.0
+max_value = 99.0
+value = 15.0
 allow_greater = true
 align = 1
 
@@ -596,7 +661,7 @@ visible = false
 anchor_right = 1.0
 anchor_bottom = 1.0
 margin_left = 7.0
-margin_top = 39.0
+margin_top = 32.0
 margin_right = -7.0
 margin_bottom = -7.0
 
@@ -604,7 +669,7 @@ margin_bottom = -7.0
 margin_left = 3.0
 margin_top = 3.0
 margin_right = 644.0
-margin_bottom = 500.0
+margin_bottom = 507.0
 custom_constants/separation = 5
 
 [node name="ClientSettings" type="Label" parent="CenterContainer/TabContainer/Player/VBoxContainer"]
@@ -781,7 +846,7 @@ visible = false
 anchor_right = 1.0
 anchor_bottom = 1.0
 margin_left = 7.0
-margin_top = 39.0
+margin_top = 32.0
 margin_right = -7.0
 margin_bottom = -7.0
 size_flags_horizontal = 3
@@ -867,7 +932,7 @@ visible = false
 anchor_right = 1.0
 anchor_bottom = 1.0
 margin_left = 7.0
-margin_top = 39.0
+margin_top = 32.0
 margin_right = -7.0
 margin_bottom = -7.0
 script = SubResource( 13 )
@@ -962,7 +1027,7 @@ visible = false
 anchor_right = 1.0
 anchor_bottom = 1.0
 margin_left = 7.0
-margin_top = 39.0
+margin_top = 32.0
 margin_right = -7.0
 margin_bottom = -7.0
 script = SubResource( 24 )

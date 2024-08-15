@@ -34,8 +34,8 @@ remote func send_message(message, author, img = "null", color = "ff0000"):
 	Global.UI.notify(author + " send a message", Color(1, 0, 0))
 
 func _text_entered(new_text):
-	rpc_unreliable("send_message",new_text,parent.my_info.nickname,parent.my_info.image,parent.my_info.color)
-	send_message(new_text,parent.my_info.nickname,parent.my_info.image,parent.my_info.color)
+	rpc_unreliable("send_message", new_text, parent.playerInfo.nickname, parent.playerInfo.image, parent.playerInfo.color)
+	send_message(new_text, parent.playerInfo.nickname, parent.playerInfo.image, parent.playerInfo.color)
 	lineEdit.text = ""
 
 func open_chat(type):
