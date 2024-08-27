@@ -166,42 +166,61 @@ puppet func _die_client():
 			glob.player.local_money += 10
 
 puppet func _hide_npc_client():
+	body.set_dead()
+	dead = true
+	colliders.get_node("Head/CollisionShape").disabled = true
+	colliders.get_node("Torso/CollisionShape").disabled = true
+	colliders.get_node("Legs/CollisionShape").disabled = true
+	colliders.get_node("Dead_Head/CollisionShape").disabled = true
+	colliders.get_node("Dead_Body/CollisionShape").disabled = true
 	gib_sfx.play()
 	hide()
+	yield(gib_sfx, "finished")
+	global_transform.origin = Vector3(1000,1000,1000)
+	body.lerp_transform.origin = Vector3(1000,1000,1000)
+	body.set_collision_layer_bit(4, false)
 
 puppet func cleanup():
 	enabled = false
 	hide()
 	dead = true
 	global_transform.origin = Vector3(1000,1000,1000)
+	body.lerp_transform.origin = Vector3(1000,1000,1000)
+	body.set_collision_layer_bit(4, false)
 
 master func check_npc():
 	if not enabled:
+		print("[CRUS ONLINE / HOST / " + name + "]: NPC not enabled")
 		rpc_id(get_tree().get_rpc_sender_id(),"cleanup")
 
 puppet func set_stealth():
 	if not stealth:
 		return 
 	skeleton.get_node("Armature/Skeleton/Cube").material_override = stealthmat
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		rpc("set_stealth")
 
 ################################################################################
 
+func spawn_check_npc():
+	if get_tree().network_peer != null and not is_network_master():
+		rpc("check_npc")
+		print("[CRUS ONLINE / CLIENT / " + name + "]: NPC Check")
+
 func _ready():
-	if not is_network_master():
-		rpc_id(0,"check_npc")
-	
-	nodamage = get_node_or_null("Body/SFX/NoDamage")
-	if nodamage == null:
-		nodamage = AudioStreamPlayer3D.new()
-		$Body.add_child(nodamage)
-		nodamage.stream = load("res://Sfx/bullet_impact_metal.wav")
-		nodamage.unit_size = 10
-	set_process(false)
 	glob = Global
+	body = $Body
 	
-	if is_network_master():
+	torso = $Collisions / Torso
+	head = $Collisions / Head
+	legs = $Collisions / Legs
+	
+	dead_head = $Collisions / Dead_Head
+	dead_body = $Collisions / Dead_Body
+	
+	Multiplayer.connect("scene_loaded", self, "spawn_check_npc")
+	
+	if get_tree().network_peer != null and is_network_master():
 		if hell_objective and not glob.hope_discarded:
 			cleanup() 
 		elif hell_objective and (glob.hope_discarded):
@@ -235,6 +254,15 @@ func _ready():
 			if randi() % 250 != 4:
 				cleanup()
 	
+	nodamage = get_node_or_null("Body/SFX/NoDamage")
+	if nodamage == null:
+		nodamage = AudioStreamPlayer3D.new()
+		$Body.add_child(nodamage)
+		nodamage.stream = load("res://Sfx/bullet_impact_metal.wav")
+		nodamage.unit_size = 10
+	
+	set_process(false)
+	
 	deathtimer = Timer.new()
 	add_child(deathtimer)
 	deathtimer.wait_time = 25
@@ -249,8 +277,7 @@ func _ready():
 	poisontimer.wait_time = 1
 	poisontimer.one_shot = true
 	poisontimer.connect("timeout", self, "poison_timeout")
-	
-	body = $Body
+
 	fireaudio = AudioStreamPlayer3D.new()
 	body.add_child(fireaudio)
 	fireaudio.global_transform.origin = body.global_transform.origin
@@ -258,9 +285,6 @@ func _ready():
 	fireaudio.unit_size = 10
 	fireaudio.max_db = 0
 	skeleton = $Nemesis
-	torso = $Collisions / Torso
-	head = $Collisions / Head
-	legs = $Collisions / Legs
 
 	new_alert_sphere = alert_sphere.instance()
 	
@@ -280,8 +304,6 @@ func _ready():
 	if objective:
 		print(glob.objectives)
 		print(name)
-	dead_head = $Collisions / Dead_Head
-	dead_body = $Collisions / Dead_Body
 	bodypos = body.global_transform.origin
 	torso_mesh = get_node_or_null("Nemesis/Armature/Skeleton/Torso_Mesh")
 	if torso_mesh != null:
@@ -309,20 +331,20 @@ func _ready():
 		heartbeat = new_heartbeat
 
 func _physics_process(delta):
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		if on_fire:
 			var dist_clamped = clamp(body.global_transform.origin.distance_to(glob.player.global_transform.origin), 0.1, 20)
 			pain_sfx[0].pitch_scale = 0.5 + ((dist_clamped - 0.1) / (20 - 0.1))
 		t += 1
 
 master func set_tranquilized(dart):
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		tranqtimer.start()
 	else:
 		rpc_id(0,"set_tranquilized",null)
 
 func tranq_timeout(dart):
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		if armored or poison_death:
 			return 
 		if not civilian and body.get("player_spotted"):
@@ -338,14 +360,14 @@ func interpolate(a, b, t):
 	return (a * (1.0 - t)) + (b * t)
 	
 master func add_velocity(amount, normal):
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		if not armored:
 			body.add_velocity(normal * amount)
 	else:
 		rpc_id(0,"add_velocity",amount, normal)
 
 master func piercing_damage(damage, collision_n, collision_p):
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		if not dead and armor > 0:
 			for body in new_alert_sphere.get_overlapping_bodies():
 				if body.has_method("alert"):
@@ -373,19 +395,23 @@ master func piercing_damage(damage, collision_n, collision_p):
 			colliders.get_node("Dead_Body/CollisionShape").disabled = true
 			deathtimer.start()
 			rpc("_hide_npc_client")
+			yield(gib_sfx, "finished")
+			global_transform.origin = Vector3(1000,1000,1000)
+			body.lerp_transform.origin = Vector3(1000,1000,1000)
+			body.set_collision_layer_bit(4, false)
 	else:
 		rpc_id(0,"piercing_damage",damage, collision_n, collision_p)
 
 func alert_body_entered(b):
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		nearby.append(b)
 
 func alert_body_exited(b):
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		nearby.remove(nearby.find(b))
 
 master func damage(damage, collision_n, collision_p, shooter_pos):
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		if on_fire and not grilled_flag:
 			if head_mesh:
 				head_mesh.material_override = grilled_material
@@ -456,7 +482,7 @@ func remove_objective():
 		glob.civ_count -= 1
 
 master func spawn_gib(gib, count, damage, collision_n, collision_p, gibType = "GIBS", gibName = null):
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		if not gib:
 			return
 
@@ -476,7 +502,7 @@ master func spawn_gib(gib, count, damage, collision_n, collision_p, gibType = "G
 			rpc("_spawn_gib_client", get_parent().get_path(), gib, damage, collision_n, collision_p, gibType, new_gib.name)
 
 master func remove_weapon():
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		if not civilian and "current_weapon" in weapon and not armored and health < 10000:
 			if weapon.disabled:
 				return 
@@ -503,7 +529,7 @@ master func remove_weapon():
 		rpc_id(0,"remove_weapon")
 	
 func die(damage, collision_n, collision_p):
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		if not dead:
 			if on_fire:
 				pain_sfx[0].max_db = - 40
@@ -564,7 +590,7 @@ func die(damage, collision_n, collision_p):
 			rpc("_die_client")
 
 func poison_timeout():
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		var new_misery = SELF_DESTRUCT.instance()
 		add_child(new_misery)
 		new_misery.global_transform.origin = body.global_transform.origin

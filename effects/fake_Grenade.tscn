@@ -19,7 +19,7 @@ remote func _spawn_shrapnel(recivedPath, recivedObject,recivedName,recivedTransf
 	newObject.global_transform = recivedTransform
 	newObject.shrapnel_flag = recivedShrapnel
 
-remote func _create_object(recivedPath, recivedObject,recivedName,recivedTransform):
+remote func _create_object(recivedPath, recivedObject, recivedName, recivedTransform):
 	var newObject = load(recivedObject).instance()
 	newObject.set_name(recivedName)
 	get_node(recivedPath).add_child(newObject)

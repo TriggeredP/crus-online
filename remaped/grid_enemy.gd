@@ -41,7 +41,7 @@ func _ready():
 	next_pos = global_transform.origin + current_dir
 
 func _physics_process(delta):
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		if get_near_player(self).distance > 20:
 			return 
 		

@@ -188,8 +188,6 @@ var melee = false
 onready var stealthMaterial = preload("res://Materials/seethrough.tres")
 
 ########################################
-var inMenu = false
-
 onready var playerPuppet = get_tree().get_nodes_in_group("Multiplayer")[0].playerPuppet
 
 remote func _create_drop_weapon(parentPath, recivedTransform,recivedHoldPos, implantThrowBonus, recivedCurrentWeapon, recivedAmmo, playerVelocity, recivdeRandName, playerIgnoreId):
@@ -206,11 +204,13 @@ remote func _create_drop_weapon(parentPath, recivedTransform,recivedHoldPos, imp
 	new_weapon_drop.gun.MESH[recivedCurrentWeapon].show()
 	new_weapon_drop.playerIgnoreId = playerIgnoreId
 
-remote func _spawn_object(parentPath, recivedObject, recivedName, recivedTransform):
+remote func _spawn_object(parentPath, recivedObject, recivedName, recivedTransform, recivedVelocity = null):
 	var newObject = load(recivedObject).instance()
 	newObject.set_name(recivedName)
 	get_node(parentPath).add_child(newObject)
 	newObject.global_transform = recivedTransform
+	if recivedVelocity != null:
+		newObject.velocity = recivedVelocity
 
 remote func _play_sound(soundName):
 	var netId = get_tree().get_rpc_sender_id()
@@ -237,6 +237,15 @@ func update_implants():
 	elif Global.ending_2:
 		left_arm_mesh.material_override = lifemat
 		right_arm_mesh.material_override = lifemat
+
+puppet func npc_muzzleflash(recivedWeapon, recivedPitch = null):
+	audio[recivedWeapon].play()
+
+	if recivedPitch != null:
+		audio[recivedWeapon].pitch_scale = recivedPitch
+	
+	if get_parent().get_parent().muzzleflash:
+		get_parent().get_parent().muzzleflash.show()
 
 ########################################
 
@@ -633,7 +642,8 @@ func _process(delta)->void :
 		if current_weapon == W_FLAMETHROWER and not Input.is_action_pressed("mouse_1"):
 				audio[current_weapon].stop()
 		leaning = Input.is_action_pressed("Lean_Left") or Input.is_action_pressed("Lean_Right")
-		player_muzzle_flash.hide()
+		if player:
+			player_muzzle_flash.hide()
 		if Input.is_action_just_pressed("drop") and current_weapon != null:
 			
 			var new_weapon_drop = weapon_drop.instance()
@@ -959,12 +969,15 @@ func _process(delta)->void :
 					for o in glob.player.grapple_orbs:
 						o.queue_free()
 					glob.player.grapple_orbs = []
+					
 			if glob.implants.arm_implant.healing != 0:
 				item_consumed = true
 				glob.player.add_health(glob.implants.arm_implant.healing)
+				
 			if glob.implants.arm_implant.he_grenade and grenade_ammo > 0:
 				grenade_ammo -= 1
 				var missile_new = GRENADE.instance()
+				missile_new.set_name(missile_new.name + "#" + str(randi() % 100000000))
 				if player:
 					get_parent().get_parent().get_parent().add_child(missile_new)
 				else :
@@ -974,12 +987,16 @@ func _process(delta)->void :
 				else :
 					missile_new.set_collision_mask_bit(1, 1)
 					missile_new.set_collision_mask_bit(2, 0)
-				missile_new.global_transform.origin = global_transform.origin
+				missile_new.global_transform.origin = global_transform.origin - (global_transform.origin - $Front_Pos_Helper.global_transform.origin).normalized()
 				missile_new.set_velocity(20, (global_transform.origin - $Front_Pos_Helper.global_transform.origin).normalized(), global_transform.origin)
 				missile_new.velocity += glob.player.player_velocity
+				
+				rpc("_spawn_object", missile_new.get_parent().get_path(), "res://Entities/Bullets/Explosive_Grenade.tscn", missile_new.name, missile_new.global_transform)
+				
 			if glob.implants.arm_implant.flechette_grenade and grenade_ammo > 0:
 				grenade_ammo -= 1
 				var missile_new = FLECHETTE_GRENADE.instance()
+				missile_new.set_name(missile_new.name + "#" + str(randi() % 100000000))
 				if player:
 					get_parent().get_parent().get_parent().add_child(missile_new)
 				else :
@@ -989,12 +1006,16 @@ func _process(delta)->void :
 				else :
 					missile_new.set_collision_mask_bit(1, 1)
 					missile_new.set_collision_mask_bit(2, 0)
-				missile_new.global_transform.origin = global_transform.origin
+				missile_new.global_transform.origin = global_transform.origin - (global_transform.origin - $Front_Pos_Helper.global_transform.origin).normalized()
 				missile_new.set_velocity(20, (global_transform.origin - $Front_Pos_Helper.global_transform.origin).normalized(), global_transform.origin)
 				missile_new.velocity += glob.player.player_velocity
+				
+				rpc("_spawn_object", missile_new.get_parent().get_path(), "res://Entities/Bullets/Flechette_Grenade.tscn", missile_new.name, missile_new.global_transform)
+				
 			if glob.implants.arm_implant.sleep_grenade and grenade_ammo > 0:
 				grenade_ammo -= 1
 				var missile_new = SLEEP_GRENADE.instance()
+				missile_new.set_name(missile_new.name + "#" + str(randi() % 100000000))
 				if player:
 					get_parent().get_parent().get_parent().add_child(missile_new)
 				else :
@@ -1004,17 +1025,24 @@ func _process(delta)->void :
 				else :
 					missile_new.set_collision_mask_bit(1, 1)
 					missile_new.set_collision_mask_bit(2, 0)
-				missile_new.global_transform.origin = global_transform.origin
+				missile_new.global_transform.origin = global_transform.origin - (global_transform.origin - $Front_Pos_Helper.global_transform.origin).normalized()
 				missile_new.set_velocity(20, (global_transform.origin - $Front_Pos_Helper.global_transform.origin).normalized(), global_transform.origin)
 				missile_new.velocity += glob.player.player_velocity
+				
+				rpc("_spawn_object", missile_new.get_parent().get_path(), "res://Entities/Bullets/Sleep_Grenade.tscn", missile_new.name, missile_new.global_transform)
+				
 			if glob.implants.arm_implant.radio:
-				if radio != null:
-					radio.queue_free()
-				radio = RADIO.instance()
-				Global.player.get_parent().add_child(radio)
-				radio.global_transform.origin = global_transform.origin
-				radio.velocity -= (global_transform.origin - $Front_Pos_Helper.global_transform.origin).normalized() * 5
-				radio.velocity -= glob.player.player_velocity
+				if radio == null:
+					radio = RADIO.instance()
+					radio.set_name(radio.name + "#" + str(randi() % 100000000))
+					Global.player.get_parent().add_child(radio)
+					
+					rpc("_spawn_object", Global.player.get_parent().get_path(), "res://Entities/Physics_Objects/radio.tscn", radio.name, radio.global_transform)
+				
+				radio.global_transform.origin = global_transform.origin - (global_transform.origin - $Front_Pos_Helper.global_transform.origin).normalized()
+				
+				radio.set_transform(radio.global_transform)
+				radio.add_velocity((global_transform.origin - $Front_Pos_Helper.global_transform.origin).normalized() * -5 - glob.player.player_velocity)
 				
 		if current_weapon != null:
 			if Input.is_action_just_pressed("mouse_1") and magazine_ammo[current_weapon] <= 0:
@@ -1059,7 +1087,7 @@ func _process(delta)->void :
 				$orbarms / AnimationPlayer2.play("AttackR", - 1)
 				orb_left = not orb_left
 				
-		if Input.is_action_pressed("mouse_1") and reload_timer.is_stopped() and current_weapon != null and not inMenu:
+		if Input.is_action_pressed("mouse_1") and reload_timer.is_stopped() and current_weapon != null:
 			if magazine_ammo[current_weapon] > 0:
 				rotation.x = initrot.x
 				shoot()
@@ -1188,7 +1216,8 @@ func cancer()->void :
 	if timer.is_stopped():
 		timer.start(0.2)
 		audio[0].play()
-		playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+		if player:
+			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 		if player:
 			magazine_ammo[current_weapon] -= 1
 		raycast.rotation = raycast_init_rot
@@ -1241,9 +1270,11 @@ func smg()->void :
 		else :
 			if get_parent().get_parent().muzzleflash:
 				get_parent().get_parent().muzzleflash.show()
+			rpc("npc_muzzleflash", current_weapon, float(magazine_ammo[current_weapon]) / MAX_MAG_AMMO[current_weapon] + 0.4 + rand_range( - 0.1, 0.1))
 		audio[current_weapon].play()
 		audio[current_weapon].pitch_scale = float(magazine_ammo[current_weapon]) / MAX_MAG_AMMO[current_weapon] + 0.4 + rand_range( - 0.1, 0.1)
-		playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+		if player:
+			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 		magazine_ammo[current_weapon] -= 1
 
 func steyr()->void :
@@ -1255,8 +1286,10 @@ func steyr()->void :
 		if not player:
 			if get_parent().get_parent().muzzleflash:
 				get_parent().get_parent().muzzleflash.show()
+			rpc("npc_muzzleflash", current_weapon, null)
 		audio[current_weapon].play()
-		playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+		if player:
+			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 		
 		
 		timer.start(0.2)
@@ -1392,9 +1425,11 @@ func mkr()->void :
 		else :
 			if get_parent().get_parent().muzzleflash:
 				get_parent().get_parent().muzzleflash.show()
+			rpc("npc_muzzleflash", current_weapon, float(magazine_ammo[current_weapon]) / MAX_MAG_AMMO[current_weapon] + 0.4 + rand_range( - 0.1, 0.1))
 		audio[current_weapon].play()
 		audio[current_weapon].pitch_scale = float(magazine_ammo[current_weapon]) / MAX_MAG_AMMO[current_weapon] + 0.4 + rand_range( - 0.1, 0.1)
-		playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+		if player:
+			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 		magazine_ammo[current_weapon] -= 1
 
 func blackjack()->void :
@@ -1411,7 +1446,8 @@ func blackjack_timeout():
 			var col_n = (global_transform.origin + Vector3.DOWN - ($Front_Pos_Helper.global_transform.origin + Vector3.UP * 3)).normalized()
 			if global_transform.origin.distance_to(col_p) < 3 and is_instance_valid(col):
 				$Batonsound.play()
-				playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+				if player:
+					playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 				glob.player.player_velocity += 5 * col_n
 				glob.player.player_view.fov *= 1.02
 				if col.has_method("tranq_timeout"):
@@ -1474,7 +1510,8 @@ func mg3()->void :
 			if get_parent().get_parent().muzzleflash:
 				get_parent().get_parent().muzzleflash.show()
 		audio[current_weapon][0].play()
-		playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+		if player:
+			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 		
 
 		magazine_ammo[current_weapon] -= 1
@@ -1507,9 +1544,11 @@ func silenced_smg()->void :
 		else :
 			if get_parent().get_parent().muzzleflash:
 				get_parent().get_parent().muzzleflash.show()
+			rpc("npc_muzzleflash", current_weapon, float(magazine_ammo[current_weapon]) / MAX_MAG_AMMO[current_weapon] + 0.4 + rand_range( - 0.1, 0.1))
 		audio[current_weapon].play()
 		audio[current_weapon].pitch_scale = float(magazine_ammo[current_weapon]) / MAX_MAG_AMMO[current_weapon] + 0.4
-		playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+		if player:
+			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 		magazine_ammo[current_weapon] -= 1
 
 func nailer()->void :
@@ -1544,8 +1583,10 @@ func nailer()->void :
 		else :
 			if get_parent().get_parent().muzzleflash:
 				get_parent().get_parent().muzzleflash.show()
+			rpc("npc_muzzleflash", current_weapon, null)
 		audio[current_weapon].play()
-		playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+		if player:
+			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 
 		magazine_ammo[current_weapon] -= 1
 
@@ -1594,8 +1635,11 @@ func an94_internal():
 
 			anim.stop()
 			anim.play(FIRE_ANIM[current_weapon])
+		else:
+			rpc("npc_muzzleflash", current_weapon, null)
 		audio[current_weapon].play()
-		playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+		if player:
+			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 
 		magazine_ammo[current_weapon] -= 1
 
@@ -1615,15 +1659,6 @@ func ar()->void :
 		burst_timer2.connect("timeout", self, "ar_internal")
 		burst_timer2.wait_time = 0.1
 		burst_timer2.start()
-		
-		
-		
-		
-		
-		
-		
-	
-	
 
 func ar_internal():
 		raycast.force_raycast_update()
@@ -1645,12 +1680,15 @@ func ar_internal():
 			muzzle_light.light_energy = 1
 			get_parent().rotation.x -= rand_range(0, 0.02)
 			glob.player.reticle.shoot()
+		else:
+			rpc("npc_muzzleflash", current_weapon, null)
 			
 		if not zoom_flag and player:
 			anim.stop()
 			anim.play(FIRE_ANIM[current_weapon])
 		audio[current_weapon].play()
-		playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+		if player:
+			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 
 		magazine_ammo[current_weapon] -= 1
 func zippy()->void :
@@ -1689,11 +1727,14 @@ func zippy()->void :
 				spawn_shell(SHELLS[current_weapon], 1, 10, get_parent().get_parent().transform.basis.xform(Vector3(5, - 10, 0).normalized()), $Player_Weapon / ShellPosition.global_transform.origin + Vector3.FORWARD * 0.2)
 				anim.stop()
 				anim.play(FIRE_ANIM[current_weapon])
+			else:
+				rpc("npc_muzzleflash", current_weapon, null)
 	
 				
 			audio[current_weapon].play()
 			audio[current_weapon].pitch_scale = float(magazine_ammo[current_weapon]) / MAX_MAG_AMMO[current_weapon] + 0.4
-			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+			if player:
+				playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 			magazine_ammo[current_weapon] -= 1
 		elif rand == 1:
 			timer.start(0.07)
@@ -1701,7 +1742,8 @@ func zippy()->void :
 			muzzle_light.light_energy = 1
 			magazine_ammo[current_weapon] -= 1
 			audio[current_weapon].play()
-			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+			if player:
+				playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 			glob.player.damage(5, Vector3.ZERO, global_transform.origin, global_transform.origin)
 func pistol()->void :
 	if timer.is_stopped():
@@ -1742,11 +1784,14 @@ func pistol()->void :
 			spawn_shell(SHELLS[current_weapon], 1, 10, get_parent().get_parent().transform.basis.xform(Vector3(5, - 10, 0).normalized()), $Player_Weapon / ShellPosition.global_transform.origin)
 			anim.stop()
 			anim.play(FIRE_ANIM[current_weapon])
+		else:
+			rpc("npc_muzzleflash", current_weapon, null)
 
 			
 		audio[current_weapon].play()
 		audio[current_weapon].pitch_scale = float(magazine_ammo[current_weapon]) / MAX_MAG_AMMO[current_weapon] + 0.4
-		playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+		if player:
+			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 		magazine_ammo[current_weapon] -= 1
 
 
@@ -1788,10 +1833,13 @@ func vag72()->void :
 			spawn_shell(SHELLS[current_weapon], 1, 10, get_parent().get_parent().transform.basis.xform(Vector3(5, - 10, 0).normalized()), $Player_Weapon / ShellPosition.global_transform.origin)
 			anim.stop()
 			anim.play(FIRE_ANIM[current_weapon])
+		else:
+			rpc("npc_muzzleflash", current_weapon, null)
 
 			
 		audio[current_weapon].play()
-		playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+		if player:
+			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 		magazine_ammo[current_weapon] -= 1
 
 func sks()->void :
@@ -1829,7 +1877,8 @@ func sks()->void :
 			else :
 				dmg = 20000
 				$SKS_Sound2.play()
-				playerPuppet.shoot_play(audio[current_weapon].pitch_scale, 1)
+				if player:
+					playerPuppet.shoot_play(audio[current_weapon].pitch_scale, 1)
 			damage[current_weapon] = dmg
 			print(damage[current_weapon])
 			do_damage(collider)
@@ -1853,7 +1902,8 @@ func sks()->void :
 
 			
 		$SKS_Sound.play()
-		playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+		if player:
+			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 		
 		
 
@@ -1892,7 +1942,8 @@ func skullgun_internal():
 			
 			
 		audio[0].play()
-		playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+		if player:
+			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 		
 
 
@@ -1929,9 +1980,12 @@ func nambu()->void :
 
 		if player:
 			get_parent().rotation.x -= 0.1
+		else:
+			rpc("npc_muzzleflash", current_weapon, null)
 		audio[current_weapon].play()
 		audio[current_weapon].pitch_scale = float(magazine_ammo[current_weapon]) / MAX_MAG_AMMO[current_weapon] + 0.4
-		playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+		if player:
+			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 		
 	
 func nambu_fire():
@@ -1954,9 +2008,12 @@ func nambu_fire():
 			do_damage(collider)
 		if player:
 			get_parent().rotation.x -= 0.1
+		else:
+			rpc("npc_muzzleflash", current_weapon, float(magazine_ammo[current_weapon]) / MAX_MAG_AMMO[current_weapon] + 0.4)
 		audio[current_weapon].play()
 		audio[current_weapon].pitch_scale = float(magazine_ammo[current_weapon]) / MAX_MAG_AMMO[current_weapon] + 0.4
-		playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+		if player:
+			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 	
 func shoot_through(collider, collision_p):
 	if collider.has_method("damage"):
@@ -2040,9 +2097,12 @@ func sniper()->void :
 			glob.player.reticle.shoot()
 			anim.stop()
 			anim.play(FIRE_ANIM[current_weapon])
+		else:
+			rpc("npc_muzzleflash", current_weapon, null)
 		
 		audio[current_weapon].play()
-		playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+		if player:
+			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 		magazine_ammo[current_weapon] -= 1
 		if player:
 			yield (get_tree().create_timer(0.1), "timeout")
@@ -2093,10 +2153,13 @@ func mauser()->void :
 			glob.player.reticle.shoot()
 			anim.stop()
 			anim.play(FIRE_ANIM[current_weapon])
+		else:
+			rpc("npc_muzzleflash", current_weapon, float(magazine_ammo[current_weapon]) / MAX_MAG_AMMO[current_weapon])
 		
 		audio[current_weapon].play()
 		audio[current_weapon].pitch_scale = float(magazine_ammo[current_weapon]) / MAX_MAG_AMMO[current_weapon]
-		playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+		if player:
+			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 		magazine_ammo[current_weapon] -= 1
 		if player:
 			yield (get_tree().create_timer(0.2), "timeout")
@@ -2124,9 +2187,12 @@ func shock()->void :
 			get_parent().rotation.x -= 0.3
 			anim.stop()
 			anim.play(FIRE_ANIM[current_weapon])
+		else:
+			rpc("npc_muzzleflash", current_weapon, float(magazine_ammo[current_weapon]) / MAX_MAG_AMMO[current_weapon] + 0.4)
 		audio[current_weapon].play()
 		audio[current_weapon].pitch_scale = float(magazine_ammo[current_weapon]) / MAX_MAG_AMMO[current_weapon] + 0.4
-		playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+		if player:
+			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 		magazine_ammo[current_weapon] -= 1
 		
 		if player:
@@ -2152,9 +2218,12 @@ func shotgun()->void :
 			get_parent().rotation.x -= 0.1
 			anim.stop()
 			anim.play(FIRE_ANIM[current_weapon])
+		else:
+			rpc("npc_muzzleflash", current_weapon, float(magazine_ammo[current_weapon]) / MAX_MAG_AMMO[current_weapon] + 0.4)
 		audio[current_weapon].play()
 		audio[current_weapon].pitch_scale = float(magazine_ammo[current_weapon]) / MAX_MAG_AMMO[current_weapon] + 0.4
-		playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+		if player:
+			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 		magazine_ammo[current_weapon] -= 1
 		
 		if player:
@@ -2184,8 +2253,11 @@ func autoshotgun()->void :
 			anim.stop()
 			$OmniLight.light_energy = 1
 			anim.play(FIRE_ANIM[current_weapon])
+		else:
+			rpc("npc_muzzleflash", current_weapon, null)
 		audio[current_weapon].play()
-		playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+		if player:
+			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 		magazine_ammo[current_weapon] -= 1
 		
 		if player:
@@ -2210,10 +2282,10 @@ func rocket_launcher()->void :
 			missile_new.set_name(missile_new.name + "#" + str(randi() % 100000000))
 
 			missleParent.add_child(missile_new)
-			missile_new.global_transform.origin = global_transform.origin
-			missile_new.velocity = (global_transform.origin - $Front_Pos_Helper.global_transform.origin).normalized() * - 30
+			missile_new.global_transform.origin = global_transform.origin - (global_transform.origin - $Front_Pos_Helper.global_transform.origin).normalized()
+			missile_new.velocity = (global_transform.origin - $Front_Pos_Helper.global_transform.origin).normalized() * -30
 			
-			rpc("_spawn_object", missleParent.get_path(),"res://MOD_CONTENT/CruS Online/effects/fake_Missile_Kinematic.tscn",missile_new.name,missile_new.global_transform)
+			rpc("_spawn_object", missleParent.get_path(), "res://Entities/Bullets/Missile_Kinematic.tscn", missile_new.name, missile_new.global_transform, missile_new.velocity)
 			
 			timer.start(0.7)
 			magazine_ammo[current_weapon] -= 1
@@ -2221,9 +2293,11 @@ func rocket_launcher()->void :
 				anim.stop()
 				anim.play(FIRE_ANIM[current_weapon])
 				audio[current_weapon].play()
-				playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+				if player:
+					playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 				glob.player.reticle.shoot()
-			else :
+			else:
+				rpc("npc_muzzleflash", current_weapon, null)
 				missile_new.set_collision_mask_bit(2, 0)
 				missile_new.set_collision_mask_bit(1, 1)
 
@@ -2235,7 +2309,7 @@ func light()->void :
 				missile_new.set_as_toplevel(true)
 			else :
 				get_parent().get_parent().get_parent().get_parent().add_child(missile_new)
-			missile_new.global_transform.origin = $Player_Weapon / LIGHT / Position3D.global_transform.origin
+			missile_new.global_transform.origin = global_transform.origin - (global_transform.origin - $Front_Pos_Helper.global_transform.origin).normalized()
 
 			missile_new.velocity = ($Player_Weapon / LIGHT / Position3D.global_transform.origin - $Front_Pos_Helper.global_transform.origin).normalized() * - 60
 			timer.start(0.1)
@@ -2244,13 +2318,19 @@ func light()->void :
 				anim.stop()
 				anim.play(FIRE_ANIM[current_weapon])
 				audio[current_weapon].play()
-				playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+				if player:
+					playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 				glob.player.reticle.shoot()
 				get_parent().rotation.x -= rand_range(0, 0.03)
 				player_weapon.rotation.z = 0 + rand_range( - 0.1, 0.1)
-			else :
+			else:
+				rpc("npc_muzzleflash", current_weapon, null)
 				missile_new.set_collision_mask_bit(2, 0)
 				missile_new.set_collision_mask_bit(1, 1)
+			
+			missile_new.set_name(missile_new.name + "#" + str(randi() % 100000000))
+			
+			rpc("_spawn_object", missile_new.get_parent().get_path(), "res://Entities/Bullets/Light_Bullet.tscn", missile_new.name, missile_new.global_transform, missile_new.velocity)
 
 func gas()->void :
 		if timer.is_stopped():
@@ -2269,20 +2349,23 @@ func gas()->void :
 			
 			missile_new.set_name(missile_new.name + "#" + str(randi() % 100000000))
 			
-			rpc("_spawn_object", missleParent.get_path(), "res://MOD_CONTENT/CruS Online/effects/fake_Grenade.tscn", missile_new.name, missile_new.global_transform)
-			
 			if player:
 				missile_new.set_collision_mask_bit(1, 0)
-			else :
+			else:
+				rpc("npc_muzzleflash", current_weapon, null)
 				missile_new.set_collision_mask_bit(1, 1)
 				missile_new.set_collision_mask_bit(2, 0)
 			missile_new.global_transform.origin = global_transform.origin
 			missile_new.add_collision_exception_with(get_parent().get_parent())
 			missile_new.set_velocity(60, (global_transform.origin - $Front_Pos_Helper.global_transform.origin).normalized(), global_transform.origin)
+			
+			rpc("_spawn_object", missleParent.get_path(), "res://Entities/Bullets/Grenade.tscn", missile_new.name, missile_new.global_transform, missile_new.velocity)
+			
 			timer.start(3)
 			
 			audio[current_weapon].play()
-			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+			if player:
+				playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 			if player:
 				magazine_ammo[current_weapon] -= 1
 				anim.stop()
@@ -2291,38 +2374,39 @@ func gas()->void :
 				glob.player.reticle.shoot()
 
 func flamethrower():
-		if timer.is_stopped():
-			timer.start(0.025)
-			magazine_ammo[current_weapon] -= 1
-			var missile_new = FIRE.instance()
-			
-			missile_new.set_name(missile_new.name + "#" + str(randi() % 1000000000))
-			
-			var missleParent = null
-			
-			if player:
-				missleParent = get_parent().get_parent().get_parent()
-			else :
-				missleParent = get_parent().get_parent().get_parent().get_parent()
-			
-			missleParent.add_child(missile_new)
+	if timer.is_stopped():
+		timer.start(0.025)
+		magazine_ammo[current_weapon] -= 1
+		var missile_new = FIRE.instance()
+		
+		missile_new.set_name("Fire#" + str(randi() % 1000000000))
+		
+		var missleParent = null
+		
+		if player:
+			missleParent = get_parent().get_parent().get_parent()
+		else :
+			missleParent = get_parent().get_parent().get_parent().get_parent()
+		
+		missleParent.add_child(missile_new)
+		
+		if player:
+			missile_new.set_collision_mask_bit(1, 0)
+		else :
+			missile_new.set_collision_mask_bit(1, 1)
+			missile_new.set_collision_mask_bit(2, 0)
+		
+		missile_new.global_transform.origin = global_transform.origin - (global_transform.origin - $Front_Pos_Helper.global_transform.origin).normalized()
+		
+		missile_new.velocity = - (global_transform.origin - $Front_Pos_Helper.global_transform.origin).normalized() * 40
+		missile_new.velocity += Global.player.player_velocity
+		
+		rpc("_spawn_object", missleParent.get_path(), "res://Entities/Bullets/Fire.tscn", missile_new.name, missile_new.global_transform, missile_new.velocity)
 
-			if player:
-				missile_new.set_collision_mask_bit(1, 0)
-			else :
-				missile_new.set_collision_mask_bit(1, 1)
-				missile_new.set_collision_mask_bit(2, 0)
-			
-			missile_new.global_transform.origin = player_muzzle_flash.global_transform.origin
-			
-			missile_new.velocity = - (global_transform.origin - $Front_Pos_Helper.global_transform.origin).normalized() * 40
-			missile_new.velocity += Global.player.player_velocity
-
-			rpc("_spawn_object", missleParent.get_path(), "res://MOD_CONTENT/CruS Online/effects/fake_Fire.tscn", missile_new.name, missile_new.global_transform)
-			
 func bore()->void :
 		if timer.is_stopped():
 			var missile_new = BORE.instance()
+			missile_new.set_name("Fire#" + str(randi() % 1000000000))
 			zoom_flag = false
 			get_parent().get_parent().get_parent().add_child(missile_new)
 			missile_new.set_collision_mask_bit(1, 0)
@@ -2334,21 +2418,30 @@ func bore()->void :
 			anim.stop()
 			anim.play(FIRE_ANIM[current_weapon])
 			audio[current_weapon].play()
-			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+			if player:
+				playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+			else:
+				rpc("npc_muzzleflash", current_weapon, null)
 			glob.player.reticle.shoot()
+			
+			rpc("_spawn_object", missile_new.get_parent().get_path(), "res://Entities/Bullets/New_Bore.tscn", missile_new.name, missile_new.global_transform, missile_new.velocity)
 			
 func radiator()->void :
 	audio[current_weapon].pitch_scale = clamp(cylinder_velocity * 10 + 0.01, 2.0, 4)
 	if not audio[current_weapon].playing:
 		audio[current_weapon].play()
-		playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+		if player:
+			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+		else:
+			rpc("npc_muzzleflash", current_weapon, null)
 	cylinder_velocity += 0.005
 	
 	if cylinder_velocity < 0.1:
 		return 
 	if timer.is_stopped():
 		$Rad_Sound2.play()
-		playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+		if player:
+			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 		timer.start(0.8)
 		$Radiation_Area / MeshInstance.scale.z = 1
 		$Radiation_Area / MeshInstance.scale.x = 1
@@ -2364,7 +2457,7 @@ func radiator()->void :
 			missleParent.add_child(rad_new)
 			rad_new.global_transform.origin = global_transform.origin + - (global_transform.origin - $Front_Pos_Helper.global_transform.origin).normalized() * (r + 4)
 			
-			rpc("_spawn_object", missleParent.get_path(),"res://MOD_CONTENT/CruS Online/effects/fake_Radiation.tscn",rad_new.name,rad_new.global_transform)
+			rpc("_spawn_object", missleParent.get_path(), "res://Entities/Bullets/Radiation.tscn", rad_new.name, rad_new.global_transform)
 		for b in $Radiation_Area.get_overlapping_bodies():
 			if b.has_method("damage"):
 				b.damage(50, (global_transform.origin - $Front_Pos_Helper.global_transform.origin).normalized(), b.global_transform.origin, global_transform.origin)
@@ -2380,7 +2473,8 @@ func tranq()->void :
 				get_parent().get_parent().get_parent().get_parent().add_child(missile_new)
 			if player:
 				missile_new.set_collision_mask_bit(1, 0)
-			else :
+			else:
+				rpc("npc_muzzleflash", current_weapon, null)
 				missile_new.set_collision_mask_bit(1, 1)
 				missile_new.set_collision_mask_bit(2, 0)
 			missile_new.global_transform.origin = global_transform.origin
@@ -2388,7 +2482,8 @@ func tranq()->void :
 			
 			
 			audio[current_weapon].play()
-			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+			if player:
+				playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 			if player:
 				magazine_ammo[current_weapon] -= 1
 				anim.stop()
@@ -2414,7 +2509,7 @@ func align_up(node_basis, normal)->Basis:
 
 
 func AI_shoot()->void :
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		if current_weapon == null or disabled:
 			return 
 		if magazine_ammo[current_weapon] > 0 and reload_timer.is_stopped():
@@ -2549,7 +2644,8 @@ func shoot()->void :
 			if not audio[current_weapon].playing:
 				if Input.is_action_pressed("mouse_1"):
 					audio[current_weapon].play()
-					playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+					if player:
+						playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 		W_NAILER:
 			nailer()
 	set_UI_ammo()

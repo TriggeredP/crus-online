@@ -92,6 +92,8 @@ func host_tick():
 ################################################################################
 
 func _ready():
+	set_collision_mask_bit(10, 1)
+	
 	lerp_transform = global_transform
 	
 	Multiplayer.connect("host_tick", self, "host_tick")
@@ -144,7 +146,7 @@ func _on_Screen_Exited():
 
 func _physics_process(delta):
 	if get_tree().network_peer != null:
-		if is_network_master():
+		if get_tree().network_peer != null and is_network_master():
 			var playerData = get_near_player()
 			
 			if playerData.distance > glob.draw_distance + 10:
@@ -242,7 +244,7 @@ func _physics_process(delta):
 			mesh.rotation = lerp(mesh.rotation, lerp_mesh_rotation, delta * 10.0)
 
 master func add_velocity(increase_velocity):
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		if not glob.CURRENT_LEVEL == 2000:
 			velocity -= increase_velocity
 		else :
@@ -274,7 +276,7 @@ master func set_flee():
 		mesh.rotation.x = 0
 
 master func set_dead():
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		if not dead:
 			set_collision_layer_bit(8, 0)
 			dead = true
@@ -286,7 +288,7 @@ master func set_dead():
 		rpc_id(0,"set_dead")
 
 master func set_tranquilized():
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		if not tranq:
 			set_collision_layer_bit(8, 0)
 			tranq = true

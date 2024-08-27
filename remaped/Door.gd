@@ -51,7 +51,7 @@ func _ready():
 	audio_player.max_db = 4
 	audio_player.pitch_scale = 0.6
 	
-	if not is_network_master():
+	if not get_tree().network_peer != null and is_network_master():
 		rpc("_get_transform")
 		rpc("check_removed")
 
@@ -59,7 +59,7 @@ master func _get_transform():
 	rset_unreliable("global_transform", global_transform)
 
 func _physics_process(delta):
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		if not open and not stop:
 			rotation.y += rotation_speed * delta
 			rotation_counter += rad2deg(rotation_speed * delta)
@@ -77,13 +77,13 @@ master func check_removed():
 		rpc_id(get_tree().get_rpc_sender_id(),"remove_on_ready")
 
 master func destroy(collision_n, collision_p):
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		damage(200, collision_n, collision_p, Vector3.ZERO)
 	else:
 		rpc("destroy", collision_n, collision_p)
 
 master func damage(damage, collision_n, collision_p, shooter_pos):
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		door_health -= damage
 		if door_health <= 0:
 			isDestroyed = true
@@ -96,7 +96,7 @@ func get_type():
 	return type;
 
 master func use():
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		stop = not stop
 		open = not open
 	else:

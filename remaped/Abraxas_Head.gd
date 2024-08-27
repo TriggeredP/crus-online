@@ -13,7 +13,7 @@ puppet func died():
 	get_parent().get_node("Particle").show()
 
 master func damage(dmg, nrml, pos, shoot_pos):
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		if not active:
 			return 
 		health -= dmg

@@ -40,7 +40,7 @@ puppet func particle_visible(value = true):
 	particle.visible = value
 
 func _physics_process(delta):
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		t += 1
 		if destroyed:
 			hide()
@@ -88,7 +88,7 @@ puppet func died():
 	get_parent().get_node("Sphere002").hide()
 
 master func damage(dmg, nrml, pos, shoot_pos):
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		if not active:
 			return 
 		health -= dmg

@@ -29,7 +29,7 @@ func _ready():
 	pass
 
 func _physics_process(delta):
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		t += 1
 		if destroyed:
 			return 
@@ -81,7 +81,7 @@ puppet func died():
 	get_parent().get_node("Particle").show()
 
 master func damage(dmg, nrml, pos, shoot_pos):
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		if not activated:
 			return 
 		health -= dmg

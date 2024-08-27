@@ -12,7 +12,7 @@ func _ready():
 
 func _on_Area_body_entered(body):
 	if body == Global.player:
-		if is_network_master():
+		if get_tree().network_peer != null and is_network_master():
 			if Global.BONUS_UNLOCK.find(level_name) == -1:
 				Global.BONUS_UNLOCK.append(level_name)
 				rpc("unlock_level")

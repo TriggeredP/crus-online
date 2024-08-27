@@ -9,33 +9,42 @@ var particle
 
 var gas_timer = 0
 
+puppet func delete():
+	queue_free()
+
 func _ready():
 	particle = $Particle
 	c_shape = $CollisionShape
 	particle.emitting = true
 	
 func _physics_process(delta):
-	if particle.emitting == false:
-		if not gas:
-			c_shape.disabled = true
-			c_shape.visible = false
-		else :
-			gas_timer += delta
-			if gas_timer >= 3:
-				queue_free()
-	if gas and not sleep:
-		for overlap_body in get_overlapping_bodies():
-			if overlap_body.has_method("damage"):
-				overlap_body.damage(damage, Vector3.ZERO, overlap_body.global_transform.origin, global_transform.origin)
+	if is_network_master():
+		if particle.emitting == false:
+			if not gas:
+				c_shape.disabled = true
+				c_shape.visible = false
+			else :
+				gas_timer += delta
+				if gas_timer >= 3:
+					rpc("delete")
+					queue_free()
+		if gas and not sleep:
+			for overlap_body in get_overlapping_bodies():
+				if overlap_body.has_method("player_damage"):
+					overlap_body.player_damage(damage, Vector3.ZERO, overlap_body.global_transform.origin, global_transform.origin, "gas")
+				elif overlap_body.has_method("damage"):
+					overlap_body.damage(damage, Vector3.ZERO, overlap_body.global_transform.origin, global_transform.origin)
 
 func _on_Explosion_area_entered(area):
-	do_damage(area)
-	
+	if is_network_master():
+		do_damage(area)
+
 func _on_Explosion_body_entered(body):
-	do_damage(body)
-	if sleep and body.has_method("tranquilize"):
-		body.tranquilize(true)
-	
+	if is_network_master():
+		do_damage(body)
+		if sleep and body.has_method("tranquilize"):
+			body.tranquilize(true)
+
 func do_damage(body):
 	if gas:
 		return 
@@ -52,4 +61,3 @@ func do_damage(body):
 		body.damage(damage, (global_transform.origin - body.global_transform.origin).normalized(), body.global_transform.origin, global_transform.origin)
 	if body.has_method("piercing_damage") and piercing:
 		body.piercing_damage(damage, (global_transform.origin - body.global_transform.origin).normalized(), body.global_transform.origin, global_transform.origin)
-

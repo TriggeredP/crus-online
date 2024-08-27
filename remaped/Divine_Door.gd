@@ -51,14 +51,14 @@ func _ready():
 	audio_player.max_db = 4
 	audio_player.pitch_scale = 0.6
 	
-	if not is_network_master():
+	if not get_tree().network_peer != null and is_network_master():
 		rpc("_get_transform")
 
 master func _get_transform():
 	rset_unreliable("global_transform", global_transform)
 
 func _physics_process(delta):
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		if not open and not stop:
 			rotation.y += rotation_speed * delta
 			rotation_counter += rad2deg(rotation_speed * delta)
@@ -76,7 +76,7 @@ func get_type():
 
 master func player_use():
 	if Global.soul_intact:
-		if is_network_master():
+		if get_tree().network_peer != null and is_network_master():
 			door_use()
 		else:
 			rpc("door_use")

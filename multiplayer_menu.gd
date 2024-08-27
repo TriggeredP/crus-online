@@ -38,6 +38,14 @@ func _ready():
 	$CenterContainer/TabContainer/Host/VBoxContainer/Port/PortEdit.text = str(Multiplayer.config.hostPort)
 	$CenterContainer/TabContainer/Host/VBoxContainer/Password/PasswordEdit.text = Multiplayer.config.hostPassword
 	
+	$CenterContainer/TabContainer/Host/VBoxContainer/TickRate/TickEdit.value = int(Multiplayer.config.tickRate)
+	
+	$CenterContainer/TabContainer/Host/VBoxContainer/CanRespawn/TickEdit.pressed = Multiplayer.config.canRespawn
+	$CenterContainer/TabContainer/Host/VBoxContainer/ChangeModeOnDeath/TickEdit.pressed = Multiplayer.config.changeModeOnDeath
+	$CenterContainer/TabContainer/Host/VBoxContainer/HelpTimer/HelpEdit.value = int(Multiplayer.config.helpTimer)
+	
+	$CenterContainer/TabContainer/Host/VBoxContainer/UPnPEnabled/UPnPEdit.pressed = Multiplayer.config.upnp
+	
 	NicknameEdit.text = Multiplayer.playerInfo.nickname
 	NicknameColor.color = Multiplayer.playerInfo.color
 	
@@ -53,6 +61,24 @@ func _ready():
 	$CenterContainer/TabContainer.current_tab = 0
 	
 	Multiplayer.connect("connected_to_server", self, "_on_connected")
+	Multiplayer.connect("status_update", self, "status_update")
+
+func status_update(new_status):
+	if new_status == "Offline":
+		enable_tabs()
+		enable_buttons()
+		$CenterContainer/TabContainer.current_tab = 0
+	
+		$CenterContainer/TabContainer/Main/VBoxContainer/PlayersList/PlayersListLabel.text = ""
+	elif new_status == "UPnP setup":
+		disable_buttons()
+		disable_tabs()
+		$CenterContainer/TabContainer/Main/VBoxContainer/IpPort/Buttons/Leave.hide()
+		$CenterContainer/TabContainer.current_tab = 0
+	else:
+		disable_buttons()
+		disable_tabs()
+		$CenterContainer/TabContainer.current_tab = 0
 
 func _physics_process(delta):
 	if Global.menu.in_game:
@@ -77,6 +103,8 @@ func save_host():
 	Multiplayer.config.changeModeOnDeath = $CenterContainer/TabContainer/Host/VBoxContainer/ChangeModeOnDeath/TickEdit.pressed
 	Multiplayer.config.helpTimer = int($CenterContainer/TabContainer/Host/VBoxContainer/HelpTimer/HelpEdit.value)
 	
+	Multiplayer.config.upnp = $CenterContainer/TabContainer/Host/VBoxContainer/UPnPEnabled/UPnPEdit.pressed
+	
 	save_data("config.save", Multiplayer.config)
 
 func get_data():
@@ -98,27 +126,13 @@ func host():
 		Multiplayer.hostSettings.bannedImplants.append(implant)
 
 	Multiplayer.host_server(port)
-	
-	disable_buttons()
-	disable_tabs()
-	$CenterContainer/TabContainer.current_tab = 0
 
 func join():
 	get_data()
 	Multiplayer.join_to_server(ip, port)
-	
-	disable_tabs()
-	disable_buttons()
-	$CenterContainer/TabContainer.current_tab = 0
 
 func leave():
 	Multiplayer.leave_server()
-	
-	enable_tabs()
-	enable_buttons()
-	$CenterContainer/TabContainer.current_tab = 0
-	
-	$CenterContainer/TabContainer/Main/VBoxContainer/PlayersList/PlayersListLabel.text = ""
 
 func disable_buttons():
 	$CenterContainer/TabContainer/Main/VBoxContainer/IpPort/Buttons/Join.hide()

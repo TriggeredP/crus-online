@@ -228,6 +228,16 @@ func cancer():
 		set_move_speed()
 
 func update_implants():
+	
+	var leg_implant = GLOBAL.implants.leg_implant
+	var arm_implant = GLOBAL.implants.arm_implant
+	var head_implant = GLOBAL.implants.head_implant
+	var torso_implant = GLOBAL.implants.torso_implant
+	
+	jump_bonus = leg_implant.jump_bonus + torso_implant.jump_bonus + head_implant.jump_bonus + arm_implant.jump_bonus
+	speed_bonus = leg_implant.speed_bonus + torso_implant.speed_bonus + head_implant.speed_bonus + arm_implant.speed_bonus
+	armor = leg_implant.armor * torso_implant.armor * head_implant.armor * arm_implant.armor
+	
 	if GLOBAL.CURRENT_LEVEL == 18 and Global.DEAD_CIVS.find("Limit Chancellor") == - 1:
 		Global.implants.head_implant = Global.implants.empty_implant
 		Global.implants.torso_implant = Global.implants.empty_implant
@@ -286,21 +296,22 @@ func update_implants():
 		UI.show()
 		shader_screen.material.set_shader_param("scope", false)
 	
-	var leg_implant = GLOBAL.implants.leg_implant
-	var arm_implant = GLOBAL.implants.arm_implant
-	var head_implant = GLOBAL.implants.head_implant
-	var torso_implant = GLOBAL.implants.torso_implant
-	
 	if leg_implant.toxic_shield or torso_implant.toxic_shield or arm_implant.toxic_shield or head_implant.toxic_shield or orb:
 		hazmat = true
 	else:
 		hazmat = false
 	
-	jump_bonus = leg_implant.jump_bonus + torso_implant.jump_bonus + head_implant.jump_bonus + arm_implant.jump_bonus
-	speed_bonus = leg_implant.speed_bonus + torso_implant.speed_bonus + head_implant.speed_bonus + arm_implant.speed_bonus
-	armor = leg_implant.armor * torso_implant.armor * head_implant.armor * arm_implant.armor
+	set_move_speed()
+
+var fakeFire = null
 
 func _ready():
+	fakeFire = load("res://MOD_CONTENT/CruS Online/effects/fake_Fire_Child.tscn").instance()
+	add_child(fakeFire)
+	fakeFire.transform.origin += Vector3.UP
+	
+	set_collision_mask_bit(10, 1)
+	
 	death_timer = Timer.new()
 	add_child(death_timer)
 	death_timer.wait_time = 5
@@ -309,7 +320,7 @@ func _ready():
 	
 	lastDamagerIdTimer = Timer.new()
 	add_child(lastDamagerIdTimer)
-	lastDamagerIdTimer.wait_time = 5
+	lastDamagerIdTimer.wait_time = 2
 	lastDamagerIdTimer.one_shot = true
 	lastDamagerIdTimer.connect("timeout", self, "reset_last_damager_id")
 	

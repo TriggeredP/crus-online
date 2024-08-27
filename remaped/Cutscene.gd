@@ -14,6 +14,7 @@ var current_scene = 0
 var t = 0
 
 onready var Multiplayer = Global.get_node('Multiplayer')
+var oneshot = false
 
 func _ready():
 	$MarginContainer / CenterContainer / Subtitle.get_font("font").size = 32 * (Global.resolution[0] / 1280)
@@ -31,13 +32,16 @@ func _ready():
 	CAMERAS = $Cameras.get_children()
 	if introskip:
 		Multiplayer.goto_menu_host()
+	elif get_tree().network_peer == null:
+		oneshot = true
+		Multiplayer.host_server(23753)
+		get_tree().network_peer.refuse_new_connections = true
 
 func _process(delta):
 	if instant:
 		t += 1
 		SUBTITLE.modulate = Color((cos(t * 0.01) + 1) * 0.5, 0, 0)
 	if TIMER.is_stopped() and current_scene != LINES.size():
-		
 		current_scene = clamp(current_scene, 0, LINES.size() - 1)
 		TIMER.wait_time = DURATION[current_scene]
 		if CAMERAS.size() > 0:
@@ -50,7 +54,9 @@ func _process(delta):
 		current_scene += 1
 		TIMER.start()
 	if TIMER.is_stopped() and current_scene == LINES.size():
-		if is_network_master():
+		if get_tree().network_peer != null and is_network_master():
+			if oneshot:
+				get_tree().network_peer = null
 			if next_scene == "res://Menu/Main_Menu.tscn":
 				Multiplayer.goto_menu_host()
 			else:
@@ -59,11 +65,12 @@ func _process(delta):
 func _input(event):
 	if event is InputEventKey:
 		if Input.is_action_just_pressed("ui_cancel") or Input.is_action_just_pressed("ui_accept"):
-			if is_network_master():
+			if get_tree().network_peer != null and is_network_master():
+				if oneshot:
+					get_tree().network_peer = null
 				if next_scene == "res://Menu/Main_Menu.tscn":
 					Multiplayer.goto_menu_host()
 				else:
 					Multiplayer.goto_scene_host(next_scene)
 		if Input.is_action_just_pressed("movement_jump") and line_skip:
-			
 			TIMER.stop()

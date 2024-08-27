@@ -9,7 +9,7 @@ export  var healing_amount = 25
 export  var kinematic = false
 
 func _ready():
-	if not is_network_master():
+	if not get_tree().network_peer != null and is_network_master():
 		rpc("check_food")
 
 master func check_food():

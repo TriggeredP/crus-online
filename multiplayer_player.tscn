@@ -1,4 +1,4 @@
-[gd_scene load_steps=139 format=2]
+[gd_scene load_steps=140 format=2]
 
 [ext_resource path="res://MOD_CONTENT/CruS Online/multiplayer_player.gd" type="Script" id=1]
 [ext_resource path="res://MOD_CONTENT/CruS Online/player_model/player_model.tscn" type="PackedScene" id=2]
@@ -104,11 +104,18 @@ script/source = "extends StaticBody
 
 onready var client = get_node(\"../../../../../../\")
 
+var blacklistedTypes = [
+	\"gas\",
+	\"radiation\",
+	\"fire\"
+]
+
 func _ready():
 	set_meta(\"puppet\", -1)
 
 func player_damage(damage, collision_n, collision_p, shooter_pos, weapon_type):
-	client.do_damage(damage * 4, collision_n, collision_p, shooter_pos, weapon_type)
+	if not weapon_type in blacklistedTypes:
+		client.do_damage(damage * 4, collision_n, collision_p, shooter_pos, weapon_type)
 
 func damage(damage, collision_n, collision_p, shooter_pos):
 	client.do_damage(damage, collision_n, collision_p, shooter_pos)
@@ -265,19 +272,46 @@ extents = Vector3( 0.371759, 0.144416, 0.780459 )
 [sub_resource type="GDScript" id=59]
 script/source = "extends StaticBody
 
+enum bodyType {DEFAULT, BODY}
+
+export(bodyType) var type = 0
+
+var onFire = false
+
 onready var client = get_node(\"../../../../../../\")
+
+var blacklistedTypes = [
+	\"gas\",
+	\"radiation\",
+	\"fire\"
+]
 
 func _ready():
 	set_meta(\"puppet\", -1)
+	
+	if type == bodyType.BODY:
+		set_meta(\"puppet_body\", -1)
 
 func player_damage(damage, collision_n, collision_p, shooter_pos, weapon_type):
-	client.do_damage(damage, collision_n, collision_p, shooter_pos, weapon_type)
+	if type == bodyType.DEFAULT:
+		if not weapon_type in blacklistedTypes:
+			client.do_damage(damage, collision_n, collision_p, shooter_pos, weapon_type)
+	elif type == bodyType.BODY:
+		if weapon_type == \"radiation\" and Global.death:
+			return
+		if weapon_type == \"fire\":
+			set_fire(true)
+		client.do_damage(damage, collision_n, collision_p, shooter_pos, weapon_type)
 
 func damage(damage, collision_n, collision_p, shooter_pos):
 	client.do_damage(damage, collision_n, collision_p, shooter_pos)
 
 func set_toxic():
 	client.set_toxic()
+
+func set_fire(value):
+	onFire = value
+	client.set_fire(onFire)
 
 func cancer():
 	client.set_cancer()
@@ -290,11 +324,14 @@ func player_use():
 [sub_resource type="BoxShape" id=35]
 extents = Vector3( 0.956756, 0.494403, 0.82258 )
 
+[sub_resource type="BoxShape" id=81]
+extents = Vector3( 0.220711, 0.228613, 0.283403 )
+
 [sub_resource type="BoxShape" id=80]
 extents = Vector3( 0.444633, 0.370771, 0.406444 )
 
 [sub_resource type="BoxShape" id=77]
-extents = Vector3( 0.325025, 0.2665, 0.129642 )
+extents = Vector3( 0.385805, 0.352425, 0.129642 )
 
 [sub_resource type="DynamicFontData" id=33]
 font_path = "res://Fonts/Envy Code R.ttf"
@@ -850,10 +887,20 @@ transform = Transform( 1, 1.16415e-10, 1.86265e-09, -1.16415e-10, 1, 1.49012e-08
 collision_layer = 6
 collision_mask = 0
 script = SubResource( 59 )
+type = 1
 
 [node name="CollisionShape" type="CollisionShape" parent="Puppet/PlayerModel/Armature/Skeleton/Chest/Body"]
 transform = Transform( 0.274, 0.000550867, 5.64335e-06, -0.000242077, 0.618844, 0.0243454, 1.80523e-05, -0.0625738, 0.240772, -0.00855047, 0.362073, 0.0626216 )
 shape = SubResource( 35 )
+
+[node name="Leg3" type="StaticBody" parent="Puppet/PlayerModel/Armature/Skeleton/Chest"]
+transform = Transform( 0.997152, 0.0341535, 0.0672283, -0.0657822, -0.0418502, 0.996955, 0.0368629, -0.998541, -0.0394849, 0.234769, -0.196863, 0.0686111 )
+collision_layer = 1024
+collision_mask = 1024
+
+[node name="CollisionShape" type="CollisionShape" parent="Puppet/PlayerModel/Armature/Skeleton/Chest/Leg3"]
+transform = Transform( 0.998226, 0.00472063, -0.0593774, -0.00251977, 0.999309, 0.037086, 0.0595112, -0.0368706, 0.997547, -0.254514, 0.0892852, 0.438399 )
+shape = SubResource( 81 )
 
 [node name="RightCalf" type="BoneAttachment" parent="Puppet/PlayerModel/Armature/Skeleton" index="3"]
 transform = Transform( 0.0282174, 0.192418, 0.980906, 0.298006, -0.938295, 0.175487, 0.954146, 0.287365, -0.0838183, 0.131162, -0.310038, -0.0563373 )
@@ -908,7 +955,7 @@ collision_mask = 0
 script = SubResource( 59 )
 
 [node name="CollisionShape" type="CollisionShape" parent="Puppet/PlayerModel/Armature/Skeleton/RatHandler/Leg"]
-transform = Transform( 0.998289, 0.00210913, -0.0584443, -0.00220456, 0.999996, -0.00156816, 0.0584406, 0.00169433, 0.99829, -0.227134, 0.0756676, 0.0364959 )
+transform = Transform( 0.998353, -0.000541503, -0.0573782, -0.00183673, 0.999141, -0.0413877, 0.0573512, 0.0414249, 0.997495, -0.227134, 0.0756676, 0.0364959 )
 shape = SubResource( 77 )
 
 [node name="RightThigh" type="BoneAttachment" parent="Puppet/PlayerModel/Armature/Skeleton" index="7"]
@@ -922,7 +969,7 @@ collision_mask = 0
 script = SubResource( 59 )
 
 [node name="CollisionShape" type="CollisionShape" parent="Puppet/PlayerModel/Armature/Skeleton/RightThigh/Leg"]
-transform = Transform( 0.274, -6.70552e-08, 9.31323e-09, -4.47035e-08, 0.621999, -3.11993e-08, -5.58794e-09, -7.72998e-08, 0.242, 0.0127361, 0.261024, 0.00377411 )
+transform = Transform( 0.274, -7.07805e-08, 9.77889e-09, -4.28408e-08, 0.621999, -3.1665e-08, -6.28643e-09, -7.45058e-08, 0.242, 0.0127361, 0.261024, 0.00377412 )
 shape = SubResource( 80 )
 
 [node name="Torso_Mesh" parent="Puppet/PlayerModel/Armature/Skeleton" index="9"]
@@ -1027,7 +1074,11 @@ bus = "SFX"
 [node name="FlashBuffer" type="Timer" parent="."]
 wait_time = 0.2
 
+[node name="RespawnDamage" type="Timer" parent="."]
+wait_time = 3.0
+
 [connection signal="timeout" from="Puppet/PlayerModel/HelpTimer" to="." method="can_respawn"]
 [connection signal="timeout" from="FlashBuffer" to="." method="flash_hide"]
+[connection signal="timeout" from="RespawnDamage" to="." method="canDamageSet"]
 
 [editable path="Puppet/PlayerModel"]

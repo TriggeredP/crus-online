@@ -12,11 +12,13 @@ remote func _set_transform(recivedTransform):
 remote func _delete():
 	queue_free()
 
-remote func _create_object(recivedPath, recivedObject,recivedName,recivedTransform):
+remote func _create_object(recivedPath, recivedObject, recivedName, recivedTransform, recivedShrapnel = null):
 	var newObject = load(recivedObject).instance()
 	newObject.set_name(recivedName)
 	get_node(recivedPath).add_child(newObject)
 	newObject.global_transform = recivedTransform
+	if recivedShrapnel != null:
+		newObject.shrapnel_flag = recivedShrapnel
 "
 
 [node name="Spatial" type="Spatial"]

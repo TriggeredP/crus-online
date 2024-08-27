@@ -45,6 +45,24 @@ func player_died():
 	
 	show()
 	
+	Global.player.cancer_count = 0
+	Global.player.weapon.disabled = true
+	
+	Global.player.crouch_flag = false
+	Global.player.top_touching = false
+	
+	Global.player.translate(Vector3.UP * 0.5 * sign(Global.player.max_gravity))
+	Global.player.collision_box.disabled = false
+	Global.player.floor_ray.cast_to.y = - 0.8
+	Global.player.floor_ray2.cast_to.y = - 0.8
+	Global.player.collision_box.disabled = false
+	Global.player.run_acceleration = 10
+	Global.player.crush_check.disabled = false
+	Global.player.get_node(\"Crush_Check/CrouchCrush\").disabled = true
+	Global.player.rotation_helper.transform.origin.y = 0
+	
+	Global.player.move_speed = 10
+	
 	if Multiplayer.hostSettings.changeModeOnDeath:
 		var diff = get_diff()
 	
@@ -78,6 +96,10 @@ func get_diff() -> String:
 	else:
 		return \"fa\"
 
+func _input(event):
+	if $RespawnButton.visible and Input.is_action_just_pressed(\"movement_jump\"):
+		respawn()
+
 func _restart(event):
 	if event is InputEventMouseButton and event.pressed:
 		respawn()
@@ -92,6 +114,8 @@ func respawn():
 			respawnPoint.shuffle()
 				
 			Global.player.global_transform.origin = respawnPoint[0].global_transform.origin
+			
+			Multiplayer.playerPuppet.player_restart()
 		else:
 			Global.player.health = 20
 			Global.player.UI.set_health(20)
@@ -108,13 +132,15 @@ func respawn():
 		Global.player.toxic = false
 		Global.player.UI.toxic = false
 		Global.player.toxic_damage_count = 0
-		Global.player.set_move_speed()
-			
+		
 		Global.player.psychosis = false
 			
 		Global.player.weapon.grapple_flag = false
 		Global.player.weapon.grapple_point = null
 		Global.player.weapon.grapple_target = null
+		
+		Global.player.weapon.disabled = false
+		Global.player.weapon.show()
 		
 		for o in Global.player.grapple_orbs:
 			o.queue_free()

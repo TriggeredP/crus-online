@@ -32,7 +32,7 @@ func _ready():
 	collision_shape.transform = t
 
 func _physics_process(delta):
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		rset_unreliable("global_transform", global_transform)
 		
 		if not open and not stop:
@@ -51,7 +51,7 @@ func _physics_process(delta):
 			stop = true
 
 master func switch_use():
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		if stop and not open:
 			open = not open
 			stop = not stop

@@ -43,7 +43,7 @@ puppet func die():
 	Global.remove_objective()
 
 func _physics_process(delta):
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		t += 1
 		
 		if not activated and fmod(t, 20) == 0:

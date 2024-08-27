@@ -80,7 +80,7 @@ func _ready():
 
 func _physics_process(delta):
 	if get_tree().network_peer != null:
-		if is_network_master():
+		if get_tree().network_peer != null and is_network_master():
 			if get_near_player().distance > Global.draw_distance + 10:
 				return 
 			if immortal and dead:
@@ -160,7 +160,7 @@ func _physics_process(delta):
 			global_transform = global_transform.interpolate_with(lerp_transform, delta * 10.0)
 
 master func add_velocity(increase_velocity):
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		velocity -= increase_velocity
 	else:
 		rpc_id(0,"add_velocity", increase_velocity)
@@ -173,7 +173,7 @@ func set_flee():
 	pass
 	
 func set_dead():
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		if not dead:
 			dead = true
 			if not immortal:

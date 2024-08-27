@@ -19,6 +19,8 @@ onready var animTree = $Puppet/PlayerModel/AnimTree
 
 onready var Multiplayer = Global.get_node("Multiplayer")
 
+var canDamage = false
+
 remote func _set_toxic():
 	Global.player.set_toxic()
 
@@ -31,6 +33,9 @@ remote func _do_damage(damage, collision_n, collision_p, shooter_pos, weapon_typ
 
 remote func _drop_weapon():
 	Input.action_press("drop")
+
+remote func _set_fire(value):
+	Global.player.fakeFire.emitting = value
 
 remote func _set_death(death):
 	if death:
@@ -95,13 +100,19 @@ func _ready():
 	
 	rset_config("transform_lerp", MultiplayerAPI.RPC_MODE_REMOTE)
 	
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		get_tree().get_nodes_in_group("Multiplayer")[0].playerPuppet = self
+	
+	canDamage = false
+	$RespawnDamage.start()
 
 func player_restart():
 	$Puppet/PlayerModel/HelpLabel.hide()
 	$Puppet/PlayerModel/Armature/Skeleton/Chest/Body.set_collision_layer_bit(8, false)
 	$Puppet/PlayerModel/HelpTimer.stop()
+	
+	canDamage = false
+	$RespawnDamage.start()
 
 func play_death_sound():
 	$Puppet/PlayerModel/SFX/IED1.play()
@@ -124,7 +135,7 @@ func play_explosion_sound():
 		$Puppet/PlayerModel/HelpTimer.start()
 
 func can_respawn():
-	$Puppet/PlayerModel/HelpLabel.text = "Press (Use) to help"
+	$Puppet/PlayerModel/HelpLabel.text = "Press [Use] to help"
 	$Puppet/PlayerModel/Armature/Skeleton/Chest/Body.set_collision_layer_bit(8, true)
 
 func _process(delta):
@@ -141,7 +152,7 @@ func _process(delta):
 #	tick_update()
 
 func _physics_process(delta):
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		
 		rset_unreliable("transform_lerp", Global.player.global_transform)
 		
@@ -158,7 +169,8 @@ func _physics_process(delta):
 		hide()
 
 func do_damage(damage, collision_n, collision_p, shooter_pos, weapon_type = null):
-	rpc_id(int(self.name),"_do_damage", damage, collision_n, collision_p, shooter_pos, weapon_type, get_tree().get_network_unique_id())
+	if canDamage:
+		rpc_id(int(self.name),"_do_damage", damage, collision_n, collision_p, shooter_pos, weapon_type, get_tree().get_network_unique_id())
 
 func set_toxic():
 	rpc_id(int(self.name),"_set_toxic")
@@ -168,6 +180,9 @@ func set_cancer():
 
 func drop_weapon():
 	rpc_id(int(self.name),"_drop_weapon")
+
+func set_fire(value):
+	rpc_id(int(self.name),"_set_fire", value)
 
 func respawn_player():
 	rpc_id(int(self.name),"_respawn_player")
@@ -181,6 +196,9 @@ remote func _respawn_player():
 remote func hideHelpLabel():
 	$Puppet/PlayerModel/HelpSound.play()
 	$Puppet/PlayerModel/HelpLabel.hide()
+	
+	canDamage = false
+	$RespawnDamage.start()
 
 func setup_puppet(id):
 	$Puppet/PlayerModel/Armature/Skeleton/Chest/Body.set_meta("puppetId",id)
@@ -202,3 +220,6 @@ remote func shoot_commit(pitch, soundId):
 
 func flash_hide():
 	weaponsMesh[currentWeaponId].get_child(0).hide()
+
+func canDamageSet():
+	canDamage = true

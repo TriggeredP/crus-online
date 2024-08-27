@@ -23,7 +23,7 @@ func _ready():
 	audio_player.unit_db = 2
 	audio_player.max_db = 3
 	
-	if not is_network_master():
+	if not get_tree().network_peer != null and is_network_master():
 		rpc("check_removed")
 
 master func check_removed():
@@ -31,13 +31,13 @@ master func check_removed():
 		rpc_id(get_tree().get_rpc_sender_id(),"remove_on_ready")
 
 master func destroy(collision_n, collision_p):
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		damage(200, collision_n, collision_p, Vector3.ZERO)
 	else:
 		rpc("destroy", collision_n, collision_p)
 
 master func damage(damage, collision_n, collision_p, shooter_pos):
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		door_health -= damage
 		if door_health <= 0:
 			isDestroyed = true

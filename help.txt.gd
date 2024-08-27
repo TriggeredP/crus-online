@@ -2,7 +2,7 @@ extends Node # extends my balls
 
 # Desine sperare qui hic intras
 
-var frustration_count = 238
+var frustration_count = 252
 
 var objectInstance
 

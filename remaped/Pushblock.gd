@@ -23,7 +23,7 @@ func get_near_player(object) -> Dictionary:
 	}
 
 func _physics_process(delta):
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		
 		var space_state = get_world().direct_space_state
 		var result_down = space_state.intersect_ray(global_transform.origin, global_transform.origin + Vector3.DOWN * 1)

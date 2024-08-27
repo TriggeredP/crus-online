@@ -258,6 +258,26 @@ audio_stream = ExtResource( 25 )
 [sub_resource type="GDScript" id=24]
 script/source = "extends PanelContainer
 
+onready var httpRequest = $HTTPRequest
+
+func _ready():
+	httpRequest.connect(\"request_completed\", self, \"_http_request_completed\")
+	
+	var err = httpRequest.request(\"https://triggeredp.site/api/boosty\")
+	if err != OK:
+		push_error(\"[CRUS ONLINE / MENU / CREDITS]: An error occurred in the boosty HTTP request.\")
+
+func _http_request_completed(result, response_code, headers, body):
+	var response = parse_json(body.get_string_from_utf8())
+	
+	if response.type == \"boosty\":
+		$RichTextLabel.bbcode_text += \"[center] Boosty subs: [/center]\\n\"
+		
+		for subType in response.data:
+			$RichTextLabel.bbcode_text += \"\\n> \" + subType.name + \":\\n\"
+			for sub in subType.subs:
+				$RichTextLabel.bbcode_text += sub + \"\\n\"
+
 func meta_clicked(meta):
 	OS.shell_open(str(meta))
 "
@@ -277,20 +297,26 @@ var errorText = [
 	\"[center]Unknow error[/center]\",
 	\"[center]Time out[/center]\",
 	\"[center]The password is incorrect[/center]\",
-	\"[center]The client and host mod versions do not match[/center]\"
+	\"[center]The client and host mod versions do not match[/center]\",
+	\"[center]How did you get up here?[/center]\",
+	\"[center]The host forcibly terminated the connection[/center]\",
+	\"[center]UPnP can't be enabled[/center]\"
 ]
 
 func _ready():
 	rect_scale = Vector2(Global.resolution[0] / 1280 ,Global.resolution[1] / 720 )
 	
 	Multiplayer.connect(\"disconnected_from_server\", self, \"show_error\")
+	Multiplayer.connect(\"throw_error\", self, \"show_error\")
 
 func show_error(error):
 	if error != Multiplayer.errorType.PASSWORD_REQUIRE:
 		rect_scale = Vector2(Global.resolution[0] / 1280 ,Global.resolution[1] / 720 )
-		
 		errorLabel.bbcode_text = errorText[error]
+		
 		popup_centered()
+		
+		rect_size = Vector2(388, $Panel/MarginContainer/RichTextLabel.rect_size.y + 10)
 "
 
 [sub_resource type="StyleBoxTexture" id=20]
@@ -344,7 +370,8 @@ mouse_filter = 2
 theme = ExtResource( 1 )
 script = ExtResource( 5 )
 __meta__ = {
-"_edit_use_anchors_": true
+"_edit_use_anchors_": true,
+"_edit_vertical_guides_": [  ]
 }
 
 [node name="CenterContainer" type="CenterContainer" parent="."]
@@ -360,11 +387,10 @@ margin_bottom = 634.0
 rect_min_size = Vector2( 661, 549 )
 
 [node name="Main" type="PanelContainer" parent="CenterContainer/TabContainer"]
-visible = false
 anchor_right = 1.0
 anchor_bottom = 1.0
 margin_left = 7.0
-margin_top = 32.0
+margin_top = 39.0
 margin_right = -7.0
 margin_bottom = -7.0
 script = SubResource( 12 )
@@ -489,6 +515,7 @@ text = "Alpha 000000/0000"
 script = SubResource( 18 )
 
 [node name="Host" type="PanelContainer" parent="CenterContainer/TabContainer"]
+visible = false
 anchor_right = 1.0
 anchor_bottom = 1.0
 margin_left = 7.0
@@ -588,7 +615,7 @@ margin_right = 591.0
 margin_bottom = 26.0
 rect_pivot_offset = Vector2( -179, -28 )
 size_flags_horizontal = 3
-text = "Can respawn:"
+text = "Deathmatch respawn:"
 
 [node name="TickEdit" type="CheckBox" parent="CenterContainer/TabContainer/Host/VBoxContainer/CanRespawn"]
 margin_left = 591.0
@@ -642,6 +669,26 @@ value = 15.0
 allow_greater = true
 align = 1
 
+[node name="UPnPEnabled" type="HBoxContainer" parent="CenterContainer/TabContainer/Host/VBoxContainer"]
+margin_top = 252.0
+margin_right = 641.0
+margin_bottom = 278.0
+
+[node name="Label" type="Label" parent="CenterContainer/TabContainer/Host/VBoxContainer/UPnPEnabled"]
+margin_right = 591.0
+margin_bottom = 26.0
+rect_pivot_offset = Vector2( -179, -28 )
+size_flags_horizontal = 3
+text = "UPnP enabled:"
+
+[node name="UPnPEdit" type="CheckBox" parent="CenterContainer/TabContainer/Host/VBoxContainer/UPnPEnabled"]
+margin_left = 591.0
+margin_right = 641.0
+margin_bottom = 26.0
+rect_min_size = Vector2( 50, 0 )
+theme = ExtResource( 24 )
+text = "<<"
+
 [node name="Save" type="Button" parent="CenterContainer/TabContainer/Host"]
 margin_left = 263.0
 margin_top = 474.0
@@ -661,7 +708,7 @@ visible = false
 anchor_right = 1.0
 anchor_bottom = 1.0
 margin_left = 7.0
-margin_top = 32.0
+margin_top = 39.0
 margin_right = -7.0
 margin_bottom = -7.0
 
@@ -669,7 +716,7 @@ margin_bottom = -7.0
 margin_left = 3.0
 margin_top = 3.0
 margin_right = 644.0
-margin_bottom = 507.0
+margin_bottom = 500.0
 custom_constants/separation = 5
 
 [node name="ClientSettings" type="Label" parent="CenterContainer/TabContainer/Player/VBoxContainer"]
@@ -846,7 +893,7 @@ visible = false
 anchor_right = 1.0
 anchor_bottom = 1.0
 margin_left = 7.0
-margin_top = 32.0
+margin_top = 39.0
 margin_right = -7.0
 margin_bottom = -7.0
 size_flags_horizontal = 3
@@ -932,7 +979,7 @@ visible = false
 anchor_right = 1.0
 anchor_bottom = 1.0
 margin_left = 7.0
-margin_top = 32.0
+margin_top = 39.0
 margin_right = -7.0
 margin_bottom = -7.0
 script = SubResource( 13 )
@@ -1027,7 +1074,7 @@ visible = false
 anchor_right = 1.0
 anchor_bottom = 1.0
 margin_left = 7.0
-margin_top = 32.0
+margin_top = 39.0
 margin_right = -7.0
 margin_bottom = -7.0
 script = SubResource( 24 )
@@ -1044,7 +1091,7 @@ Created by TriggeredP
 [color=blue][url=https://www.youtube.com/@triggeredp]YouTube[/url][/color]    >.<    [color=blue][url=https://boosty.to/triggeredp]Boosty[/url][/color]
 
 Special thanks:[/center]
-DX: [color=maroon]Helped with animations for the player[/color]
+DX: [color=maroon]Helped with animations for the player and CruS Online testing[/color]
 Keith Mason: [color=maroon]creator of Construct map[/color]
 Xuesos: [color=maroon]My IRL friend who helped me with CruS Online testing[/color]
 
@@ -1055,16 +1102,19 @@ Created by TriggeredP
 YouTube    >.<    Boosty
 
 Special thanks:
-DX: Helped with animations for the player
+DX: Helped with animations for the player and CruS Online testing
 Keith Mason: creator of Construct map
 Xuesos: My IRL friend who helped me with CruS Online testing
 
 "
 
+[node name="HTTPRequest" type="HTTPRequest" parent="CenterContainer/TabContainer/Credits"]
+
 [node name="ErrorHandler" type="WindowDialog" parent="."]
+visible = true
 margin_top = 21.0
 margin_right = 388.0
-margin_bottom = 95.0
+margin_bottom = 71.0
 size_flags_horizontal = 3
 size_flags_vertical = 3
 theme = ExtResource( 1 )
@@ -1084,22 +1134,25 @@ __meta__ = {
 [node name="MarginContainer" type="MarginContainer" parent="ErrorHandler/Panel"]
 anchor_right = 1.0
 anchor_bottom = 1.0
-margin_left = 5.0
-margin_right = -5.0
+margin_left = 15.0
+margin_top = 5.0
+margin_right = -15.0
+margin_bottom = -5.0
 __meta__ = {
 "_edit_use_anchors_": true
 }
 
 [node name="RichTextLabel" type="RichTextLabel" parent="ErrorHandler/Panel/MarginContainer"]
-margin_right = 378.0
-margin_bottom = 74.0
+margin_right = 358.0
+margin_bottom = 40.0
+rect_min_size = Vector2( 358, 0 )
+rect_clip_content = false
 size_flags_horizontal = 3
 size_flags_vertical = 3
 bbcode_enabled = true
 bbcode_text = "[center]Unknow error[/center]"
 text = "Unknow error"
 fit_content_height = true
-scroll_active = false
 __meta__ = {
 "_edit_use_anchors_": true
 }

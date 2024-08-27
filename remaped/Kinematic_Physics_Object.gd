@@ -157,7 +157,7 @@ func _ready()->void :
 		yield (get_tree(), "idle_frame")
 		angular_velocity = Vector2(velocity.x, velocity.z).length()
 	
-	if not is_network_master():
+	if get_tree().network_peer != null and not is_network_master():
 		axis_lock_motion_x = true
 		axis_lock_motion_y = true
 		axis_lock_motion_z = true
@@ -167,6 +167,23 @@ func _ready()->void :
 master func _get_transform():
 	rset_unreliable("lerp_transform", lerp_transform)
 	rset_unreliable("global_transform", global_transform)
+
+master func set_transform(recivedTransform):
+	if is_network_master():
+		finished = false
+		t = 0
+		velocity = Vector3.ZERO
+		
+		lerp_transform = recivedTransform
+		global_transform = recivedTransform
+	else:
+		rpc("set_transform", recivedTransform)
+
+master func add_velocity(recivedVelocity):
+	if is_network_master():
+		velocity += recivedVelocity
+	else:
+		rpc("add_velocity", recivedVelocity)
 
 func _physics_process(delta):
 	if get_tree().network_peer != null:
@@ -342,7 +359,7 @@ func damage(damage, collision_n, collision_p, shooter_pos):
 	if damage < 3:
 		return 
 	
-	if get_tree().network_peer == null or is_network_master():
+	if get_tree().network_peer == null or get_tree().network_peer != null and is_network_master():
 		velocity -= collision_n * damage / mass
 	else:
 		rset("velocity", velocity - collision_n * damage / mass)
@@ -354,7 +371,7 @@ func damage(damage, collision_n, collision_p, shooter_pos):
 		angular_velocity = velocity.length()
 	
 func set_water(a):
-	if get_tree().network_peer == null or is_network_master():
+	if get_tree().network_peer == null or get_tree().network_peer != null and is_network_master():
 		water = a
 		velocity *= 0.5
 		velocity.y = 0

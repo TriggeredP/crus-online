@@ -18,7 +18,7 @@ master func get_material():
 	rpc_id(get_tree().get_rpc_sender_id(),"set_material",materialId,head_only)
 
 func _ready():
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		materialId = randi() % materials.size()
 		var material = load(materials[materialId])
 		$Armature / Skeleton / Head_Mesh.material_override = material

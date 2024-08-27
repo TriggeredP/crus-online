@@ -8,7 +8,7 @@ puppet func play_sound():
 	$Attack_Sound.play()
 
 func AI_shoot()->void :
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		if raycast.is_colliding():
 			if raycast.get_collider().name == "Player" or raycast.get_collider().has_meta("puppet"):
 				if velocity_booster:

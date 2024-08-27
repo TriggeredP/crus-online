@@ -52,7 +52,7 @@ func _ready():
 	audio_player.pitch_scale = 0.6
 
 func _physics_process(delta):
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		if not open and not stop:
 			rotation.y += rotation_speed * delta
 			rotation_counter += rad2deg(rotation_speed * delta)
@@ -70,7 +70,7 @@ func get_type():
 
 master func player_use():
 	if Global.husk_mode:
-		if is_network_master():
+		if get_tree().network_peer != null and is_network_master():
 			door_use()
 		else:
 			rpc("door_use")

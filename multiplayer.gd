@@ -1,8 +1,8 @@
 extends Node
 
-var version = "Alpha 150824/1725"
+var version = "Alpha 270824/1736"
 
-enum errorType {UNKNOW, TIME_OUT, WRONG_PASSWORD, WRONG_VERSION, PASSWORD_REQUIRE}
+enum errorType {UNKNOW, TIME_OUT, WRONG_PASSWORD, WRONG_VERSION, PASSWORD_REQUIRE, SERVER_CLOSED, UPNP_ERROR}
 
 var playerInfo = {
 	"nickname": "MT Foxtrot",
@@ -27,7 +27,8 @@ var config = {
 	"tickRate": 3,
 	"helpTimer": 15,
 	"canRespawn": false,
-	"changeModeOnDeath": true
+	"changeModeOnDeath": true,
+	"upnp": false
 }
 
 var password = ""
@@ -45,6 +46,7 @@ onready var DeathScreen = Global.get_node('DeathScreen')
 onready var Players = $Players
 onready var Menu = $Menu
 onready var Hint = $Hint
+onready var UPnP = $UPnP
 
 signal status_update(status)
 signal players_update(data)
@@ -53,6 +55,8 @@ signal host_tick()
 
 signal connected_to_server()
 signal disconnected_from_server(error)
+
+signal throw_error(error)
 
 func _ready():
 	pause_mode = Node.PAUSE_MODE_PROCESS
@@ -67,6 +71,10 @@ func _ready():
 var tick = 0
 
 func _physics_process(delta):
+	if get_tree().network_peer != null and get_tree().network_peer.get_connection_status() == 0:
+		goto_menu_client()
+		clear_connection(errorType.SERVER_CLOSED)
+	
 	if get_tree().network_peer != null and is_network_master() and tick % config.tickRate == 0:
 		emit_signal("host_tick")
 		tick = 0
@@ -74,17 +82,25 @@ func _physics_process(delta):
 
 func clear_connection(recivedError):
 	emit_signal("disconnected_from_server", recivedError)
-	print("[CRUS ONLINE]: ERROR " + str(recivedError))
+	push_error("[CRUS ONLINE / MAIN]: ERROR " + str(recivedError))
 	
-	get_tree().network_peer = null
+	leave_server()
 
 func host_server(port):
 	hostSettings.helpTimer = config.helpTimer
 	hostSettings.canRespawn = config.canRespawn
 	hostSettings.changeModeOnDeath = config.changeModeOnDeath
 	
+	if config.upnp == true:
+		emit_signal("status_update", "UPnP setup")
+		UPnP.upnp_setup(port)
+		var err = yield(UPnP, "upnp_completed")
+		
+		if err != OK:
+			emit_signal("throw_error", errorType.UPNP_ERROR)
+	
 	var server = NetworkedMultiplayerENet.new()
-	server.create_server(port,16)
+	server.create_server(port, 16)
 	get_tree().set_network_peer(server)
 
 	players[1] = playerInfo
@@ -93,7 +109,7 @@ func host_server(port):
 	emit_signal("status_update", "Hosting server")
 	
 	dataLoaded = true
-	print("Server hosted")
+	print("[CRUS ONLINE / MAIN]: Server hosted")
 
 func join_to_server(ip, port):
 	config.lastIp = ip
@@ -103,7 +119,7 @@ func join_to_server(ip, port):
 	client.create_client(ip,port)
 	get_tree().set_network_peer(client)
 	
-	print("Client try to connect")
+	print("[CRUS ONLINE / MAIN]: Client try to connect")
 
 func leave_server():
 	get_tree().network_peer = null
@@ -113,7 +129,7 @@ func leave_server():
 	emit_signal("status_update", "Offline")
 	emit_signal("players_update", players)
 	
-	print("Server leaved")
+	print("[CRUS ONLINE / MAIN]: Server leaved")
 
 func _disconnected(id):
 	var playerPuppet = get_node_or_null("Players/" + str(id))
@@ -127,7 +143,7 @@ func _disconnected(id):
 		
 		players.erase(id)
 		emit_signal("players_update", players)
-		print("Disconnected")
+		print("[CRUS ONLINE / MAIN]: Disconnected")
 
 ################################################################################
 
@@ -142,7 +158,7 @@ func _disconnected(id):
 func _connected(id):
 	if not dataLoaded:
 		rpc("password_require_check", passwordEntered)
-		print("[CLIENT]: Connect Init")
+		print("[CRUS ONLINE / CLIENT]: Connect Init")
 
 puppet func disconnect_client(recivedError):
 	clear_connection(recivedError)
@@ -176,7 +192,7 @@ master func connect_init(recivedPassword, recivedVersion):
 	else:
 		if recivedPassword == config.hostPassword:
 			rpc_id(id, "client_connect_init", hostSettings, players, Global.CURRENT_LEVEL)
-			print("[HOST]: Client Connect Init")
+			print("[CRUS ONLINE / HOST]: Client Connect Init")
 		else:
 			rpc_id(id, "disconnect_client", errorType.WRONG_PASSWORD)
 
@@ -193,7 +209,7 @@ puppet func client_connect_init(recivedHostSettings, recivedPlayerInfo, level):
 	emit_signal("status_update", "Connected to server")
 	emit_signal("connected_to_server")
 	
-	print("[CLIENT]: Player connected")
+	print("[CRUS ONLINE / CLIENT]: Player connected")
 
 remote func connect_notify(nickname):
 	Global.UI.notify(nickname + " connected", Color(1, 0, 0))
@@ -204,7 +220,7 @@ master func host_add_player(info):
 	if players[id] == null:
 		players[id] = info
 		rpc("sync_players",players)
-		print("[HOST]: Sync player info")
+		print("[CRUS ONLINE / HOST]: Sync player info")
 		
 		emit_signal("players_update", players)
 
@@ -218,12 +234,14 @@ master func host_remove_player():
 puppet func sync_players(info):
 	players = info
 	emit_signal("players_update", players)
-	print("[CLIENT]: Player info synced")
+	print("[CRUS ONLINE / CLIENT]: Player info synced")
 
 ################################################################################
 
 func goto_menu_host(levelFinished = false):
 	var menuPath = "res://MOD_CONTENT/CruS Online/maps/crus_online_lobby.tscn"
+	
+	DeathScreen.hide()
 	
 	if levelFinished:
 		menuPath = level_finished()
@@ -238,12 +256,14 @@ func goto_menu_host(levelFinished = false):
 	Global.CURRENT_LEVEL = 0
 	Global.goto_scene(menuPath)
 	rpc("goto_menu_client", levelFinished)
-	print("[HOST]: Goto to menu")
+	print("[CRUS ONLINE / HOST]: Goto to menu")
 	
 	Players.remove_players()
 
 puppet func goto_menu_client(levelFinished = false):
 	var menuPath = "res://MOD_CONTENT/CruS Online/maps/crus_online_lobby.tscn"
+	
+	DeathScreen.hide()
 	
 	if levelFinished:
 		menuPath = level_finished()
@@ -256,7 +276,7 @@ puppet func goto_menu_client(levelFinished = false):
 	enable_menu()
 	Global.CURRENT_LEVEL = 0
 	Global.goto_scene(menuPath)
-	print("[CLIENT]: Goto to menu")
+	print("[CRUS ONLINE / CLIENT]: Goto to menu")
 	
 	Players.remove_players()
 
@@ -324,7 +344,7 @@ func goto_scene_host(scene):
 	get_tree().network_peer.refuse_new_connections = true
 	Global.goto_scene(scene)
 	rpc("goto_scene_client", scene, Global.CURRENT_LEVEL)
-	print("[HOST]: Goto to scene [" + scene + "]")
+	print("[CRUS ONLINE / HOST]: Goto to scene [" + scene + "]")
 	
 	Players.load_players()
 
@@ -337,7 +357,7 @@ puppet func goto_scene_client(scene, level):
 	disable_menu()
 	Global.CURRENT_LEVEL = level
 	Global.goto_scene(scene)
-	print("[CLIENT]: Goto to scene [" + scene + "]")
+	print("[CRUS ONLINE / CLIENT]: Goto to scene [" + scene + "]")
 	
 	Players.load_players()
 
@@ -348,7 +368,7 @@ func _scene_loaded():
 		player_scene_loaded = true
 		get_tree().paused = true
 		
-		if is_network_master():
+		if get_tree().network_peer != null and is_network_master():
 			loaded_players.append(1)
 			connect("host_tick", self, "check_players_load")
 		else:
@@ -364,7 +384,7 @@ func check_players_load():
 	if is_players_loaded:
 		disconnect("host_tick", self, "check_players_load")
 		
-		print("[HOST]: Players loaded")
+		print("[CRUS ONLINE / HOST]: Scene loaded")
 		
 		get_tree().paused = false
 		$SyncLoad.hide()
@@ -378,13 +398,15 @@ puppet func scene_loaded_signal():
 	get_tree().paused = false
 	$SyncLoad.hide()
 	emit_signal("scene_loaded")
+	
+	print("[CRUS ONLINE / CLIENT]: Scene loaded")
 
 ################################################################################
 
 var died_players = []
 
 func player_died():
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		_player_died(true)
 	else:
 		rpc("_player_died")
@@ -404,7 +426,7 @@ master func _player_died(host = false):
 			all_player_died = false
 	
 	if all_player_died:
-		print("[HOST]: All players is dead lol")
+		print("[CRUS ONLINE / HOST]: All players is dead lol")
 		$RestartTimer.start()
 		set_death_label()
 		rpc("set_death_label")
@@ -421,7 +443,7 @@ puppet func hide_death_screen():
 	DeathScreen.hide()
 
 func player_respawn():
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		_player_respawn(true)
 	else:
 		rpc("_player_respawn")
@@ -431,7 +453,7 @@ master func _player_respawn(host = false):
 		if died_players.has(1):
 			died_players.erase(1)
 	else:
-		if not died_players.has(get_tree().get_rpc_sender_id()):
+		if died_players.has(get_tree().get_rpc_sender_id()):
 			died_players.erase(get_tree().get_rpc_sender_id())
 
 ################################################################################

@@ -202,7 +202,7 @@ puppet func hide_muzzleflash(hideFlash):
 
 func _physics_process(delta)->void :
 	if get_tree().network_peer != null:
-		if is_network_master():
+		if get_tree().network_peer != null and is_network_master():
 			var nearest_player = get_near_player(self)
 			
 			player = nearest_player.player
@@ -293,7 +293,7 @@ func _physics_process(delta)->void :
 			global_transform = global_transform.interpolate_with(lerp_transform, delta * 10.0)
 
 func move()->void :
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		if crusher:
 			for i in get_slide_count():
 				var collision = get_slide_collision(i)
@@ -303,7 +303,7 @@ func move()->void :
 		velocity = move_and_slide(velocity, Vector3.UP, false, 4, 0.785398)
 
 func wait_for_player(delta)->void :
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		if not patrol:
 			if move_speed == 0:
 				anim_player.play("Idle", - 1, 1)
@@ -357,7 +357,7 @@ func anim()->void :
 	pass
 
 func track_player(delta)->void :
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		var player_offset = Vector3(0, 1.5, 0)
 		if civ_killer:
 			player_offset = Vector3(0, - 1.5, 0)
@@ -402,7 +402,7 @@ func track_player(delta)->void :
 			alerted_counter = 0
 
 func player_spotted()->void :
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		glob.action_lerp_value += 1
 		if fmod(time, pathing_frequency) == 0:
 			var new_path = NavigationServer.map_get_path(navigation, global_transform.origin, player.global_transform.origin, true)
@@ -412,7 +412,7 @@ func player_spotted()->void :
 			path = NavigationServer.map_get_path(navigation, global_transform.origin, global_transform.origin + Vector3(rand_range( - 3, 3), 0, rand_range( - 3, 3)), true)
 
 master func add_velocity(incvelocity:Vector3)->void :
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		velocity -= incvelocity
 		if not dead and not tranq:
 			yield (get_tree(), "idle_frame")
@@ -425,7 +425,7 @@ master func add_velocity(incvelocity:Vector3)->void :
 		rpc("add_velocity", incvelocity)
 
 master func alert(pos:Vector3)->void :
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		if player_spotted or alerted or dead or tranq:
 			return 
 		
@@ -442,7 +442,7 @@ master func alert(pos:Vector3)->void :
 		rpc("alert", pos)
 
 func active(delta:float)->void :
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		if burst_counter >= burst_size:
 			burst_reloading = true
 		if burst_counter <= 0:
@@ -468,7 +468,7 @@ func active(delta:float)->void :
 			rpc("set_animation", "Idle", 1)
 
 func find_path(delta)->void :
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		if move_speed == 0:
 			anim_player.play("Idle")
 			rpc("set_animation", "Idle", 1)
@@ -539,13 +539,13 @@ func get_body_transform()->Basis:
 	return transform.basis
 
 master func set_flee()->void :
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		flee = true
 	else:
 		rpc("set_flee")
 
 master func set_dead()->void :
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		if not dead:
 			dead = true
 			weapon.hide()
@@ -558,7 +558,7 @@ master func set_dead()->void :
 		rpc("set_dead")
 
 master func set_tranquilized():
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		if not tranq:
 			tranq = true
 			if anim_player.has_animation(DEATH_ANIMS[0]):
@@ -569,7 +569,7 @@ master func set_tranquilized():
 		rpc("set_tranquilized")
 
 func tranq_timeout():
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		if dead:
 			return 
 		if anim_player.has_animation(DEATH_ANIMS[0]):

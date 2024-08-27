@@ -33,7 +33,7 @@ func _ready():
 	move_audio.stream = load("res://Sfx/Environment/Elevator_Move.wav")
 
 func _process(delta):
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		rset_unreliable("global_transform", global_transform)
 		
 		last_pos = global_transform.origin
@@ -43,7 +43,7 @@ func _process(delta):
 			translate(Vector3(0, speed * delta, 0))
 
 master func stop():
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		stopped = true
 		initpos = not initpos
 		speed = - speed
@@ -53,7 +53,7 @@ master func stop():
 		rpc("stop")
 
 master func use():
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		stopped = false
 	else:
 		rpc("use")

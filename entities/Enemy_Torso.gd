@@ -58,7 +58,7 @@ func _ready():
 		damage_multiplier = 1
 
 func cancer():
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		if soul.cancer_immunity:
 			return 
 		if soul.armor > 0:
@@ -74,7 +74,7 @@ func cancer():
 		soul.hide()
 
 func _physics_process(delta):
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		if bored:
 			head_health -= 1
 			damage(0, Vector3.ZERO, global_transform.origin, global_transform.origin)
@@ -85,30 +85,30 @@ func _physics_process(delta):
 			new_blood_particle.emitting = true
 
 func set_water(a):
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		if head:
 			if soul.body.has_method("set_water") and not soul.body.dead:
 				soul.body.set_water(a)
 
 func add_velocity(normal, amount):
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		soul.add_velocity(normal, amount)
 
 master func tranquilize(dart):
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		soul.set_tranquilized(dart)
 	else:
 		rpc_id(0,"tranquilize",dart)
 
 func tranq_timeout(dart):
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		soul.tranq_timeout(dart)
 
 func grapple(pos:Position3D):
 	soul.grapple(pos)
 
 master func damage(damage, collision_n, collision_p, shooter_pos):
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		if head and damage < 0.5 and not bored:
 			return 
 		soul.damage(damage * damage_multiplier, collision_n, collision_p, shooter_pos)
@@ -164,7 +164,7 @@ func remove_weapon():
 	soul.remove_weapon()
 
 func piercing_damage(damage, collision_n, collision_p, shooter_pos):
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		soul.piercing_damage(damage * damage_multiplier, collision_n, collision_p)
 		if head:
 			head_health = - 1

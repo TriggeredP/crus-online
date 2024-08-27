@@ -34,7 +34,7 @@ func player_use():
 	if not Global.hope_discarded:
 		Global.player.UI.notify("zvhvhivj jidv ijvdkjaeui djvhduhekj vduihkeu", Color(1, 0, 0))
 	else :
-		if is_network_master():
+		if get_tree().network_peer != null and is_network_master():
 			for i in range(10):
 				var new_gib = GIB.instance()
 				

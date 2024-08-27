@@ -7,7 +7,7 @@ onready var collision = get_node("../Area/CollisionShape")
 func _ready():
 	collision.disabled = true
 	
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		if randi() % 2 != 0:
 			foodType = randi() % get_child_count()
 			get_child(foodType).show()

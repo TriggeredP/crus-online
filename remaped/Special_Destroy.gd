@@ -4,6 +4,6 @@ puppet func remove():
 	queue_free()
 
 func special_destroy():
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		queue_free()
 		rpc("remove")

@@ -34,7 +34,7 @@ func align_up(node_basis, normal)->Basis:
 	return result
 
 func _physics_process(delta):
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		var roty = rotation.y
 		var n = Vector3.ZERO
 		var c = 0
@@ -90,7 +90,7 @@ remote func _stop_sound():
 	$SFX_Engine.stop()
 
 func _process(delta):
-	if Input.is_action_just_pressed("Use") and in_use and is_network_master():
+	if Input.is_action_just_pressed("Use") and in_use and get_tree().network_peer != null and is_network_master():
 		$Car / Camera.current = false
 		Global.player.transform.basis = init_player_basis * $Car / Player_Pos.transform.basis
 		Global.player.player_velocity = Vector3.ZERO

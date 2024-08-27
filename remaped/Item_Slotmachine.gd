@@ -23,7 +23,7 @@ puppet func play_audio():
 	$Audio.play()
 
 func _physics_process(delta):
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		if rotation_counter >= 0:
 			rotation_counter -= 1
 			if not $Audio.playing:
@@ -61,7 +61,7 @@ puppet func client_spawn_item(recivedItem, recivedPath, recivedName, recivedTran
 	new_coin.global_transform = recivedTransform
 
 func player_use():
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		check_use(true)
 	else:
 		rpc("check_use")
@@ -81,7 +81,7 @@ puppet func money_check():
 		return 
 	Global.money -= 10
 	
-	if is_network_master():
+	if get_tree().network_peer != null and is_network_master():
 		rotation_counter = 50
 	else:
 		rset("rotation_counter", 50)
