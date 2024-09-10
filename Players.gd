@@ -3,7 +3,7 @@ extends Node
 onready var parent = get_parent()
 
 func load_players():
-	print("[LOCAL]: Load players")
+	print("[CRUS ONLINE / LOCAL]: Load players")
 	
 	reload_players()
 	

@@ -31,7 +31,6 @@ func _ready():
 	mutex = Mutex.new()
 	thread = Thread.new()
 	
-	
 	enemies = get_tree().get_nodes_in_group("enemies")
 	player = Global.player
 	delta = get_physics_process_delta_time()

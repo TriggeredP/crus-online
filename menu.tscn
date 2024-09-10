@@ -170,14 +170,16 @@ var mapsList = [
 	\"res://MOD_CONTENT/CruS Online/maps/bonesquad_museum.tscn\",
 	\"res://MOD_CONTENT/CruS Online/maps/Construct_Blam.tscn\",
 	\"res://MOD_CONTENT/CruS Online/maps/edenrat.tscn\",
-	\"res://MOD_CONTENT/CruS Online/maps/multiplayer_test_map.tscn\"
+	\"res://MOD_CONTENT/CruS Online/maps/multiplayer_test_map.tscn\",
+	\"res://MOD_CONTENT/CruS Online/maps/benchmark.tscn\"
 ]
 
 var mapsName = [
 	\"Bonequad museum\",
 	\"Construct\",
 	\"Edenrat\",
-	\"Test map\"
+	\"Test map\",
+	\"Benchmark\"
 ]
 
 var mapSelected = 0
@@ -668,26 +670,6 @@ max_value = 99.0
 value = 15.0
 allow_greater = true
 align = 1
-
-[node name="UPnPEnabled" type="HBoxContainer" parent="CenterContainer/TabContainer/Host/VBoxContainer"]
-margin_top = 252.0
-margin_right = 641.0
-margin_bottom = 278.0
-
-[node name="Label" type="Label" parent="CenterContainer/TabContainer/Host/VBoxContainer/UPnPEnabled"]
-margin_right = 591.0
-margin_bottom = 26.0
-rect_pivot_offset = Vector2( -179, -28 )
-size_flags_horizontal = 3
-text = "UPnP enabled:"
-
-[node name="UPnPEdit" type="CheckBox" parent="CenterContainer/TabContainer/Host/VBoxContainer/UPnPEnabled"]
-margin_left = 591.0
-margin_right = 641.0
-margin_bottom = 26.0
-rect_min_size = Vector2( 50, 0 )
-theme = ExtResource( 24 )
-text = "<<"
 
 [node name="Save" type="Button" parent="CenterContainer/TabContainer/Host"]
 margin_left = 263.0

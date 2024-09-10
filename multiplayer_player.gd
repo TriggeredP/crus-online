@@ -152,6 +152,8 @@ func _process(delta):
 #	tick_update()
 
 func _physics_process(delta):
+	Multiplayer.packages_count += 1
+	
 	if get_tree().network_peer != null and is_network_master():
 		
 		rset_unreliable("transform_lerp", Global.player.global_transform)

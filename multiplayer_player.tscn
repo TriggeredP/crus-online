@@ -1,4 +1,4 @@
-[gd_scene load_steps=140 format=2]
+[gd_scene load_steps=139 format=2]
 
 [ext_resource path="res://MOD_CONTENT/CruS Online/multiplayer_player.gd" type="Script" id=1]
 [ext_resource path="res://MOD_CONTENT/CruS Online/player_model/player_model.tscn" type="PackedScene" id=2]
@@ -323,9 +323,6 @@ func player_use():
 
 [sub_resource type="BoxShape" id=35]
 extents = Vector3( 0.956756, 0.494403, 0.82258 )
-
-[sub_resource type="BoxShape" id=81]
-extents = Vector3( 0.220711, 0.228613, 0.283403 )
 
 [sub_resource type="BoxShape" id=80]
 extents = Vector3( 0.444633, 0.370771, 0.406444 )
@@ -892,15 +889,6 @@ type = 1
 [node name="CollisionShape" type="CollisionShape" parent="Puppet/PlayerModel/Armature/Skeleton/Chest/Body"]
 transform = Transform( 0.274, 0.000550867, 5.64335e-06, -0.000242077, 0.618844, 0.0243454, 1.80523e-05, -0.0625738, 0.240772, -0.00855047, 0.362073, 0.0626216 )
 shape = SubResource( 35 )
-
-[node name="Leg3" type="StaticBody" parent="Puppet/PlayerModel/Armature/Skeleton/Chest"]
-transform = Transform( 0.997152, 0.0341535, 0.0672283, -0.0657822, -0.0418502, 0.996955, 0.0368629, -0.998541, -0.0394849, 0.234769, -0.196863, 0.0686111 )
-collision_layer = 1024
-collision_mask = 1024
-
-[node name="CollisionShape" type="CollisionShape" parent="Puppet/PlayerModel/Armature/Skeleton/Chest/Leg3"]
-transform = Transform( 0.998226, 0.00472063, -0.0593774, -0.00251977, 0.999309, 0.037086, 0.0595112, -0.0368706, 0.997547, -0.254514, 0.0892852, 0.438399 )
-shape = SubResource( 81 )
 
 [node name="RightCalf" type="BoneAttachment" parent="Puppet/PlayerModel/Armature/Skeleton" index="3"]
 transform = Transform( 0.0282174, 0.192418, 0.980906, 0.298006, -0.938295, 0.175487, 0.954146, 0.287365, -0.0838183, 0.131162, -0.310038, -0.0563373 )

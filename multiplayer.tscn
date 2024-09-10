@@ -1,4 +1,4 @@
-[gd_scene load_steps=34 format=2]
+[gd_scene load_steps=33 format=2]
 
 [ext_resource path="res://MOD_CONTENT/CruS Online/multiplayer.gd" type="Script" id=1]
 [ext_resource path="res://Maps/textures/trauma/bugs.png" type="Texture" id=2]
@@ -21,7 +21,6 @@
 [ext_resource path="res://Textures/Menu/exit_menu_normal.png" type="Texture" id=19]
 [ext_resource path="res://Sfx/NPCs/night_creep_pain_1.wav" type="AudioStream" id=20]
 [ext_resource path="res://MOD_CONTENT/CruS Online/Stats.gd" type="Script" id=21]
-[ext_resource path="res://MOD_CONTENT/CruS Online/UPnP.gd" type="Script" id=22]
 
 [sub_resource type="DynamicFont" id=12]
 use_filter = true
@@ -95,9 +94,6 @@ func _ready():
 
 [node name="Multiplayer" type="Node" groups=["Multiplayer"]]
 script = ExtResource( 1 )
-
-[node name="UPnP" type="Node" parent="."]
-script = ExtResource( 22 )
 
 [node name="Players" type="Node" parent="."]
 script = ExtResource( 3 )
@@ -367,6 +363,45 @@ align = 1
 wait_time = 5.0
 one_shot = true
 
+[node name="PingTimer" type="Timer" parent="."]
+
+[node name="Debug" type="MarginContainer" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+theme = ExtResource( 11 )
+custom_constants/margin_right = 150
+custom_constants/margin_top = 150
+__meta__ = {
+"_edit_use_anchors_": true
+}
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Debug"]
+margin_top = 150.0
+margin_right = 1130.0
+margin_bottom = 720.0
+mouse_filter = 2
+
+[node name="GameType" type="Label" parent="Debug/VBoxContainer"]
+margin_right = 1130.0
+margin_bottom = 26.0
+text = "Player is not connected"
+align = 2
+
+[node name="PPT" type="Label" parent="Debug/VBoxContainer"]
+margin_top = 26.0
+margin_right = 1130.0
+margin_bottom = 52.0
+text = "Packages per tick: 0"
+align = 2
+
+[node name="Ping" type="Label" parent="Debug/VBoxContainer"]
+margin_top = 52.0
+margin_right = 1130.0
+margin_bottom = 78.0
+text = "Ping: 0"
+align = 2
+
 [connection signal="button_pressed" from="Menu/Start" to="Menu" method="hide_menu"]
 [connection signal="button_pressed" from="Menu/Disconnect" to="Menu" method="leave_server"]
 [connection signal="button_pressed" from="Menu/OpenChat" to="Menu/ChatBox" method="open_chat"]
@@ -375,6 +410,7 @@ one_shot = true
 [connection signal="button_pressed" from="Menu/CloseStats" to="Menu/Stats" method="close_stats"]
 [connection signal="text_entered" from="Menu/ChatBox/VBoxContainer/LineEdit" to="Menu/ChatBox" method="_text_entered"]
 [connection signal="timeout" from="RestartTimer" to="." method="restart_map"]
+[connection signal="timeout" from="PingTimer" to="." method="ping_check"]
 
 [editable path="Menu/CloseChat"]
 [editable path="Menu/CloseStats"]

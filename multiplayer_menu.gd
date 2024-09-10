@@ -44,8 +44,6 @@ func _ready():
 	$CenterContainer/TabContainer/Host/VBoxContainer/ChangeModeOnDeath/TickEdit.pressed = Multiplayer.config.changeModeOnDeath
 	$CenterContainer/TabContainer/Host/VBoxContainer/HelpTimer/HelpEdit.value = int(Multiplayer.config.helpTimer)
 	
-	$CenterContainer/TabContainer/Host/VBoxContainer/UPnPEnabled/UPnPEdit.pressed = Multiplayer.config.upnp
-	
 	NicknameEdit.text = Multiplayer.playerInfo.nickname
 	NicknameColor.color = Multiplayer.playerInfo.color
 	
@@ -70,11 +68,6 @@ func status_update(new_status):
 		$CenterContainer/TabContainer.current_tab = 0
 	
 		$CenterContainer/TabContainer/Main/VBoxContainer/PlayersList/PlayersListLabel.text = ""
-	elif new_status == "UPnP setup":
-		disable_buttons()
-		disable_tabs()
-		$CenterContainer/TabContainer/Main/VBoxContainer/IpPort/Buttons/Leave.hide()
-		$CenterContainer/TabContainer.current_tab = 0
 	else:
 		disable_buttons()
 		disable_tabs()
@@ -102,8 +95,6 @@ func save_host():
 	Multiplayer.config.canRespawn = $CenterContainer/TabContainer/Host/VBoxContainer/CanRespawn/TickEdit.pressed
 	Multiplayer.config.changeModeOnDeath = $CenterContainer/TabContainer/Host/VBoxContainer/ChangeModeOnDeath/TickEdit.pressed
 	Multiplayer.config.helpTimer = int($CenterContainer/TabContainer/Host/VBoxContainer/HelpTimer/HelpEdit.value)
-	
-	Multiplayer.config.upnp = $CenterContainer/TabContainer/Host/VBoxContainer/UPnPEnabled/UPnPEdit.pressed
 	
 	save_data("config.save", Multiplayer.config)
 

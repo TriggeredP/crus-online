@@ -1,6 +1,6 @@
 extends Node
 
-var version = "Alpha 270824/1736"
+var version = "Alpha 100924/2346"
 
 enum errorType {UNKNOW, TIME_OUT, WRONG_PASSWORD, WRONG_VERSION, PASSWORD_REQUIRE, SERVER_CLOSED, UPNP_ERROR}
 
@@ -27,8 +27,7 @@ var config = {
 	"tickRate": 3,
 	"helpTimer": 15,
 	"canRespawn": false,
-	"changeModeOnDeath": true,
-	"upnp": false
+	"changeModeOnDeath": true
 }
 
 var password = ""
@@ -46,7 +45,6 @@ onready var DeathScreen = Global.get_node('DeathScreen')
 onready var Players = $Players
 onready var Menu = $Menu
 onready var Hint = $Hint
-onready var UPnP = $UPnP
 
 signal status_update(status)
 signal players_update(data)
@@ -70,6 +68,15 @@ func _ready():
 
 var tick = 0
 
+var packages_count = 0
+
+func _input(event):
+	if event is InputEventKey and not event.echo and event.pressed:
+		var key = event.scancode
+
+		if key == KEY_F1:
+			$Debug.visible = !$Debug.visible
+
 func _physics_process(delta):
 	if get_tree().network_peer != null and get_tree().network_peer.get_connection_status() == 0:
 		goto_menu_client()
@@ -77,8 +84,27 @@ func _physics_process(delta):
 	
 	if get_tree().network_peer != null and is_network_master() and tick % config.tickRate == 0:
 		emit_signal("host_tick")
+		$Debug/VBoxContainer/PPT.text = "Packages per tick: " + str(packages_count + 1)
+		rpc("set_packages_count", packages_count + 1)
+		packages_count = 0
 		tick = 0
 	tick += 1
+
+var ping_msec = 0
+
+puppet func set_packages_count(value):
+	$Debug/VBoxContainer/PPT.text = "Packages per tick: " + str(value)
+
+func ping_check():
+	if get_tree().network_peer != null and not is_network_master():
+		ping_msec = OS.get_ticks_msec()
+		rpc("ping_host")
+
+master func ping_host():
+	rpc_id(get_tree().get_rpc_sender_id(), "ping_set")
+
+puppet func ping_set():
+	$Debug/VBoxContainer/Ping.text = "Ping: " + str(OS.get_ticks_msec() - ping_msec)
 
 func clear_connection(recivedError):
 	emit_signal("disconnected_from_server", recivedError)
@@ -91,13 +117,10 @@ func host_server(port):
 	hostSettings.canRespawn = config.canRespawn
 	hostSettings.changeModeOnDeath = config.changeModeOnDeath
 	
-	if config.upnp == true:
-		emit_signal("status_update", "UPnP setup")
-		UPnP.upnp_setup(port)
-		var err = yield(UPnP, "upnp_completed")
-		
-		if err != OK:
-			emit_signal("throw_error", errorType.UPNP_ERROR)
+	$Debug/VBoxContainer/Ping.text = "Ping: 0"
+	$Debug/VBoxContainer/GameType.text = "Player is host"
+	
+	$PingTimer.stop()
 	
 	var server = NetworkedMultiplayerENet.new()
 	server.create_server(port, 16)
@@ -115,6 +138,10 @@ func join_to_server(ip, port):
 	config.lastIp = ip
 	config.lastPort = port
 	
+	$Debug/VBoxContainer/GameType.text = "Player is client"
+	
+	$PingTimer.start()
+	
 	var client = NetworkedMultiplayerENet.new()
 	client.create_client(ip,port)
 	get_tree().set_network_peer(client)
@@ -125,6 +152,8 @@ func leave_server():
 	get_tree().network_peer = null
 	dataLoaded = false
 	players = {}
+	
+	$Debug/VBoxContainer/GameType.text = "Player is not connected"
 	
 	emit_signal("status_update", "Offline")
 	emit_signal("players_update", players)
@@ -239,6 +268,7 @@ puppet func sync_players(info):
 ################################################################################
 
 func goto_menu_host(levelFinished = false):
+	$RestartTimer.stop()
 	var menuPath = "res://MOD_CONTENT/CruS Online/maps/crus_online_lobby.tscn"
 	
 	DeathScreen.hide()
@@ -331,6 +361,7 @@ var loaded_players = []
 var player_scene_loaded = true
 
 func goto_scene_host(scene):
+	$RestartTimer.stop()
 	hostSettings.map = scene
 	
 	died_players = []

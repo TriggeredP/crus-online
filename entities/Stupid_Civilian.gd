@@ -81,12 +81,14 @@ var lerp_transform : Transform
 var last_transform : Transform
 
 func host_tick():
-	if not global_transform.is_equal_approx(last_transform):
+	if (global_transform.origin - last_transform.origin).length() > 0.01:
 		rset_unreliable("lerp_transform", global_transform)
+		Multiplayer.packages_count += 1
 		last_transform = global_transform
 	
-	if not mesh.rotation.is_equal_approx(last_mesh_rotation):
+	if (mesh.rotation - last_mesh_rotation).length() > 0.01:
 		rset_unreliable("lerp_mesh_rotation", mesh.rotation)
+		Multiplayer.packages_count += 1
 		last_mesh_rotation = mesh.rotation
 
 ################################################################################
