@@ -94,7 +94,7 @@ func _physics_process(delta):
 				
 			var new_enemy = SPAWNS[selectedEnemy].instance()
 			
-			new_enemy.set_name(new_enemy.name + "#" + str(randi() % 100000000))
+			new_enemy.set_name(new_enemy.name + "#" + str(new_enemy.get_instance_id()))
 			
 			get_parent().add_child(new_enemy)
 			new_enemy.global_transform.origin = head.global_transform.origin

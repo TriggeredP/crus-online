@@ -8,7 +8,7 @@ var objectInstance
 
 func sync_object_spawn(objectParent):
 	var object = objectInstance.instance()
-	object.set_name(object.name + "#" + str(randi() % 1000000000))
+	object.set_name(object.name + "#" + str(object.get_instance_id()))
 	objectParent.add_child(object)
 	rpc("_spawn_object", objectParent.get_path(), object.name, object.global_transform)
 

@@ -121,6 +121,8 @@ func respawn():
 			Global.player.UI.set_health(20)
 			
 			Multiplayer.player_respawn()
+		
+		Multiplayer.playerPuppet.respawn_puppet()
 			
 		Global.player.dead = false
 		Global.player.died = false

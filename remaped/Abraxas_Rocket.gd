@@ -67,7 +67,7 @@ puppet func create_missile(parentPath, missileName, missileTransform):
 func rocket_launcher()->void :
 	var missile_new = BULLETS.instance()
 	
-	missile_new.set_name(missile_new.name + "#" + str(randi() % 1000000000))
+	missile_new.set_name(missile_new.name + "#" + str(missile_new.get_instance_id()))
 	
 	get_parent().get_parent().get_parent().add_child(missile_new)
 	missile_new.add_collision_exception_with(self)

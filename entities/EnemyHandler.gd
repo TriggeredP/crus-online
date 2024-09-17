@@ -489,7 +489,7 @@ master func spawn_gib(gib, count, damage, collision_n, collision_p, gibType = "G
 		for i_gib in range(count):
 			var new_gib = self[gibType][gib].instance()
 			
-			new_gib.set_name(new_gib.name + "#" + str(randi() % 1000000000))
+			new_gib.set_name(new_gib.name + "#" + str(new_gib.get_instance_id()))
 			
 			get_parent().add_child(new_gib)
 			
@@ -513,7 +513,7 @@ master func remove_weapon():
 				boneattachment.hide()
 			
 			var new_weapon_drop = weapon_drop.instance()
-			new_weapon_drop.set_name(new_weapon_drop.name + "#" + str(randi() % 1000000000))
+			new_weapon_drop.set_name(new_weapon_drop.name + "#" + str(new_weapon_drop.get_instance_id()))
 			get_parent().add_child(new_weapon_drop)
 			new_weapon_drop.playerIgnoreId = get_tree().get_network_unique_id()
 			new_weapon_drop.global_transform.origin = body.global_transform.origin + Vector3(0, 2, 0)
@@ -552,7 +552,7 @@ func die(damage, collision_n, collision_p):
 				if "disabled" in weapon:
 					if not weapon.disabled:
 						var new_weapon_drop = weapon_drop.instance()
-						new_weapon_drop.set_name(new_weapon_drop.name + "#" + str(randi() % 1000000000))
+						new_weapon_drop.set_name(new_weapon_drop.name + "#" + str(new_weapon_drop.get_instance_id()))
 						get_parent().add_child(new_weapon_drop)
 						new_weapon_drop.playerIgnoreId = get_tree().get_network_unique_id()
 						new_weapon_drop.global_transform.origin = body.global_transform.origin + Vector3(0, 1, 0)

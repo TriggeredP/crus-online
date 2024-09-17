@@ -38,7 +38,7 @@ func player_use():
 			for i in range(10):
 				var new_gib = GIB.instance()
 				
-				new_gib.set_name(new_gib.name + "#" + str(randi() % 1000000000))
+				new_gib.set_name(new_gib.name + "#" + str(new_gib.get_instance_id()))
 
 				get_parent().add_child(new_gib)
 				new_gib.global_transform.origin = global_transform.origin

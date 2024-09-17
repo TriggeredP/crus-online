@@ -188,7 +188,7 @@ var melee = false
 onready var stealthMaterial = preload("res://Materials/seethrough.tres")
 
 ########################################
-onready var playerPuppet = get_tree().get_nodes_in_group("Multiplayer")[0].playerPuppet
+onready var playerPuppet = Global.get_node("Multiplayer").playerPuppet
 
 remote func _create_drop_weapon(parentPath, recivedTransform,recivedHoldPos, implantThrowBonus, recivedCurrentWeapon, recivedAmmo, playerVelocity, recivdeRandName, playerIgnoreId):
 	var new_weapon_drop = weapon_drop.instance()
@@ -214,7 +214,7 @@ remote func _spawn_object(parentPath, recivedObject, recivedName, recivedTransfo
 
 remote func _play_sound(soundName):
 	var netId = get_tree().get_rpc_sender_id()
-	get_tree().get_nodes_in_group("Multiplayer")[0].players[netId].puppet.get_node("Puppet/PlayerModel/SFX/" + soundName).play()
+	Global.get_node("Multiplayer").players[netId].puppet.get_node("Puppet/PlayerModel/SFX/" + soundName).play()
 
 func update_implants():
 	if Global.implants.torso_implant.orbsuit:
@@ -224,6 +224,8 @@ func update_implants():
 		current_weapon = null
 		weapon1 = null
 		weapon2 = null
+		
+		playerPuppet.set_current_weapon(current_weapon)
 	else :
 		orb = false
 		$orbarms.hide()
@@ -338,10 +340,13 @@ func _ready()->void :
 		ammo[weapon2] += MAX_MAG_AMMO[weapon2] * glob.implants.torso_implant.ammo_bonus
 		current_weapon = weapon1
 		
+		
 		if orb:
 			current_weapon = null
 			weapon1 = null
 			weapon2 = null
+		
+		playerPuppet.set_current_weapon(current_weapon)
 		
 		regentimer1 = Timer.new()
 		add_child(regentimer1)
@@ -647,7 +652,7 @@ func _process(delta)->void :
 		if Input.is_action_just_pressed("drop") and current_weapon != null:
 			
 			var new_weapon_drop = weapon_drop.instance()
-			new_weapon_drop.set_name(new_weapon_drop.name + "#" + str(randi() % 1000000000))
+			new_weapon_drop.set_name(new_weapon_drop.name + "#" + str(new_weapon_drop.get_instance_id()))
 			glob.player.get_parent().add_child(new_weapon_drop)
 			new_weapon_drop.global_transform.origin = global_transform.origin - (global_transform.origin - hold_pos.global_transform.origin).normalized()
 			new_weapon_drop.gun.MESH[new_weapon_drop.gun.current_weapon].hide()
@@ -666,6 +671,9 @@ func _process(delta)->void :
 			if weapon2 == current_weapon:
 				weapon2 = null
 			current_weapon = null
+			
+			playerPuppet.set_current_weapon(current_weapon)
+			
 			zoom_flag = false
 			player_weapon.hide()
 			glob.player.set_move_speed()
@@ -888,6 +896,7 @@ func _process(delta)->void :
 			$Player_Leg / AnimationPlayer.play("Kick")
 			$Kicksound2.play()
 			rpc("_play_sound","Kicksound2")
+			playerPuppet.set_kick()
 			kicktimer = 0
 			kickflag = true
 		elif glob.implants.torso_implant.thrust and Input.is_action_just_pressed("kick") and kicktimer >= 40:
@@ -977,7 +986,7 @@ func _process(delta)->void :
 			if glob.implants.arm_implant.he_grenade and grenade_ammo > 0:
 				grenade_ammo -= 1
 				var missile_new = GRENADE.instance()
-				missile_new.set_name(missile_new.name + "#" + str(randi() % 100000000))
+				missile_new.set_name(missile_new.name + "#" + str(missile_new.get_instance_id()))
 				if player:
 					get_parent().get_parent().get_parent().add_child(missile_new)
 				else :
@@ -996,7 +1005,7 @@ func _process(delta)->void :
 			if glob.implants.arm_implant.flechette_grenade and grenade_ammo > 0:
 				grenade_ammo -= 1
 				var missile_new = FLECHETTE_GRENADE.instance()
-				missile_new.set_name(missile_new.name + "#" + str(randi() % 100000000))
+				missile_new.set_name(missile_new.name + "#" + str(missile_new.get_instance_id()))
 				if player:
 					get_parent().get_parent().get_parent().add_child(missile_new)
 				else :
@@ -1015,7 +1024,7 @@ func _process(delta)->void :
 			if glob.implants.arm_implant.sleep_grenade and grenade_ammo > 0:
 				grenade_ammo -= 1
 				var missile_new = SLEEP_GRENADE.instance()
-				missile_new.set_name(missile_new.name + "#" + str(randi() % 100000000))
+				missile_new.set_name(missile_new.name + "#" + str(missile_new.get_instance_id()))
 				if player:
 					get_parent().get_parent().get_parent().add_child(missile_new)
 				else :
@@ -1034,7 +1043,7 @@ func _process(delta)->void :
 			if glob.implants.arm_implant.radio:
 				if radio == null:
 					radio = RADIO.instance()
-					radio.set_name(radio.name + "#" + str(randi() % 100000000))
+					radio.set_name(radio.name + "#" + str(radio.get_instance_id()))
 					Global.player.get_parent().add_child(radio)
 					
 					rpc("_spawn_object", Global.player.get_parent().get_path(), "res://Entities/Physics_Objects/radio.tscn", radio.name, radio.global_transform)
@@ -1107,6 +1116,8 @@ func _process(delta)->void :
 			current_weapon = weapon1
 			held_weapon = 1
 			
+			playerPuppet.set_current_weapon(current_weapon)
+			
 			if current_weapon == null:
 				player_weapon.hide()
 			else :
@@ -1120,6 +1131,9 @@ func _process(delta)->void :
 				current_weapon = weapon2
 			elif current_weapon == weapon2:
 				current_weapon = weapon1
+			
+			playerPuppet.set_current_weapon(current_weapon)
+			
 			set_UI_ammo()
 			if current_weapon == null:
 				player_weapon.hide()
@@ -1137,6 +1151,8 @@ func _process(delta)->void :
 			
 			held_weapon = 2
 			current_weapon = weapon2
+			
+			playerPuppet.set_current_weapon(current_weapon)
 			
 			set_UI_ammo()
 			if current_weapon == null:
@@ -1194,6 +1210,9 @@ func _process(delta)->void :
 			weapon2 = current_weapon
 			current_weapon = W_LIGHT
 			weapon1 = current_weapon
+			
+			playerPuppet.set_current_weapon(current_weapon)
+			
 			set_UI_ammo()
 		if Input.is_action_just_pressed("weapon6") and reload_timer.is_stopped() and glob.debug:
 			if current_weapon == W_AR:
@@ -1202,6 +1221,9 @@ func _process(delta)->void :
 			weapon2 = current_weapon
 			current_weapon = W_NAILER
 			weapon1 = current_weapon
+			
+			playerPuppet.set_current_weapon(current_weapon)
+			
 			set_UI_ammo()
 		
 func reload()->void :
@@ -2279,7 +2301,7 @@ func rocket_launcher()->void :
 			else :
 				missleParent = get_parent().get_parent().get_parent().get_parent()
 			
-			missile_new.set_name(missile_new.name + "#" + str(randi() % 100000000))
+			missile_new.set_name(missile_new.name + "#" + str(missile_new.get_instance_id()))
 
 			missleParent.add_child(missile_new)
 			missile_new.global_transform.origin = global_transform.origin - (global_transform.origin - $Front_Pos_Helper.global_transform.origin).normalized()
@@ -2328,7 +2350,7 @@ func light()->void :
 				missile_new.set_collision_mask_bit(2, 0)
 				missile_new.set_collision_mask_bit(1, 1)
 			
-			missile_new.set_name(missile_new.name + "#" + str(randi() % 100000000))
+			missile_new.set_name(missile_new.name + "#" + str(missile_new.get_instance_id()))
 			
 			rpc("_spawn_object", missile_new.get_parent().get_path(), "res://Entities/Bullets/Light_Bullet.tscn", missile_new.name, missile_new.global_transform, missile_new.velocity)
 
@@ -2347,7 +2369,7 @@ func gas()->void :
 				zoom_flag = false
 			missleParent.add_child(missile_new)
 			
-			missile_new.set_name(missile_new.name + "#" + str(randi() % 100000000))
+			missile_new.set_name(missile_new.name + "#" + str(missile_new.get_instance_id()))
 			
 			if player:
 				missile_new.set_collision_mask_bit(1, 0)
@@ -2379,7 +2401,7 @@ func flamethrower():
 		magazine_ammo[current_weapon] -= 1
 		var missile_new = FIRE.instance()
 		
-		missile_new.set_name("Fire#" + str(randi() % 1000000000))
+		missile_new.set_name("Fire#" + str(missile_new.get_instance_id()))
 		
 		var missleParent = null
 		
@@ -2406,7 +2428,7 @@ func flamethrower():
 func bore()->void :
 		if timer.is_stopped():
 			var missile_new = BORE.instance()
-			missile_new.set_name("Fire#" + str(randi() % 1000000000))
+			missile_new.set_name("Fire#" + str(missile_new.get_instance_id()))
 			zoom_flag = false
 			get_parent().get_parent().get_parent().add_child(missile_new)
 			missile_new.set_collision_mask_bit(1, 0)
@@ -2450,7 +2472,7 @@ func radiator()->void :
 		for r in range(6):
 			var rad_new = RADIATION.instance()
 			
-			rad_new.set_name(rad_new.name + "#" + str(randi() % 100000000))
+			rad_new.set_name(rad_new.name + "#" + str(rad_new.get_instance_id()))
 			
 			var missleParent = get_parent().get_parent().get_parent()
 			
@@ -2720,6 +2742,9 @@ func set_weapon(weapon_index):
 		elif current_weapon == weapon2:
 			weapon2 = weapon_index
 		current_weapon = weapon_index
+		
+		playerPuppet.set_current_weapon(current_weapon)
+		
 		anim.stop()
 		anim.play("Nogun", - 1, 100)
 		glob.player.set_move_speed()

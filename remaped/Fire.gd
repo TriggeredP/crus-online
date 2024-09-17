@@ -30,7 +30,7 @@ func _physics_process(delta):
 		if col:
 			var body = col.collider
 			var new_fire_child = f.instance()
-			new_fire_child.set_name("FireChild#" + str(randi() % 100000000))
+			new_fire_child.set_name("FireChild#" + str(new_fire_child.get_instance_id()))
 			
 			if body.has_meta("puppet_body"):
 				if not body.onFire:

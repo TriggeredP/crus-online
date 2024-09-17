@@ -13,7 +13,7 @@ master func spawn_ball(count = 1):
 	if is_network_master():
 		for i in range(count):
 			var newObject = ball.instance()
-			newObject.set_name(newObject.name + "#" + str(randi() % 1000000000))
+			newObject.set_name(newObject.name + "#" + str(newObject.get_instance_id()))
 			$Balls.add_child(newObject)
 			
 			newObject.global_transform.origin += Vector3(rand_range(-10.0, 10.0), rand_range(-10.0, 10.0), rand_range(-10.0, 10.0))

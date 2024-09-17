@@ -146,6 +146,8 @@ onready var orbWalkSound = preload("res://Sfx/orbwalk.wav")
 var playerWalkSound
 
 ################################################################################
+onready var Multiplayer = Global.get_node("Multiplayer")
+onready var playerPuppet = Multiplayer.playerPuppet
 
 const deathMessages = {
 	"general":[
@@ -177,12 +179,12 @@ func reset_last_damager_id():
 	weaponType = null
 
 remote func send_death_nofify(killerId):
-	var deadNickname = get_tree().get_nodes_in_group("Multiplayer")[0].players[get_tree().get_rpc_sender_id()].nickname
+	var deadNickname = Multiplayer.players[get_tree().get_rpc_sender_id()].nickname
 	
 	if killerId == null:
 		Global.UI.notify(deathMessages.general[randi() % deathMessages.general.size()] % deadNickname, Color(1, 0, 0))
 	else:
-		var killerNickname = get_tree().get_nodes_in_group("Multiplayer")[0].players[killerId].nickname
+		var killerNickname = Multiplayer.players[killerId].nickname
 		Global.UI.notify(deathMessages.killedByPlayer[randi() % deathMessages.killedByPlayer.size()] % [deadNickname,killerNickname], Color(1, 0, 0))
 
 remote func _spawn_gib(parentPath, gib, gibName, gibPos, recivedDamage):
@@ -194,10 +196,10 @@ remote func _spawn_gib(parentPath, gib, gibName, gibPos, recivedDamage):
 
 remote func _play_sound(soundName):
 	var netId = get_tree().get_rpc_sender_id()
-	get_tree().get_nodes_in_group("Multiplayer")[0].players[netId].puppet.get_node("Puppet/PlayerModel/SFX/" + soundName).play()
+	Multiplayer.players[netId].puppet.get_node("Puppet/PlayerModel/SFX/" + soundName).play()
 
 remote func _play_death_sound():
-	get_tree().get_nodes_in_group("Multiplayer")[0].players[get_tree().get_rpc_sender_id()].puppet.play_death_sound()
+	Multiplayer.players[get_tree().get_rpc_sender_id()].puppet.play_death_sound()
 
 remote func _spawn_explosion(pos):
 	if get_tree().get_network_unique_id() != get_tree().get_rpc_sender_id():
@@ -205,7 +207,7 @@ remote func _spawn_explosion(pos):
 		get_parent().add_child(n_explosion)
 		n_explosion.global_transform.origin = pos
 		
-		get_tree().get_nodes_in_group("Multiplayer")[0].players[get_tree().get_rpc_sender_id()].puppet.play_explosion_sound()
+		Multiplayer.players[get_tree().get_rpc_sender_id()].puppet.play_explosion_sound()
 
 ################################################################################
 
@@ -645,6 +647,7 @@ func _physics_process(delta):
 			$Crush_Check / CrouchCrush.disabled = true
 			rotation_helper.transform.origin.y = 0
 			set_move_speed()
+		playerPuppet.set_crouch(crouch_flag)
 	if toxic and not crouch_flag:
 		move_speed = 7 + sin(time_2)
 	if Input.is_action_pressed("Lean_Left"):
@@ -704,6 +707,7 @@ func _process(delta):
 			if crouch_flag:
 				rotation_helper.transform.origin.y = - 0.7
 		drug_gravity_flag = false
+		playerPuppet.set_gravity(max_gravity)
 	queue_jump()
 
 func suicide():
@@ -715,11 +719,12 @@ func suicide():
 			instadie(100, Vector3.ZERO, Vector3.ZERO, Vector3.ZERO)
 
 func move(delta):
-	
-	
-	
 	var floor_normal
-	var on_floor = is_on_floor()
+
+	if on_floor != is_on_floor():
+		on_floor = is_on_floor()
+		playerPuppet.set_is_on_floor(on_floor)
+	
 	if Vector3(cmd.right_move, 0, cmd.forward_move).length() != 0:
 		ray_rotation.look_at(global_transform.origin + Vector3(cmd.right_move, 0, cmd.forward_move), Vector3.UP)
 		ray_rotation.transform.basis *= transform.basis
@@ -1202,7 +1207,7 @@ func spawn_gib(gib, count, damage, collision_n, collision_p):
 	for i_gib in range(count):
 		
 		var new_gib = gibs[gib].instance()
-		new_gib.set_name(new_gib.name + "#" + str(randi() % 100000000))
+		new_gib.set_name(new_gib.name + "#" + str(new_gib.get_instance_id()))
 		get_parent().add_child(new_gib)
 		new_gib.global_transform.origin = global_transform.origin
 		var damageArgs = [damage * 10, - collision_n + Vector3(rand_range(0, 0.1), rand_range(0, 0.1), rand_range(0, 0.1)), collision_p, Vector3.ZERO]

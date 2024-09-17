@@ -117,7 +117,7 @@ func host_tick():
 func _ready()->void :
 	lerp_transform = global_transform
 	
-	Multiplayer.connect("host_tick", self, "host_tick")
+#	Multiplayer.connect("host_tick", self, "host_tick")
 	rset_config("lerp_transform", MultiplayerAPI.RPC_MODE_PUPPET)
 	rset_config("global_transform", MultiplayerAPI.RPC_MODE_PUPPET)
 
@@ -199,6 +199,7 @@ func _physics_process(delta):
 			lerp_transform.origin = Global.player.weapon.hold_pos.global_transform.origin
 
 		if is_network_master():
+			host_tick()
 			
 			if fmod(t, 300) == 0 and (velocity.x < 0.01 and velocity.y < 0.01):
 				change_transform = false

@@ -124,7 +124,7 @@ func host_tick():
 func _ready()->void :
 	lerp_transform = global_transform
 	
-	Multiplayer.connect("host_tick", self, "host_tick")
+#	Multiplayer.connect("host_tick", self, "host_tick")
 	rset_config("lerp_transform", MultiplayerAPI.RPC_MODE_PUPPET)
 	
 	glob = Global
@@ -204,6 +204,8 @@ puppet func hide_muzzleflash(hideFlash):
 func _physics_process(delta)->void :
 	if get_tree().network_peer != null:
 		if get_tree().network_peer != null and is_network_master():
+			host_tick()
+			
 			var nearest_player = get_near_player(self)
 			
 			player = nearest_player.player

@@ -47,7 +47,7 @@ func _physics_process(delta):
 func spawn_coins(amount):
 	for i in range(amount):
 		var new_coin = coin.instance()
-		new_coin.set_name(new_coin.name + "#" + str(randi() % 100000000))
+		new_coin.set_name(new_coin.name + "#" + str(new_coin.get_instance_id()))
 		add_child(new_coin)
 		new_coin.fromSlotMachine = true
 		new_coin.global_transform.origin = $Position3D.global_transform.origin

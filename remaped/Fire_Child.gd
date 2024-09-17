@@ -64,7 +64,7 @@ func _on_Area_body_entered(body):
 				return
 			elif not body.has_meta("puppet_body") and "soul" in body:
 				var new_fire_child = f.instance()
-				new_fire_child.set_name("FireChild#" + str(randi() % 100000000))
+				new_fire_child.set_name("FireChild#" + str(new_fire_child.get_instance_id()))
 				
 				if body.soul.on_fire:
 					return 
@@ -76,7 +76,7 @@ func _on_Area_body_entered(body):
 				rpc("_create_object", body.soul.body.get_path(), "res://Entities/Bullets/Fire_Child.tscn", new_fire_child.name, new_fire_child.global_transform, true)
 			elif (body == Global.player or body.has_meta("puppet_body")) and not player_fire:
 				var new_fire_child = f.instance()
-				new_fire_child.set_name("FireChild#" + str(randi() % 100000000))
+				new_fire_child.set_name("FireChild#" + str(new_fire_child.get_instance_id()))
 				
 				body.add_child(new_fire_child)
 				player_fire = true

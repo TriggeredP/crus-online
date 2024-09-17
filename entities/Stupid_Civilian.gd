@@ -98,7 +98,7 @@ func _ready():
 	
 	lerp_transform = global_transform
 	
-	Multiplayer.connect("host_tick", self, "host_tick")
+#	Multiplayer.connect("host_tick", self, "host_tick")
 	rset_config("lerp_transform", MultiplayerAPI.RPC_MODE_PUPPET)
 	rset_config("lerp_mesh_rotation", MultiplayerAPI.RPC_MODE_PUPPET)
 	
@@ -149,6 +149,8 @@ func _on_Screen_Exited():
 func _physics_process(delta):
 	if get_tree().network_peer != null:
 		if get_tree().network_peer != null and is_network_master():
+			host_tick()
+			
 			var playerData = get_near_player()
 			
 			if playerData.distance > glob.draw_distance + 10:

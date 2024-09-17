@@ -58,7 +58,7 @@ func spawn_item():
 	get_parent().add_child(new_weapon_drop)
 	new_weapon_drop.gun.MESH[new_weapon_drop.gun.current_weapon].hide()
 	var wepRand = randi() % weapon_indexes[wep].size()
-	new_weapon_drop.set_name(new_weapon_drop.name + "#" + str(randi() % 100000000))
+	new_weapon_drop.set_name(new_weapon_drop.name + "#" + str(new_weapon_drop.get_instance_id()))
 	new_weapon_drop.gun.current_weapon = weapon_indexes[wep][wepRand]
 	new_weapon_drop.gun.ammo = Global.player.weapon.MAX_MAG_AMMO[new_weapon_drop.gun.current_weapon]
 	new_weapon_drop.gun.MESH[new_weapon_drop.gun.current_weapon].show()

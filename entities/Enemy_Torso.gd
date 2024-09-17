@@ -130,7 +130,7 @@ master func damage(damage, collision_n, collision_p, shooter_pos):
 			soul.die(damage, collision_n, collision_p)
 			if not gibflag and gibbable:
 				var new_head_gib = head_gib.instance()
-				new_head_gib.set_name(new_head_gib.name + "#" + str(randi() % 1000000000))
+				new_head_gib.set_name(new_head_gib.name + "#" + str(new_head_gib.get_instance_id()))
 				
 				soul.add_child(new_head_gib)
 				new_head_gib.global_transform.origin = global_transform.origin

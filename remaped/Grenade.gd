@@ -128,7 +128,7 @@ func _physics_process(delta):
 						queue_free()
 						return 
 					var new_explosion = explosion_types[EXPLOSION_TYPE].instance()
-					new_explosion.set_name(new_explosion.name + "#" + str(randi() % 1000000000))
+					new_explosion.set_name(new_explosion.name + "#" + str(new_explosion.get_instance_id()))
 					get_parent().add_child(new_explosion)
 					new_explosion.global_transform.origin = global_transform.origin
 					explosion_flag = true

@@ -27,7 +27,7 @@ master func activation(violence):
 			rset("item_count", item_count)
 			var rand = randi() % items.size()
 			var new_item = items[rand].instance()
-			new_item.set_name(new_item.name + "#" + str(randi() % 1000000000))
+			new_item.set_name(new_item.name + "#" + str(new_item.get_instance_id()))
 			add_child(new_item)
 			new_item.global_transform.origin = $Position3D.global_transform.origin
 			new_item.damage(10, (global_transform.origin - $Position3D.global_transform.origin).normalized(), global_transform.origin, global_transform.origin)

@@ -17,7 +17,7 @@ func player_use():
 	if not soul:
 		for i in range(10):
 			var new_gib = gib.instance()
-			new_gib.set_name(new_gib.name + "#" + str(randi() % 100000000))
+			new_gib.set_name(new_gib.name + "#" + str(new_gib.get_instance_id()))
 			get_parent().get_parent().add_child(new_gib)
 			new_gib.global_transform.origin = global_transform.origin
 			new_gib.damage(20, Vector3.FORWARD.rotated(Vector3.UP, rand_range( - PI, PI)), global_transform.origin, global_transform.origin)

@@ -61,7 +61,7 @@ func host_tick():
 func _ready():
 	lerp_transform = global_transform
 	
-	Multiplayer.connect("host_tick", self, "host_tick")
+#	Multiplayer.connect("host_tick", self, "host_tick")
 	rset_config("lerp_transform", MultiplayerAPI.RPC_MODE_PUPPET)
 	
 	if immortal:
@@ -82,6 +82,8 @@ func _ready():
 func _physics_process(delta):
 	if get_tree().network_peer != null:
 		if get_tree().network_peer != null and is_network_master():
+			host_tick()
+			
 			if get_near_player().distance > Global.draw_distance + 10:
 				return 
 			if immortal and dead:

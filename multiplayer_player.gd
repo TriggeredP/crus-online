@@ -3,6 +3,13 @@ extends Spatial
 var weaponsMesh
 var currentWeaponId = 0
 
+var weaponHold = false
+var playerCrouch = false
+var playerOnFloor = true
+
+var playerMovement
+var playerAim
+
 var jumpBlend = 0.0
 var movementBlend = [0.0,0.0]
 var weaponBlend = 0.0
@@ -43,50 +50,6 @@ remote func _set_death(death):
 	else:
 		animTree.set("parameters/DEATH1/active", false)
 		animTree.active = true
-
-remote func _update_puppet(weaponId,playerIsDead,playerOnFloor,playerMovement,playerAim,playerKick,playerCrouch,playerGravity):
-	jumpBlend = lerp(jumpBlend,abs(floor(playerOnFloor) - 1),0.1)
-	movementBlend[0] = lerp(movementBlend[0],playerMovement[0],0.1)
-	movementBlend[1] = lerp(movementBlend[1],playerMovement[1],0.1)
-	playerAimBlend = lerp(playerAimBlend,playerAim,0.1)
-	
-	crouchBlend = lerp(crouchBlend,floor(playerCrouch),0.1)
-	
-	animTree.set("parameters/LEGS_BLEND/blend_amount",jumpBlend)
-	
-	animTree.set("parameters/STANDMOVE_AMOUNT/blend_amount", movementBlend[0] * -1)
-	animTree.set("parameters/CROUCHMOVE_AMOUNT/blend_amount", movementBlend[0] * -1)
-	
-	animTree.set("parameters/RUN_FORWARD_DIRECTION/blend_amount", movementBlend[1])
-	animTree.set("parameters/RUN_BACKWARD_DIRECTION/blend_amount", movementBlend[1] * -1)
-	
-	animTree.set("parameters/MOVE_BLEND/blend_amount",crouchBlend)
-	
-	animTree.set("parameters/LOOK_DIRECTION/blend_amount", playerAim)
-	
-	if playerKick:
-		animTree.set("parameters/KICK/active", true)
-	
-	if not playerIsDead:
-		animTree.set("parameters/DEATH1/active", false)
-		animTree.active = true
-	
-	if weaponId == null:
-		weaponBlend = lerp(weaponBlend,0,0.1)
-		weaponsMesh[currentWeaponId].hide()
-	else:
-		weaponBlend = lerp(weaponBlend,1,0.1)
-		weaponsMesh[currentWeaponId].hide()
-		weaponsMesh[weaponId].show()
-		weaponsMesh[weaponId].get_child(0).hide()
-		currentWeaponId = weaponId
-	
-	if playerGravity:
-		$Puppet/PlayerModel.rotation.z = deg2rad(0)
-	else:
-		$Puppet/PlayerModel.rotation.z = deg2rad(180)
-	
-	animTree.set("parameters/ARMS_BLEND/blend_amount", weaponBlend)
 
 func _ready():
 	weaponsMesh = $Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons.get_children()
@@ -139,36 +102,95 @@ func can_respawn():
 	$Puppet/PlayerModel/Armature/Skeleton/Chest/Body.set_collision_layer_bit(8, true)
 
 func _process(delta):
+	weaponBlend = lerp(weaponBlend,float(!weaponHold),0.1)
+	crouchBlend = lerp(crouchBlend,floor(playerCrouch),0.1)
+	jumpBlend = lerp(jumpBlend,abs(floor(playerOnFloor) - 1),0.1)
+	
+	movementBlend[0] = lerp(movementBlend[0],playerMovement[0],0.1)
+	movementBlend[1] = lerp(movementBlend[1],playerMovement[1],0.1)
+	playerAimBlend = lerp(playerAimBlend,playerAim,0.1)
+	
+	animTree.set("parameters/LEGS_BLEND/blend_amount",jumpBlend)
+	animTree.set("parameters/STANDMOVE_AMOUNT/blend_amount", movementBlend[0] * -1)
+	animTree.set("parameters/CROUCHMOVE_AMOUNT/blend_amount", movementBlend[0] * -1)
+	animTree.set("parameters/RUN_FORWARD_DIRECTION/blend_amount", movementBlend[1])
+	animTree.set("parameters/RUN_BACKWARD_DIRECTION/blend_amount", movementBlend[1] * -1)
+	animTree.set("parameters/MOVE_BLEND/blend_amount",crouchBlend)
+	animTree.set("parameters/LOOK_DIRECTION/blend_amount", playerAim)
+	animTree.set("parameters/ARMS_BLEND/blend_amount", weaponBlend)
+	
+	global_transform = global_transform.interpolate_with(transform_lerp, delta * 10.0)
+	
 	if not $Puppet/PlayerModel/HelpTimer.is_stopped():
 		$Puppet/PlayerModel/HelpLabel.text =  "Wait " + str(floor($Puppet/PlayerModel/HelpTimer.time_left * 10.0)/10.0) + " to help"
 	
 	if $Puppet/PlayerModel/SFX/IED_alert.playing:
 		$Puppet/PlayerModel/SFX/IED_alert.pitch_scale += 0.025
 
-	global_transform = global_transform.interpolate_with(transform_lerp, delta * 10.0)
-
-#func host_tick():
-#	rpc("tick_update")
-#	tick_update()
-
 func _physics_process(delta):
 	Multiplayer.packages_count += 1
 	
 	if get_tree().network_peer != null and is_network_master():
 		
-		rset_unreliable("transform_lerp", Global.player.global_transform)
-		
-		rpc("_update_puppet",
-			Global.player.weapon.current_weapon,
-			Global.player.dead,
-			Global.player.is_on_floor(),
+		rpc_unreliable("_update_puppet",
+			Global.player.global_transform,
 			[Global.player.cmd.forward_move,Global.player.cmd.right_move],
-			Global.player.rotation_helper.rotation.x,
-			Global.player.weapon.kickflag,
-			Global.player.crouch_flag,
-			Global.player.max_gravity > 0
+			Global.player.rotation_helper.rotation.x
 		)
 		hide()
+
+remote func _update_puppet(recivedTransform, recivedPlayerMovement, recivedPlayerAim):
+	transform_lerp = recivedTransform
+	playerMovement = recivedPlayerMovement
+	playerAim = recivedPlayerAim
+
+puppet func respawn_puppet():
+	if is_network_master():
+		rpc("respawn_puppet")
+	else:
+		animTree.set("parameters/DEATH1/active", false)
+		animTree.active = true
+
+puppet func set_current_weapon(value):
+	if is_network_master():
+		rpc("set_current_weapon", value)
+	else:
+		if value == null:
+			weaponHold = true
+			weaponsMesh[currentWeaponId].hide()
+		else:
+			weaponHold = false
+			weaponsMesh[currentWeaponId].hide()
+			weaponsMesh[value].show()
+			weaponsMesh[value].get_child(0).hide()
+			currentWeaponId = value
+
+puppet func set_is_on_floor(value):
+	if is_network_master():
+		rpc("set_is_on_floor", value)
+	else:
+		playerOnFloor = value
+
+puppet func set_kick():
+	if is_network_master():
+		rpc("set_kick")
+	else:
+		animTree.set("parameters/KICK/active", true)
+
+puppet func set_crouch(value):
+	if is_network_master():
+		rpc("set_crouch", value)
+	else:
+		playerCrouch = value
+
+puppet func set_gravity(value):
+	if is_network_master():
+		rpc("set_gravity", value)
+	else:
+		if value > 0:
+			$Puppet/PlayerModel.rotation.z = deg2rad(0)
+		else:
+			$Puppet/PlayerModel.rotation.z = deg2rad(180)
 
 func do_damage(damage, collision_n, collision_p, shooter_pos, weapon_type = null):
 	if canDamage:

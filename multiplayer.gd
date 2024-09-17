@@ -1,6 +1,6 @@
 extends Node
 
-var version = "Alpha 100924/2346"
+var version = "Alpha 180924/0146"
 
 enum errorType {UNKNOW, TIME_OUT, WRONG_PASSWORD, WRONG_VERSION, PASSWORD_REQUIRE, SERVER_CLOSED, UPNP_ERROR}
 
@@ -45,6 +45,7 @@ onready var DeathScreen = Global.get_node('DeathScreen')
 onready var Players = $Players
 onready var Menu = $Menu
 onready var Hint = $Hint
+onready var UDPLagger = $UDPLagger
 
 signal status_update(status)
 signal players_update(data)
@@ -116,6 +117,9 @@ func host_server(port):
 	hostSettings.helpTimer = config.helpTimer
 	hostSettings.canRespawn = config.canRespawn
 	hostSettings.changeModeOnDeath = config.changeModeOnDeath
+	
+	if UDPLagger.enabled:
+		UDPLagger.setup()
 	
 	$Debug/VBoxContainer/Ping.text = "Ping: 0"
 	$Debug/VBoxContainer/GameType.text = "Player is host"
