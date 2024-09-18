@@ -17,6 +17,8 @@ var audio_player
 
 var isDestroyed = false
 
+var destroy_check_timer
+
 func _ready():
 	rset_config("global_transform",MultiplayerAPI.RPC_MODE_PUPPET)
 	
@@ -51,6 +53,13 @@ func _ready():
 	audio_player.max_db = 4
 	audio_player.pitch_scale = 0.6
 	
+	destroy_check_timer = Timer.new()
+	destroy_check_timer.wait_time = 2.0
+	destroy_check_timer.one_shot = true
+	destroy_check_timer.connect("timeout", self, "respawn")
+	
+	rset_config("door_health", MultiplayerAPI.RPC_MODE_PUPPET)
+	
 	if not get_tree().network_peer != null and is_network_master():
 		rpc("_get_transform")
 		rpc("check_removed")
@@ -80,16 +89,21 @@ master func destroy(collision_n, collision_p):
 	if get_tree().network_peer != null and is_network_master():
 		damage(200, collision_n, collision_p, Vector3.ZERO)
 	else:
+		remove(collision_n, collision_p)
 		rpc("destroy", collision_n, collision_p)
 
 master func damage(damage, collision_n, collision_p, shooter_pos):
 	if get_tree().network_peer != null and is_network_master():
 		door_health -= damage
 		if door_health <= 0:
-			isDestroyed = true
 			remove(collision_n, collision_p)
-			rpc("remove", collision_n, collision_p)
+			rpc("remove", collision_n, collision_p, true)
+		rset("door_health", door_health)
 	else:
+		door_health -= damage
+		if door_health <= 0:
+			remove(collision_n, collision_p)
+			destroy_check_timer.start()
 		rpc("damage", damage, collision_n, collision_p, shooter_pos)
 
 func get_type():
@@ -108,16 +122,27 @@ puppet func remove_on_ready():
 	set_collision_layer_bit(8, false)
 	hide()
 
-puppet func remove(collision_n, collision_p):
-	audio_player.global_transform.origin = collision_p
-	audio_player.play()
-	var new_particle = PARTICLE.instance()
-	get_parent().add_child(new_particle)
-	new_particle.global_transform.origin = collision_p
-	new_particle.look_at(global_transform.origin + collision_n * 5 + Vector3(1e-07, 0, 0), Vector3.UP)
-	new_particle.material_override = mesh_instance.mesh.surface_get_material(0)
-	new_particle.emitting = true
-	set_collision_layer_bit(0,false)
-	set_collision_mask_bit(0,false)
-	set_collision_layer_bit(8, false)
-	hide()
+puppet func remove(collision_n, collision_p, from_host = false):
+	if not visible and from_host:
+		destroy_check_timer.stop()
+	else:
+		isDestroyed = true
+		audio_player.global_transform.origin = collision_p
+		audio_player.play()
+		var new_particle = PARTICLE.instance()
+		get_parent().add_child(new_particle)
+		new_particle.global_transform.origin = collision_p
+		new_particle.look_at(global_transform.origin + collision_n * 5 + Vector3(1e-06, 0, 0), Vector3.UP)
+		new_particle.material_override = mesh_instance.mesh.surface_get_material(0)
+		new_particle.emitting = true
+		set_collision_layer_bit(0,false)
+		set_collision_mask_bit(0,false)
+		set_collision_layer_bit(8, false)
+		hide()
+
+func respawn():
+	isDestroyed = false
+	set_collision_layer_bit(0,true)
+	set_collision_mask_bit(0,true)
+	set_collision_layer_bit(8, true)
+	show()

@@ -101,7 +101,7 @@ script = ExtResource( 3 )
 
 [node name="UDPLagger" type="Node" parent="."]
 script = ExtResource( 22 )
-fake_latency_ms = 100
+fake_latency_ms = 500
 
 [node name="Menu" type="Control" parent="."]
 anchor_right = 1.0

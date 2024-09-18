@@ -389,6 +389,7 @@ margin_bottom = 634.0
 rect_min_size = Vector2( 661, 549 )
 
 [node name="Main" type="PanelContainer" parent="CenterContainer/TabContainer"]
+visible = false
 anchor_right = 1.0
 anchor_bottom = 1.0
 margin_left = 7.0
@@ -517,7 +518,6 @@ text = "Alpha 000000/0000"
 script = SubResource( 18 )
 
 [node name="Host" type="PanelContainer" parent="CenterContainer/TabContainer"]
-visible = false
 anchor_right = 1.0
 anchor_bottom = 1.0
 margin_left = 7.0
@@ -585,6 +585,7 @@ max_length = 5
 placeholder_text = "8080"
 
 [node name="TickRate" type="HBoxContainer" parent="CenterContainer/TabContainer/Host/VBoxContainer"]
+visible = false
 margin_top = 108.0
 margin_right = 641.0
 margin_bottom = 134.0
@@ -608,9 +609,9 @@ allow_greater = true
 align = 1
 
 [node name="CanRespawn" type="HBoxContainer" parent="CenterContainer/TabContainer/Host/VBoxContainer"]
-margin_top = 144.0
+margin_top = 108.0
 margin_right = 641.0
-margin_bottom = 170.0
+margin_bottom = 134.0
 
 [node name="Label" type="Label" parent="CenterContainer/TabContainer/Host/VBoxContainer/CanRespawn"]
 margin_right = 591.0
@@ -628,9 +629,9 @@ theme = ExtResource( 24 )
 text = "<<"
 
 [node name="ChangeModeOnDeath" type="HBoxContainer" parent="CenterContainer/TabContainer/Host/VBoxContainer"]
-margin_top = 180.0
+margin_top = 144.0
 margin_right = 641.0
-margin_bottom = 206.0
+margin_bottom = 170.0
 
 [node name="Label" type="Label" parent="CenterContainer/TabContainer/Host/VBoxContainer/ChangeModeOnDeath"]
 margin_right = 591.0
@@ -649,9 +650,9 @@ pressed = true
 text = "<<"
 
 [node name="HelpTimer" type="HBoxContainer" parent="CenterContainer/TabContainer/Host/VBoxContainer"]
-margin_top = 216.0
+margin_top = 180.0
 margin_right = 641.0
-margin_bottom = 242.0
+margin_bottom = 206.0
 alignment = 1
 
 [node name="Label" type="Label" parent="CenterContainer/TabContainer/Host/VBoxContainer/HelpTimer"]
