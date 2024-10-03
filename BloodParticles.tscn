@@ -1,0 +1,43 @@
+[gd_scene load_steps=7 format=2]
+
+[ext_resource path="res://Textures/Decals/blood2.png" type="Texture" id=1]
+
+[sub_resource type="Curve" id=1]
+_data = [ Vector2( 0, 1 ), 0.0, 0.0, 0, 0, Vector2( 1, 0 ), 0.0, 0.0, 0, 0 ]
+
+[sub_resource type="CurveTexture" id=2]
+curve = SubResource( 1 )
+
+[sub_resource type="ParticlesMaterial" id=3]
+lifetime_randomness = 0.2
+direction = Vector3( 0, 1, 0 )
+spread = 180.0
+initial_velocity = 2.0
+initial_velocity_random = 0.3
+angular_velocity = 5.0
+angular_velocity_random = 0.38
+linear_accel = 5.0
+radial_accel = 5.0
+scale = 1.5
+scale_curve = SubResource( 2 )
+
+[sub_resource type="SpatialMaterial" id=4]
+flags_transparent = true
+flags_unshaded = true
+params_billboard_mode = 3
+particles_anim_h_frames = 1
+particles_anim_v_frames = 1
+particles_anim_loop = false
+albedo_texture = ExtResource( 1 )
+
+[sub_resource type="QuadMesh" id=5]
+material = SubResource( 4 )
+
+[node name="BloodParticles" type="Particles"]
+emitting = false
+amount = 16
+lifetime = 0.75
+one_shot = true
+explosiveness = 1.0
+process_material = SubResource( 3 )
+draw_pass_1 = SubResource( 5 )

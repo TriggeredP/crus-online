@@ -128,16 +128,15 @@ func _process(delta):
 		$Puppet/PlayerModel/SFX/IED_alert.pitch_scale += 0.025
 
 func _physics_process(delta):
-	Multiplayer.packages_count += 1
-	
-	if get_tree().network_peer != null and is_network_master():
-		
-		rpc_unreliable("_update_puppet",
-			Global.player.global_transform,
-			[Global.player.cmd.forward_move,Global.player.cmd.right_move],
-			Global.player.rotation_helper.rotation.x
-		)
-		hide()
+	if get_tree().network_peer != null:
+		Multiplayer.packages_count += 1
+		if is_network_master():
+			rpc_unreliable("_update_puppet",
+				Global.player.global_transform,
+				[Global.player.cmd.forward_move,Global.player.cmd.right_move],
+				Global.player.rotation_helper.rotation.x
+			)
+			hide()
 
 remote func _update_puppet(recivedTransform, recivedPlayerMovement, recivedPlayerAim):
 	transform_lerp = recivedTransform

@@ -1,4 +1,4 @@
-[gd_scene load_steps=41 format=2]
+[gd_scene load_steps=47 format=2]
 
 [ext_resource path="res://Menu/menu_theme.tres" type="Theme" id=1]
 [ext_resource path="res://Textures/Misc/mainguy_clothes.png" type="Texture" id=2]
@@ -12,6 +12,8 @@
 [ext_resource path="res://Textures/Menu/Handler/2.png" type="Texture" id=10]
 [ext_resource path="res://MOD_CONTENT/CruS Online/redpanel.tres" type="StyleBox" id=11]
 [ext_resource path="res://Textures/Menu/return_normal.png" type="Texture" id=12]
+[ext_resource path="res://MOD_CONTENT/CruS Online/ChatBox.gd" type="Script" id=13]
+[ext_resource path="res://Sfx/NPCs/night_creep_pain_1.wav" type="AudioStream" id=14]
 [ext_resource path="res://Textures/NPC/cultist_civilian.png" type="Texture" id=15]
 [ext_resource path="res://Textures/NPC/bosssguy_clothes.png" type="Texture" id=16]
 [ext_resource path="res://Textures/NPC/Enemy_Civilian2.png" type="Texture" id=17]
@@ -24,6 +26,7 @@
 [ext_resource path="res://MOD_CONTENT/CruS Online/extramenu.tres" type="Theme" id=24]
 [ext_resource path="res://Sfx/UI/Implant_Equip.wav" type="AudioStream" id=25]
 [ext_resource path="res://Sfx/UI/implant_unequip.wav" type="AudioStream" id=26]
+[ext_resource path="res://Fonts/gamefont(1).ttf" type="DynamicFontData" id=27]
 
 [sub_resource type="GDScript" id=12]
 script/source = "extends PanelContainer
@@ -256,6 +259,19 @@ func ban_all():
 
 [sub_resource type="AudioStreamRandomPitch" id=14]
 audio_stream = ExtResource( 25 )
+
+[sub_resource type="DynamicFont" id=27]
+use_filter = true
+extra_spacing_bottom = 5
+font_data = ExtResource( 27 )
+
+[sub_resource type="DynamicFont" id=28]
+use_filter = true
+font_data = ExtResource( 27 )
+
+[sub_resource type="AudioStreamRandomPitch" id=29]
+audio_stream = ExtResource( 14 )
+random_pitch = 1.3
 
 [sub_resource type="GDScript" id=24]
 script/source = "extends PanelContainer
@@ -518,6 +534,7 @@ text = "Alpha 000000/0000"
 script = SubResource( 18 )
 
 [node name="Host" type="PanelContainer" parent="CenterContainer/TabContainer"]
+visible = false
 anchor_right = 1.0
 anchor_bottom = 1.0
 margin_left = 7.0
@@ -1052,8 +1069,62 @@ stream = SubResource( 14 )
 [node name="Unequip" type="AudioStreamPlayer" parent="CenterContainer/TabContainer/Implants"]
 stream = ExtResource( 26 )
 
-[node name="Credits" type="PanelContainer" parent="CenterContainer/TabContainer"]
+[node name="Chat" type="PanelContainer" parent="CenterContainer/TabContainer"]
 visible = false
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_left = 7.0
+margin_top = 39.0
+margin_right = -7.0
+margin_bottom = -7.0
+theme = ExtResource( 1 )
+script = ExtResource( 13 )
+__meta__ = {
+"_edit_use_anchors_": true
+}
+hide_on_ready = false
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/TabContainer/Chat"]
+margin_left = 3.0
+margin_top = 3.0
+margin_right = 644.0
+margin_bottom = 500.0
+custom_constants/separation = 3
+
+[node name="PanelContainer" type="PanelContainer" parent="CenterContainer/TabContainer/Chat/VBoxContainer"]
+margin_right = 641.0
+margin_bottom = 468.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+custom_styles/panel = ExtResource( 11 )
+
+[node name="RichTextLabel" type="RichTextLabel" parent="CenterContainer/TabContainer/Chat/VBoxContainer/PanelContainer"]
+margin_left = 10.0
+margin_top = 5.0
+margin_right = 631.0
+margin_bottom = 463.0
+custom_fonts/normal_font = SubResource( 27 )
+bbcode_enabled = true
+bbcode_text = "Welcome to CruS Online"
+text = "Welcome to CruS Online"
+scroll_following = true
+
+[node name="LineEdit" type="LineEdit" parent="CenterContainer/TabContainer/Chat/VBoxContainer"]
+margin_top = 471.0
+margin_right = 641.0
+margin_bottom = 497.0
+theme = ExtResource( 24 )
+custom_constants/minimum_spaces = 0
+custom_fonts/font = SubResource( 28 )
+selecting_enabled = false
+deselect_on_focus_loss_enabled = false
+placeholder_text = " / to type"
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="CenterContainer/TabContainer/Chat"]
+stream = SubResource( 29 )
+pitch_scale = 1.28
+
+[node name="Credits" type="PanelContainer" parent="CenterContainer/TabContainer"]
 anchor_right = 1.0
 anchor_bottom = 1.0
 margin_left = 7.0
@@ -1266,6 +1337,7 @@ autostart = true
 [connection signal="item_selected" from="CenterContainer/TabContainer/Implants/HBoxContainer/ImplantsController/AllowedImplantsList" to="CenterContainer/TabContainer/Implants" method="toggle_implant"]
 [connection signal="pressed" from="CenterContainer/TabContainer/Implants/HBoxContainer/VBoxContainer/Button3" to="CenterContainer/TabContainer/Implants" method="ban_all"]
 [connection signal="pressed" from="CenterContainer/TabContainer/Implants/HBoxContainer/VBoxContainer/Button4" to="CenterContainer/TabContainer/Implants" method="allow_all"]
+[connection signal="text_entered" from="CenterContainer/TabContainer/Chat/VBoxContainer/LineEdit" to="CenterContainer/TabContainer/Chat" method="_text_entered"]
 [connection signal="meta_clicked" from="CenterContainer/TabContainer/Credits/RichTextLabel" to="CenterContainer/TabContainer/Credits" method="meta_clicked"]
 [connection signal="popup_hide" from="PasswordInput" to="PasswordInput" method="set_password"]
 [connection signal="text_entered" from="PasswordInput/Panel/MarginContainer/RichTextLabel/PasswordEdit" to="PasswordInput" method="password_entered"]

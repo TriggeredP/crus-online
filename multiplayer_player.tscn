@@ -1,4 +1,4 @@
-[gd_scene load_steps=139 format=2]
+[gd_scene load_steps=142 format=2]
 
 [ext_resource path="res://MOD_CONTENT/CruS Online/multiplayer_player.gd" type="Script" id=1]
 [ext_resource path="res://MOD_CONTENT/CruS Online/player_model/player_model.tscn" type="PackedScene" id=2]
@@ -92,6 +92,7 @@
 [ext_resource path="res://flashlight.tscn" type="PackedScene" id=90]
 [ext_resource path="res://Textures/Particles/shine.png" type="Texture" id=91]
 [ext_resource path="res://Sfx/Player/IED_hollow_laughter-old1.wav" type="AudioStream" id=92]
+[ext_resource path="res://MOD_CONTENT/CruS Online/target_white.png" type="Texture" id=93]
 
 [sub_resource type="GDScript" id=66]
 script/source = "extends Spatial
@@ -129,6 +130,22 @@ func cancer():
 
 [sub_resource type="BoxShape" id=64]
 extents = Vector3( 0.228365, 0.241875, 0.277687 )
+
+[sub_resource type="SpatialMaterial" id=84]
+flags_transparent = true
+flags_unshaded = true
+flags_no_depth_test = true
+flags_fixed_size = true
+params_billboard_mode = 1
+albedo_color = Color( 0, 1, 0.0156863, 1 )
+albedo_texture = ExtResource( 93 )
+distance_fade_mode = 1
+distance_fade_min_distance = 10.0
+distance_fade_max_distance = 20.0
+
+[sub_resource type="QuadMesh" id=85]
+material = SubResource( 84 )
+size = Vector2( 0.087, 0.087 )
 
 [sub_resource type="SpatialMaterial" id=17]
 albedo_texture = ExtResource( 48 )
@@ -379,6 +396,11 @@ script = SubResource( 65 )
 
 [node name="CollisionPolygon" type="CollisionShape" parent="Puppet/PlayerModel/Armature/Skeleton/Head/Head"]
 shape = SubResource( 64 )
+
+[node name="PlayerIndicator" type="MeshInstance" parent="Puppet/PlayerModel/Armature/Skeleton/Head" index="2"]
+transform = Transform( 0.999962, -0.000671573, 0.00876921, -0.000857488, -0.999775, 0.0212075, 0.00875309, -0.0212146, -0.999737, 0.000732271, 0.150957, -0.00722488 )
+mesh = SubResource( 85 )
+skeleton = NodePath("../../../..")
 
 [node name="RightHand" type="BoneAttachment" parent="Puppet/PlayerModel/Armature/Skeleton" index="1"]
 transform = Transform( 0.14914, -0.128445, 0.980438, -0.975317, 0.144175, 0.167249, -0.162837, -0.981181, -0.103771, 0.139553, 0.461656, -0.237993 )

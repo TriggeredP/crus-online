@@ -393,17 +393,12 @@ func hold(item):
 			add_child(item)
 	
 	use_ray.add_exception(item)
+	
 	item.global_transform.origin = hold_pos.global_transform.origin
 	
 	held_object = item
 	held_object_world = held_object.get_collision_layer_bit(0)
-	held_object.set_collision_layer_bit(0, 0)
-	held_object.set_collision_mask_bit(0, 0)
-	held_object.set_collision_layer_bit(6, 0)
-	
-	held_object.rpc("_set_collision_layer",6,0)
-	held_object.rpc("_set_collision_layer",0,0)
-	held_object.rpc("_set_collision_mask",0,0)
+	held_object.set_hold_collision(true)
 		
 	holding = true
 
@@ -682,6 +677,7 @@ func _process(delta)->void :
 			if use_ray.is_colliding():
 				if global_transform.origin.distance_to(use_ray.get_collision_point()) < global_transform.origin.distance_to(hold_pos.global_transform.origin):
 					pos = use_ray.get_collision_point()
+			held_object.set_transform(hold_pos.global_transform, true)
 			held_object.global_transform.origin = pos
 			held_object.velocity = Vector3.ZERO
 			var col_is_usable
@@ -693,18 +689,8 @@ func _process(delta)->void :
 				holding = false
 				
 				if get_tree().network_peer != null:
-					held_object.holdId = 0
-					held_object.held = false
-					held_object.rset("held",false)
-					held_object.rset("holdId",0)
-					
-					held_object.set_collision_layer_bit(6, 1)
-					held_object.set_collision_layer_bit(0, 1)
-					held_object.set_collision_mask_bit(0, 1)
-					
-					held_object.rpc("_set_collision_layer",6,1)
-					held_object.rpc("_set_collision_layer",0,1)
-					held_object.rpc("_set_collision_mask",0,1)
+					held_object.set_hold_collision(false)
+					use_ray.remove_exception(held_object)
 				else:
 					if "soul" in held_object:
 						held_object.get_parent().remove_child(held_object)
@@ -728,10 +714,8 @@ func _process(delta)->void :
 				holding = false
 				
 				if get_tree().network_peer != null:
-					held_object.holdId = 0
-					held_object.held = false
-					held_object.rset("held",false)
-					held_object.rset("holdId",0)
+					held_object.set_hold_collision(false)
+					use_ray.remove_exception(held_object)
 					
 					var calculatedVelocity
 					if "mass" in held_object:
@@ -740,14 +724,6 @@ func _process(delta)->void :
 						calculatedVelocity = (20 + glob.implants.arm_implant.throw_bonus) * (global_transform.origin - hold_pos.global_transform.origin).normalized()
 					held_object.velocity += glob.player.player_velocity
 					held_object.rset("velocity",held_object.velocity + glob.player.player_velocity - calculatedVelocity)
-					
-					held_object.set_collision_layer_bit(6, 1)
-					held_object.set_collision_layer_bit(0, 1)
-					held_object.set_collision_mask_bit(0, 1)
-					
-					held_object.rpc("_set_collision_layer",6,1)
-					held_object.rpc("_set_collision_layer",0,1)
-					held_object.rpc("_set_collision_mask",0,1)
 				else:
 					if "alerter" in held_object:
 						held_object.alerter = true

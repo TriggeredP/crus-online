@@ -7,15 +7,14 @@ onready var anim = $AnimationPlayer
 
 var materialId = 0
 
-puppet func set_material(materialId,headOnlyRecived):
-	print("NPC material changed")
-	var material = load(materials[materialId])
+puppet func set_material(recived_material_id, head_only_recived):
+	var material = load(materials[recived_material_id])
 	$Armature / Skeleton / Head_Mesh.material_override = material
-	if not headOnlyRecived:
+	if not head_only_recived:
 		$Armature / Skeleton / Torso_Mesh.material_override = material
 
 master func get_material():
-	rpc_id(get_tree().get_rpc_sender_id(),"set_material",materialId,head_only)
+	rpc_id(get_tree().get_rpc_sender_id(), "set_material", materialId, head_only)
 
 func _ready():
 	if get_tree().network_peer != null and is_network_master():
@@ -25,7 +24,7 @@ func _ready():
 		if not head_only:
 			$Armature / Skeleton / Torso_Mesh.material_override = material
 	else:
-		rpc_id(0,"get_material")
+		rpc_id(0, "get_material")
 
 func _process(delta):
 	if not cutscene:

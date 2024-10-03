@@ -119,6 +119,8 @@ var Multiplayer = Global.get_node("Multiplayer")
 
 var enabled = true
 
+var blood_particles
+
 remote func _create_drop_weapon(parentPath, recivedTransform, recivedVelocity, recivedCurrentWeapon, recivedAmmo, recivdeName, playerIgnoreId):
 	var new_weapon_drop = weapon_drop.instance()
 	new_weapon_drop.set_name(recivdeName)
@@ -180,18 +182,27 @@ puppet func _hide_npc_client():
 	body.lerp_transform.origin = Vector3(1000,1000,1000)
 	body.set_collision_layer_bit(4, false)
 
-puppet func cleanup():
+puppet func respawn():
+	enabled = true
+	show()
+	dead = false
+	body.set_collision_layer_bit(4, true)
+
+puppet func cleanup(teleport_body = true):
 	enabled = false
 	hide()
 	dead = true
-	global_transform.origin = Vector3(1000,1000,1000)
-	body.lerp_transform.origin = Vector3(1000,1000,1000)
+	if teleport_body:
+		global_transform.origin = Vector3(1000,1000,1000)
+		body.lerp_transform.origin = Vector3(1000,1000,1000)
 	body.set_collision_layer_bit(4, false)
 
 master func check_npc():
 	if not enabled:
 		print("[CRUS ONLINE / HOST / " + name + "]: NPC not enabled")
 		rpc_id(get_tree().get_rpc_sender_id(),"cleanup")
+	else:
+		rpc_id(get_tree().get_rpc_sender_id(),"respawn")
 
 puppet func set_stealth():
 	if not stealth:
@@ -218,41 +229,50 @@ func _ready():
 	dead_head = $Collisions / Dead_Head
 	dead_body = $Collisions / Dead_Body
 	
+	blood_particles = load("res://MOD_CONTENT/CruS Online/BloodParticles.tscn").instance()
+	add_child(blood_particles)
+	
 	Multiplayer.connect("scene_loaded", self, "spawn_check_npc")
 	
-	if get_tree().network_peer != null and is_network_master():
-		if hell_objective and not glob.hope_discarded:
-			cleanup() 
-		elif hell_objective and (glob.hope_discarded):
-			objective = true
-		if (chaos_objective and not glob.chaos_mode):
-			cleanup() 
-		if chaos_objective and rand_range(0, 100) > 25:
-			cleanup() 
-		if glob.chaos_mode:
-			if rand_range(0, 100) < 10:
-				stealth_random = true
-			if chaos_objective:
+	rset_config("health", MultiplayerAPI.RPC_MODE_PUPPET)
+	rset_config("armor", MultiplayerAPI.RPC_MODE_PUPPET)
+	
+	if get_tree().network_peer != null:
+		if is_network_master():
+			if hell_objective and not glob.hope_discarded:
+				cleanup() 
+			elif hell_objective and (glob.hope_discarded):
 				objective = true
-			if rand_range(0, 100) < 10:
-				poison_death = true
-			if rand_range(0, 100) < 10:
-				healthy_random = true
-			if rand_range(0, 100) < 10:
-				armored_random = true
-		if not civilian and glob.hope_discarded:
-			if health < 70 and health > 20:
-				health = 70
-		if glob.DEAD_CIVS.find(npc_name) != - 1:
-			cleanup()
-		if glob.hope_discarded:
-			pass
-		elif (glob.ending_1 or glob.punishment_mode) and random_spawn:
-			if randi() % 25 != 4:
+			if (chaos_objective and not glob.chaos_mode):
+				cleanup() 
+			if chaos_objective and rand_range(0, 100) > 25:
+				cleanup() 
+			if glob.chaos_mode:
+				if rand_range(0, 100) < 10:
+					stealth_random = true
+				if chaos_objective:
+					objective = true
+				if rand_range(0, 100) < 10:
+					poison_death = true
+				if rand_range(0, 100) < 10:
+					healthy_random = true
+				if rand_range(0, 100) < 10:
+					armored_random = true
+			if not civilian and glob.hope_discarded:
+				if health < 70 and health > 20:
+					health = 70
+			if glob.DEAD_CIVS.find(npc_name) != - 1:
 				cleanup()
-		elif random_spawn:
-			if randi() % 250 != 4:
-				cleanup()
+			if glob.hope_discarded:
+				pass
+			elif (glob.ending_1 or glob.punishment_mode) and random_spawn:
+				if randi() % 25 != 4:
+					cleanup()
+			elif random_spawn:
+				if randi() % 250 != 4:
+					cleanup()
+		else:
+			cleanup(false)
 	
 	nodamage = get_node_or_null("Body/SFX/NoDamage")
 	if nodamage == null:
@@ -367,40 +387,51 @@ master func add_velocity(amount, normal):
 		rpc_id(0,"add_velocity",amount, normal)
 
 master func piercing_damage(damage, collision_n, collision_p):
-	if get_tree().network_peer != null and is_network_master():
+	if get_tree().network_peer != null:
 		if not dead and armor > 0:
-			for body in new_alert_sphere.get_overlapping_bodies():
+			for body in new_alert_sphere.get_overlapping_bodies() and is_network_master():
 				if body.has_method("alert"):
 					body.alert(glob.player.global_transform.origin)
 			pain_sfx[0].play()
 		armor -= damage
-		if health <= flee_health and damage > 0.5:
+		
+		if is_network_master():
+			rset("armor", armor)
+		
+		if health <= flee_health and damage > 0.5 and is_network_master():
 			body.set_flee()
 			flee = true
 		if health <= 0:
 			if not dead:
+				blood_particles.global_transform = torso.global_transform
+				blood_particles.emitting = true
 				die(damage, collision_n, collision_p)
 		if health <= gib_health and not gibs_spawned and gib:
 			gibs_spawned = true
 			gib_sfx.play()
-			for gib in len(GIBS):
-				if head.get_head_health() > 0 and gib == G_HEAD:
-					spawn_gib(gib, 1, damage, collision_n, collision_p)
-					pass
-				elif gib != G_HEAD:
-					spawn_gib(gib, 1, damage, collision_n, collision_p)
-					pass
+			blood_particles.global_transform = torso.global_transform
+			blood_particles.emitting = true
+			if is_network_master():
+				for gib in len(GIBS):
+					if head.get_head_health() > 0 and gib == G_HEAD:
+						spawn_gib(gib, 1, damage, collision_n, collision_p)
+						pass
+					elif gib != G_HEAD:
+						spawn_gib(gib, 1, damage, collision_n, collision_p)
+						pass
+				
+				rpc("_hide_npc_client")
 			skeleton.hide()
 			colliders.get_node("Dead_Head/CollisionShape").disabled = true
 			colliders.get_node("Dead_Body/CollisionShape").disabled = true
 			deathtimer.start()
-			rpc("_hide_npc_client")
 			yield(gib_sfx, "finished")
-			global_transform.origin = Vector3(1000,1000,1000)
-			body.lerp_transform.origin = Vector3(1000,1000,1000)
+			if is_network_master():
+				global_transform.origin = Vector3(1000,1000,1000)
+				body.lerp_transform.origin = Vector3(1000,1000,1000)
 			body.set_collision_layer_bit(4, false)
-	else:
-		rpc_id(0,"piercing_damage",damage, collision_n, collision_p)
+		if not is_network_master():
+			rpc_id(0,"piercing_damage",damage, collision_n, collision_p)
 
 func alert_body_entered(b):
 	if get_tree().network_peer != null and is_network_master():
@@ -411,7 +442,7 @@ func alert_body_exited(b):
 		nearby.remove(nearby.find(b))
 
 master func damage(damage, collision_n, collision_p, shooter_pos):
-	if get_tree().network_peer != null and is_network_master():
+	if get_tree().network_peer != null:
 		if on_fire and not grilled_flag:
 			if head_mesh:
 				head_mesh.material_override = grilled_material
@@ -424,7 +455,7 @@ master func damage(damage, collision_n, collision_p, shooter_pos):
 			if nodamage != null:
 				nodamage.pitch_scale = 1.2 + rand_range(0, 0.2)
 				nodamage.play()
-			for body in new_alert_sphere.get_overlapping_bodies():
+			for body in new_alert_sphere.get_overlapping_bodies() and is_network_master():
 				if body.has_method("alert"):
 					body.alert(glob.player.global_transform.origin)
 			return 
@@ -436,39 +467,51 @@ master func damage(damage, collision_n, collision_p, shooter_pos):
 				alerted = true
 			if not pain_sfx[0].playing:
 				pain_sfx[0].play()
-		if damage > 0.5:
+		if damage > 0.5 and is_network_master():
 			body.add_velocity(collision_n * damage * 0.2)
 		health -= damage
+		
+		if is_network_master():
+			rset("health", health)
+		
 		if health <= flee_health and damage > 0.5:
 			body.set_flee()
 			flee = true
-		if health <= 0:
+		if health <= 0 and is_network_master():
 			if not dead:
+				blood_particles.global_transform = torso.global_transform
+				blood_particles.emitting = true
 				die(damage, collision_n, collision_p)
 		if health <= gib_health and not gibs_spawned and gib and damage != 20.6:
 			gibs_spawned = true
 			gib_sfx.play()
-			if rand_range(0, 1) < drop_chance:
-				var i = 0
-				for d in len(DROPS):
-					if rand_range(0, 100) < DROP_CHANCE[i]:
-						spawn_gib(d, 1, damage, collision_n, collision_p, "DROPS")
+			blood_particles.global_transform = torso.global_transform
+			blood_particles.emitting = true
+			if is_network_master():
+				if rand_range(0, 1) < drop_chance:
+					var i = 0
+					for d in len(DROPS):
+						if rand_range(0, 100) < DROP_CHANCE[i]:
+							spawn_gib(d, 1, damage, collision_n, collision_p, "DROPS")
+							pass
+						i += 1
+				for gib in len(GIBS):
+					if head.get_head_health() > 0 and GIBS[gib] == G_HEAD:
+						spawn_gib(gib, 1, damage, collision_n, collision_p)
 						pass
-					i += 1
-			for gib in len(GIBS):
-				if head.get_head_health() > 0 and GIBS[gib] == G_HEAD:
-					spawn_gib(gib, 1, damage, collision_n, collision_p)
-					pass
-				elif GIBS[gib] != G_HEAD:
-					spawn_gib(gib, 1, damage, collision_n, collision_p)
-					pass
+					elif GIBS[gib] != G_HEAD:
+						spawn_gib(gib, 1, damage, collision_n, collision_p)
+						pass
+				
+				rpc("_hide_npc_client")
+			
 			skeleton.hide()
 			colliders.get_node("Dead_Head/CollisionShape").disabled = true
 			colliders.get_node("Dead_Body/CollisionShape").disabled = true
 			deathtimer.start()
-			rpc("_hide_npc_client")
-	else:
-		rpc_id(0,"damage",damage, collision_n, collision_p, shooter_pos)
+		
+		if not is_network_master():
+			rpc_id(0,"damage",damage, collision_n, collision_p, shooter_pos)
 
 func remove_objective():
 	if dead:

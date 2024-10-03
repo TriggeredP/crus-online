@@ -67,17 +67,6 @@ remote func _sync_vars(recDisabled,recUsable,recGrill_health,recSphere_collision
 remote func _set_grill(value):
 	grill = value
 
-remote func _set_collision(typeA,typeB):
-	set_collision_layer_bit(0, typeA)
-	set_collision_mask_bit(2, typeB)
-	set_collision_mask_bit(3, typeB)
-
-remote func _set_collision_layer(numA,numB):
-	set_collision_layer_bit(numA, numB)
-
-remote func _set_collision_mask(numA,numB):
-	set_collision_mask_bit(numA, numB)
-
 remote func _spawn_fake_gas(pos):
 	var fake_gas_cloud = preload("res://MOD_CONTENT/CruS Online/effects/fake_poison_gas.tscn").instance()
 	get_parent().add_child(fake_gas_cloud)
@@ -169,22 +158,43 @@ master func _get_transform():
 	rset_unreliable("lerp_transform", lerp_transform)
 	rset_unreliable("global_transform", global_transform)
 
-master func set_transform(recivedTransform):
+master func set_transform(recivedTransform, only_origin = false):
 	if is_network_master():
 		finished = false
 		t = 0
 		velocity = Vector3.ZERO
 		
-		lerp_transform = recivedTransform
-		global_transform = recivedTransform
+		if only_origin:
+			lerp_transform.origin = recivedTransform.origin
+			global_transform.origin = recivedTransform.origin
+		else:
+			lerp_transform = recivedTransform
+			global_transform = recivedTransform
 	else:
-		rpc("set_transform", recivedTransform)
+		rpc("set_transform", recivedTransform, only_origin)
 
 master func add_velocity(recivedVelocity):
 	if is_network_master():
 		velocity += recivedVelocity
 	else:
 		rpc("add_velocity", recivedVelocity)
+
+func set_hold_collision(recived_holding):
+	_set_hold_collision(recived_holding)
+	rpc("_set_hold_collision", recived_holding)
+
+remote func _set_hold_collision(recived_holding):
+	if recived_holding:
+		$CollisionShape.disabled = true
+		set_collision_layer_bit(6, 0)
+		set_collision_mask_bit(0, 0)
+	else:
+		$CollisionShape.disabled = false
+		set_collision_layer_bit(6, 1)
+		set_collision_mask_bit(0, 1)
+		
+		holdId = 0
+		held = false
 
 func _physics_process(delta):
 	if get_tree().network_peer != null:
@@ -195,8 +205,8 @@ func _physics_process(delta):
 
 		t += 1
 		
-		if held and get_tree().get_network_unique_id() == holdId:
-			lerp_transform.origin = Global.player.weapon.hold_pos.global_transform.origin
+#		if held and get_tree().get_network_unique_id() == holdId:
+#			lerp_transform.origin = Global.player.weapon.hold_pos.global_transform.origin
 
 		if is_network_master():
 			host_tick()
@@ -227,17 +237,17 @@ func _physics_process(delta):
 				new_healing.global_transform.origin = global_transform.origin
 				rpc("_grill",new_healing.global_transform.origin)
 			
-			if collidable:
-				if Vector2(velocity.x, velocity.z).length() > 5:
-					set_collision_layer_bit(0, 0)
-					set_collision_mask_bit(2, 1)
-					set_collision_mask_bit(3, 1)
-					rpc("_set_collision",0,1)
-				elif not held:
-					set_collision_layer_bit(0, 1)
-					set_collision_mask_bit(2, 0)
-					set_collision_mask_bit(3, 0)
-					rpc("_set_collision",1,0)
+#			if collidable:
+#				if Vector2(velocity.x, velocity.z).length() > 5:
+#					set_collision_layer_bit(0, 0)
+#					set_collision_mask_bit(2, 1)
+#					set_collision_mask_bit(3, 1)
+#					rpc("_set_collision",0,1)
+#				elif not held:
+#					set_collision_layer_bit(0, 1)
+#					set_collision_mask_bit(2, 0)
+#					set_collision_mask_bit(3, 0)
+#					rpc("_set_collision",1,0)
 			
 			if player_head:
 				rot_towards = lerp(rot_towards, global_transform.origin - velocity, 5 * delta)

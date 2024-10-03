@@ -101,7 +101,7 @@ script = ExtResource( 3 )
 
 [node name="UDPLagger" type="Node" parent="."]
 script = ExtResource( 22 )
-fake_latency_ms = 500
+fake_latency_ms = 200
 
 [node name="Menu" type="Control" parent="."]
 anchor_right = 1.0
@@ -369,6 +369,7 @@ wait_time = 5.0
 one_shot = true
 
 [node name="PingTimer" type="Timer" parent="."]
+autostart = true
 
 [node name="Debug" type="MarginContainer" parent="."]
 anchor_right = 1.0
@@ -397,7 +398,7 @@ align = 2
 margin_top = 26.0
 margin_right = 1130.0
 margin_bottom = 52.0
-text = "Packages per tick: 0"
+text = "Packages per sec: 0"
 align = 2
 
 [node name="Ping" type="Label" parent="Debug/VBoxContainer"]

@@ -1,6 +1,6 @@
 extends Node
 
-var version = "Pre Beta 190924/0123"
+var version = "Pre Beta 031024/1740"
 
 enum errorType {UNKNOW, TIME_OUT, WRONG_PASSWORD, WRONG_VERSION, PASSWORD_REQUIRE, SERVER_CLOSED, UPNP_ERROR}
 
@@ -85,27 +85,26 @@ func _physics_process(delta):
 	
 	if get_tree().network_peer != null and is_network_master() and tick % config.tickRate == 0:
 		emit_signal("host_tick")
-		$Debug/VBoxContainer/PPT.text = "Packages per tick: " + str(packages_count + 1)
-		rpc("set_packages_count", packages_count + 1)
-		packages_count = 0
 		tick = 0
 	tick += 1
 
-var ping_msec = 0
-
 puppet func set_packages_count(value):
-	$Debug/VBoxContainer/PPT.text = "Packages per tick: " + str(value)
+	$Debug/VBoxContainer/PPT.text = "Packages per sec: " + str(value)
 
 func ping_check():
-	if get_tree().network_peer != null and not is_network_master():
-		ping_msec = OS.get_ticks_msec()
-		rpc("ping_host")
+	if get_tree().network_peer != null:
+		if not is_network_master():
+			rpc("ping_host", OS.get_ticks_msec())
+		else:
+			$Debug/VBoxContainer/PPT.text = "Packages per sec: " + str(packages_count + 1)
+			rpc("set_packages_count", packages_count + 1)
+			packages_count = 0
 
-master func ping_host():
-	rpc_id(get_tree().get_rpc_sender_id(), "ping_set")
+master func ping_host(recived_ping):
+	rpc_id(get_tree().get_rpc_sender_id(), "ping_set", recived_ping)
 
-puppet func ping_set():
-	$Debug/VBoxContainer/Ping.text = "Ping: " + str(OS.get_ticks_msec() - ping_msec)
+puppet func ping_set(recived_ping):
+	$Debug/VBoxContainer/Ping.text = "Ping: " + str(OS.get_ticks_msec() - recived_ping)
 
 func clear_connection(recivedError):
 	emit_signal("disconnected_from_server", recivedError)
@@ -123,8 +122,6 @@ func host_server(port):
 	
 	$Debug/VBoxContainer/Ping.text = "Ping: 0"
 	$Debug/VBoxContainer/GameType.text = "Player is host"
-	
-	$PingTimer.stop()
 	
 	var server = NetworkedMultiplayerENet.new()
 	server.create_server(port, 16)
@@ -144,8 +141,6 @@ func join_to_server(ip, port):
 	
 	$Debug/VBoxContainer/GameType.text = "Player is client"
 	
-	$PingTimer.start()
-	
 	var client = NetworkedMultiplayerENet.new()
 	client.create_client(ip,port)
 	get_tree().set_network_peer(client)
@@ -158,6 +153,8 @@ func leave_server():
 	players = {}
 	
 	$Debug/VBoxContainer/GameType.text = "Player is not connected"
+	$Debug/VBoxContainer/PPT.text = "Packages per sec: 0"
+	$Debug/VBoxContainer/Ping.text = "Ping: 0"
 	
 	emit_signal("status_update", "Offline")
 	emit_signal("players_update", players)
@@ -295,6 +292,7 @@ func goto_menu_host(levelFinished = false):
 	Players.remove_players()
 
 puppet func goto_menu_client(levelFinished = false):
+	$RestartTimer.stop()
 	var menuPath = "res://MOD_CONTENT/CruS Online/maps/crus_online_lobby.tscn"
 	
 	DeathScreen.hide()
@@ -384,6 +382,7 @@ func goto_scene_host(scene):
 	Players.load_players()
 
 puppet func goto_scene_client(scene, level):
+	$RestartTimer.stop()
 	player_scene_loaded = false
 	
 	Global.cutscene = false

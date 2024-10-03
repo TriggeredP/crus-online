@@ -14,9 +14,9 @@ var sfx = preload("res://Sfx/Environment/door_concrete.wav")
 var audio_player:AudioStreamPlayer3D
 var timer:Timer
 
+var lerp_translation
+
 func _ready():
-	rset_config("global_transform",MultiplayerAPI.RPC_MODE_PUPPET)
-	
 	timer = Timer.new()
 	add_child(timer)
 	timer.wait_time = 5
@@ -37,48 +37,61 @@ func _ready():
 	t = t.translated(Vector3(mesh_instance.get_aabb().position.x, 0, mesh_instance.get_aabb().position.z))
 	mesh_instance.transform = t
 	collision_shape.transform = t
+	
+	lerp_translation = translation
 
 func _physics_process(delta):
-	if get_tree().network_peer != null and is_network_master():
-		rset_unreliable("global_transform", global_transform)
-		
-		if not open and not stop:
-			if not audio_player.playing:
-				audio_player.play()
-			if mesh_instance.get_aabb().size.x > mesh_instance.get_aabb().size.z:
-				translation.x += speed * delta
-			elif mesh_instance.get_aabb().size.x < mesh_instance.get_aabb().size.z:
-				translation.z += speed * delta
-			else :
-				translation.z += speed * delta
-				translation.x += speed * delta
-			movement_counter += speed * delta
-		if open and not stop:
-			if not audio_player.playing:
-				audio_player.play()
-			if mesh_instance.get_aabb().size.x > mesh_instance.get_aabb().size.z:
-				translation.x -= speed * delta
-			elif mesh_instance.get_aabb().size.x < mesh_instance.get_aabb().size.z:
-				translation.z -= speed * delta
-			else :
-				translation.z -= speed * delta
-				translation.x -= speed * delta
-			movement_counter += speed * delta
-		if movement_counter > mesh_instance.get_aabb().size.x + 0.1 and movement_counter > mesh_instance.get_aabb().size.z + 0.1:
-			audio_player.stop()
-			movement_counter = 0
-			stop = true
+	if not open and not stop:
+		if not audio_player.playing:
+			audio_player.play()
+		if mesh_instance.get_aabb().size.x > mesh_instance.get_aabb().size.z:
+			translation.x += speed * delta
+		elif mesh_instance.get_aabb().size.x < mesh_instance.get_aabb().size.z:
+			translation.z += speed * delta
+		else :
+			translation.z += speed * delta
+			translation.x += speed * delta
+		movement_counter += speed * delta
+	if open and not stop:
+		if not audio_player.playing:
+			audio_player.play()
+		if mesh_instance.get_aabb().size.x > mesh_instance.get_aabb().size.z:
+			translation.x -= speed * delta
+		elif mesh_instance.get_aabb().size.x < mesh_instance.get_aabb().size.z:
+			translation.z -= speed * delta
+		else :
+			translation.z -= speed * delta
+			translation.x -= speed * delta
+		movement_counter += speed * delta
+	if movement_counter > mesh_instance.get_aabb().size.x + 0.1 and movement_counter > mesh_instance.get_aabb().size.z + 0.1:
+		audio_player.stop()
+		movement_counter = 0
+		stop = true
+		if get_tree().network_peer != null and is_network_master():
+			rpc("set_door", stop, open, translation)
+
+puppet func set_door(recived_stop, recived_open, recived_translation = null):
+	stop = recived_stop
+	open = recived_open
+	
+	if recived_translation != null:
+		translation = recived_translation
 
 func timeout():
+	stop = not stop
+	open = not open
+	
 	if get_tree().network_peer != null and is_network_master():
-		stop = not stop
-		open = not open
+		rpc("set_door", stop, open, translation)
 
 master func use():
-	if get_tree().network_peer != null and is_network_master():
+	if get_tree().network_peer != null:
 		if stop and not open:
 			open = not open
 			stop = not stop
+			
 			timer.start()
-	else:
-		rpc("use")
+			if is_network_master():
+				rpc("set_door", stop, open)
+			else:
+				rpc("use")

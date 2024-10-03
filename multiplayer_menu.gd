@@ -56,6 +56,7 @@ func _ready():
 	
 	$CenterContainer.hide()
 	$CenterContainer/TabContainer.set_tab_hidden(4, true)
+	$CenterContainer/TabContainer.set_tab_hidden(5, true)
 	$CenterContainer/TabContainer.current_tab = 0
 	
 	Multiplayer.connect("connected_to_server", self, "_on_connected")
@@ -138,10 +139,12 @@ func enable_buttons():
 func disable_tabs():
 	$CenterContainer/TabContainer.set_tab_hidden(1, true)
 	$CenterContainer/TabContainer.set_tab_hidden(2, true)
+	$CenterContainer/TabContainer.set_tab_hidden(5, false)
 
 func enable_tabs():
 	$CenterContainer/TabContainer.set_tab_hidden(1, false)
 	$CenterContainer/TabContainer.set_tab_hidden(2, false)
+	$CenterContainer/TabContainer.set_tab_hidden(5, true)
 
 func _on_connected():
 	$CenterContainer/TabContainer/Main/VBoxContainer/IpPort/Buttons.current_tab = 1

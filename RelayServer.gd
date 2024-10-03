@@ -33,15 +33,16 @@ func _ready():
 	set_process(false)
 
 func setup():
-	print("[CRUS ONLINE / DEBUG / UDP LAGGER]: Setting up")
-	
-	vserver_peer = PacketPeerUDP.new()
-	vserver_peer.listen(virtual_server_port, "127.0.0.1")
-	
-	vclient_peer = PacketPeerUDP.new()
-	vclient_peer.set_dest_address("127.0.0.1", true_server_port)
-	
-	set_process(true)
+	if enabled:
+		print("[CRUS ONLINE / DEBUG / UDP LAGGER]: Setting up")
+		
+		vserver_peer = PacketPeerUDP.new()
+		vserver_peer.listen(virtual_server_port, "127.0.0.1")
+		
+		vclient_peer = PacketPeerUDP.new()
+		vclient_peer.set_dest_address("127.0.0.1", true_server_port)
+		
+		set_process(true)
 
 func _process(delta):
 	var now = Time.get_ticks_msec()

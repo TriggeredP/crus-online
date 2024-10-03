@@ -108,7 +108,7 @@ func grapple(pos:Position3D):
 	soul.grapple(pos)
 
 master func damage(damage, collision_n, collision_p, shooter_pos):
-	if get_tree().network_peer != null and is_network_master():
+	if get_tree().network_peer != null:
 		if head and damage < 0.5 and not bored:
 			return 
 		soul.damage(damage * damage_multiplier, collision_n, collision_p, shooter_pos)
@@ -117,9 +117,8 @@ master func damage(damage, collision_n, collision_p, shooter_pos):
 		else :
 			type = 1
 		if head and not bored and damage > 0.5:
-			
 			head_health = - 1
-		if bored and head_health > - 1:
+		if bored and head_health > - 1 and is_network_master():
 			head_health -= 1
 		if head_health < 0 and headoff == false:
 			if bored:
@@ -128,7 +127,7 @@ master func damage(damage, collision_n, collision_p, shooter_pos):
 			bored = false
 			deadhead.already_dead()
 			soul.die(damage, collision_n, collision_p)
-			if not gibflag and gibbable:
+			if not gibflag and gibbable and is_network_master():
 				var new_head_gib = head_gib.instance()
 				new_head_gib.set_name(new_head_gib.name + "#" + str(new_head_gib.get_instance_id()))
 				
@@ -144,9 +143,10 @@ master func damage(damage, collision_n, collision_p, shooter_pos):
 				head_mesh.hide()
 			$CollisionShape.disabled = true
 			gibflag = true
-			rpc("_client_damage")
-	else:
-		rpc_id(0,"damage", damage, collision_n, collision_p, shooter_pos)
+			if is_network_master():
+				rpc("_client_damage")
+		if not is_network_master():
+			rpc_id(0, "damage", damage, collision_n, collision_p, shooter_pos)
 
 func player_use():
 	if get_collision_layer_bit(8):
@@ -164,19 +164,16 @@ func remove_weapon():
 	soul.remove_weapon()
 
 func piercing_damage(damage, collision_n, collision_p, shooter_pos):
-	if get_tree().network_peer != null and is_network_master():
+	if get_tree().network_peer != null:
 		soul.piercing_damage(damage * damage_multiplier, collision_n, collision_p)
 		if head:
 			head_health = - 1
 		if head_health < 0 and headoff == false:
 			deadhead.already_dead()
 			soul.die(damage, collision_n, collision_p)
-			if not gibflag:
-				
-				var newGibName = int(rand_range(0,1000000))
-				
+			if not gibflag and is_network_master():
 				var new_head_gib = head_gib.instance()
-				new_head_gib.set_name(new_head_gib.name + "#" + str(newGibName))
+				new_head_gib.set_name(new_head_gib.name + "#" + str(new_head_gib.get_instance_id()))
 				soul.add_child(new_head_gib)
 				
 				new_head_gib.global_transform.origin = global_transform.origin
@@ -190,7 +187,8 @@ func piercing_damage(damage, collision_n, collision_p, shooter_pos):
 				head_mesh.hide()
 			$CollisionShape.disabled = true
 			gibflag = true
-			rpc("_client_damage")
+			if is_network_master():
+				rpc("_client_damage")
 
 func already_dead():
 	headoff = true

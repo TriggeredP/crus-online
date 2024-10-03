@@ -110,5 +110,5 @@ func _on_Area_area_entered(area):
 func _on_Area_body_entered(body):
 	if body.get_collision_layer_bit(0):
 		return 
-	if body.has_method("damage"):
+	if body.has_method("damage") and is_network_master():
 		body.damage(100, current_dir.normalized(), global_transform.origin, global_transform.origin)
