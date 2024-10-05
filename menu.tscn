@@ -405,7 +405,6 @@ margin_bottom = 634.0
 rect_min_size = Vector2( 661, 549 )
 
 [node name="Main" type="PanelContainer" parent="CenterContainer/TabContainer"]
-visible = false
 anchor_right = 1.0
 anchor_bottom = 1.0
 margin_left = 7.0
@@ -1082,7 +1081,7 @@ script = ExtResource( 13 )
 __meta__ = {
 "_edit_use_anchors_": true
 }
-hide_on_ready = false
+in_game_chat = false
 
 [node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/TabContainer/Chat"]
 margin_left = 3.0
@@ -1125,6 +1124,7 @@ stream = SubResource( 29 )
 pitch_scale = 1.28
 
 [node name="Credits" type="PanelContainer" parent="CenterContainer/TabContainer"]
+visible = false
 anchor_right = 1.0
 anchor_bottom = 1.0
 margin_left = 7.0
@@ -1147,7 +1147,7 @@ Created by TriggeredP
 Special thanks:[/center]
 DX: [color=maroon]Helped with animations for the player and CruS Online testing[/color]
 Keith Mason: [color=maroon]creator of Construct map[/color]
-Xuesos: [color=maroon]My IRL friend who helped me with CruS Online testing[/color]
+Xuesos (4cne): [color=maroon]My IRL friend who helped me with CruS Online testing[/color]
 
 "
 text = "Cruelty Squad Online
@@ -1158,7 +1158,7 @@ YouTube    >.<    Boosty
 Special thanks:
 DX: Helped with animations for the player and CruS Online testing
 Keith Mason: creator of Construct map
-Xuesos: My IRL friend who helped me with CruS Online testing
+Xuesos (4cne): My IRL friend who helped me with CruS Online testing
 
 "
 
@@ -1296,12 +1296,12 @@ size_flags_vertical = 3
 bbcode_enabled = true
 bbcode_text = "[center]Warning
 
-This mod is currently in pre-beta testing
+This mod is currently in beta testing
 so there might be a lot of bugs and weird shit
 I've warned you [/center][right] - TriggeredP [/right]"
 text = "Warning
 
-This mod is currently in pre-beta testing
+This mod is currently in beta testing
 so there might be a lot of bugs and weird shit
 I've warned you  - TriggeredP "
 fit_content_height = true

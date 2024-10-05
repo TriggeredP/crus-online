@@ -80,15 +80,15 @@ var last_mesh_rotation
 var lerp_transform : Transform
 var last_transform : Transform
 
+puppet func set_puppet_transform(recived_position, recived_rotation):
+	lerp_transform.origin = recived_position
+	lerp_mesh_rotation = recived_rotation
+
 func host_tick():
-	if (global_transform.origin - last_transform.origin).length() > 0.01:
-		rset_unreliable("lerp_transform", global_transform)
+	if (global_transform.origin - last_transform.origin).length() > 0.01 or (mesh.rotation - last_mesh_rotation).length() > 0.01:
+		rpc_unreliable("set_puppet_transform", global_transform.origin, mesh.rotation)
 		Multiplayer.packages_count += 1
 		last_transform = global_transform
-	
-	if (mesh.rotation - last_mesh_rotation).length() > 0.01:
-		rset_unreliable("lerp_mesh_rotation", mesh.rotation)
-		Multiplayer.packages_count += 1
 		last_mesh_rotation = mesh.rotation
 
 ################################################################################

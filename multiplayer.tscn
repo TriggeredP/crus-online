@@ -101,6 +101,7 @@ script = ExtResource( 3 )
 
 [node name="UDPLagger" type="Node" parent="."]
 script = ExtResource( 22 )
+enabled = false
 fake_latency_ms = 200
 
 [node name="Menu" type="Control" parent="."]
@@ -372,6 +373,7 @@ one_shot = true
 autostart = true
 
 [node name="Debug" type="MarginContainer" parent="."]
+visible = false
 anchor_right = 1.0
 anchor_bottom = 1.0
 mouse_filter = 2

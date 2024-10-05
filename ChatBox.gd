@@ -1,6 +1,6 @@
 extends PanelContainer
 
-export var hide_on_ready = true
+export var in_game_chat = true
 
 onready var textBox = $VBoxContainer/PanelContainer/RichTextLabel
 onready var lineEdit = $VBoxContainer/LineEdit
@@ -11,7 +11,7 @@ onready var parent = Global.get_node("Multiplayer")
 var sizeRatio = 16
 
 func _ready():
-	if hide_on_ready:
+	if in_game_chat:
 		hide()
 
 func set_size_ratio():
@@ -34,6 +34,10 @@ remote func send_message(message, author, img = "null", color = "ff0000"):
 	
 	textBox.bbcode_text = textBox.bbcode_text + rawText
 	$AudioStreamPlayer.play()
+	
+	if in_game_chat:
+		Global.UI.notify(message, Color(1, 0, 0))
+		Global.UI.notify(author + ":", Color(color))
 
 func _text_entered(new_text):
 	if new_text != "":
@@ -43,11 +47,11 @@ func _text_entered(new_text):
 
 func open_chat(type):
 	show()
+	set_size_ratio()
 	$"../OpenChat".button_disable()
 	$"../CloseChat".button_enable()
 
 func close_chat(type):
 	hide()
-	set_size_ratio()
 	$"../OpenChat".button_enable()
 	$"../CloseChat".button_disable()

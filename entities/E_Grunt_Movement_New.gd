@@ -113,6 +113,9 @@ puppet func set_animation(anim:String, speed:float)->void :
 var lerp_transform : Transform
 var last_transform : Transform
 
+puppet func set_puppet_transform(recived_position, recived_rotation):
+	lerp_transform.origin = recived_position
+
 func host_tick():
 	if (global_transform.origin - last_transform.origin).length() > 0.01:
 		rset_unreliable("lerp_transform", global_transform)
