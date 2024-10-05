@@ -4163,6 +4163,9 @@ shape = SubResource( 72 )
 [node name="PlayerModel" parent="." instance=ExtResource( 1 )]
 transform = Transform( 0.974303, 0, -0.22524, 0, 1, 0, 0.22524, 0, 0.974303, -3.37492, 1.50098, 2.10234 )
 
+[node name="Skeleton" parent="PlayerModel/Armature" index="0"]
+bones/2/bound_children = [  ]
+
 [node name="Head" parent="PlayerModel/Armature/Skeleton" index="0"]
 transform = Transform( 0.998235, -0.00611006, -0.0590595, 0.012, 0.994926, 0.0998948, 0.0581494, -0.100428, 0.993244, -0.00361, 0.616729, 0.0323869 )
 
@@ -4174,6 +4177,9 @@ active = false
 
 [node name="PlayerModel2" parent="." instance=ExtResource( 1 )]
 transform = Transform( 0.0454676, 0, 0.998966, 0, 1, 0, -0.998966, 0, 0.0454676, -1.71829, 1.50105, 1.08632 )
+
+[node name="Skeleton" parent="PlayerModel2/Armature" index="0"]
+bones/2/bound_children = [  ]
 
 [node name="Head" parent="PlayerModel2/Armature/Skeleton" index="0"]
 transform = Transform( 0.998235, -0.00611006, -0.0590595, 0.012, 0.994926, 0.0998948, 0.0581494, -0.100428, 0.993244, -0.00361, 0.616729, 0.0323869 )
