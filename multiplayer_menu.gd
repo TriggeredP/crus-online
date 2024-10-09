@@ -117,7 +117,7 @@ func host():
 	for implant in $CenterContainer/TabContainer/Implants.bannedImplants:
 		Multiplayer.hostSettings.bannedImplants.append(implant)
 
-	Multiplayer.host_server(port)
+	Multiplayer.host_server()
 
 func join():
 	get_data()

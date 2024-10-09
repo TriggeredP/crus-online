@@ -95,6 +95,9 @@ func _ready():
 
 [node name="Multiplayer" type="Node" groups=["Multiplayer"]]
 script = ExtResource( 1 )
+__meta__ = {
+"_edit_horizontal_guides_": [  ]
+}
 
 [node name="Players" type="Node" parent="."]
 script = ExtResource( 3 )

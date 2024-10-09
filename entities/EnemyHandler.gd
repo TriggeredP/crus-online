@@ -134,11 +134,6 @@ remote func _create_drop_weapon(parentPath, recivedTransform, recivedVelocity, r
 	new_weapon_drop.gun.MESH[recivedCurrentWeapon].show()
 	new_weapon_drop.playerIgnoreId = playerIgnoreId
 
-puppet func _spawn_gib_client(parentPath, gib, damage, collision_n, collision_p, gibType, gibName):
-	var new_gib = self[gibType][gib].instance()
-	new_gib.set_name(gibName)
-	get_node(parentPath).add_child(new_gib)
-
 puppet func _die_client():
 	if not dead:
 		for particle in all_particles:
@@ -412,13 +407,7 @@ master func piercing_damage(damage, collision_n, collision_p):
 			blood_particles.global_transform = torso.global_transform
 			blood_particles.emitting = true
 			if is_network_master():
-				for gib in len(GIBS):
-					if head.get_head_health() > 0 and gib == G_HEAD:
-						spawn_gib(gib, 1, damage, collision_n, collision_p)
-						pass
-					elif gib != G_HEAD:
-						spawn_gib(gib, 1, damage, collision_n, collision_p)
-						pass
+				spawn_gib(damage, collision_n, collision_p)
 				
 				rpc("_hide_npc_client")
 			skeleton.hide()
@@ -492,16 +481,9 @@ master func damage(damage, collision_n, collision_p, shooter_pos):
 					var i = 0
 					for d in len(DROPS):
 						if rand_range(0, 100) < DROP_CHANCE[i]:
-							spawn_gib(d, 1, damage, collision_n, collision_p, "DROPS")
-							pass
+							spawn_drop(d, damage, collision_n, collision_p)
 						i += 1
-				for gib in len(GIBS):
-					if head.get_head_health() > 0 and GIBS[gib] == G_HEAD:
-						spawn_gib(gib, 1, damage, collision_n, collision_p)
-						pass
-					elif GIBS[gib] != G_HEAD:
-						spawn_gib(gib, 1, damage, collision_n, collision_p)
-						pass
+				spawn_gib(damage, collision_n, collision_p)
 				
 				rpc("_hide_npc_client")
 			
@@ -524,25 +506,51 @@ func remove_objective():
 	else :
 		glob.civ_count -= 1
 
-master func spawn_gib(gib, count, damage, collision_n, collision_p, gibType = "GIBS", gibName = null):
-	if get_tree().network_peer != null and is_network_master():
-		if not gib:
-			return
+puppet func _spawn_gib_client(parentPath, gibName, spawn_head):
+	var count = 0
+	
+	for gib in GIBS:
+		if gib == G_HEAD and spawn_head or gib != G_HEAD:
+			var new_gib = gib.instance()
+			new_gib.set_name(gibName[count])
+			get_node(parentPath).add_child(new_gib)
+			
+			count += 1
 
-		for i_gib in range(count):
-			var new_gib = self[gibType][gib].instance()
-			
-			new_gib.set_name(new_gib.name + "#" + str(new_gib.get_instance_id()))
-			
-			get_parent().add_child(new_gib)
-			
-			new_gib.global_transform.origin = collision_p
-			if "velocity" in new_gib:
-				new_gib.velocity = (damage + rand_range(0, 10)) * - collision_n
-			elif "body" in new_gib:
-				new_gib.body.velocity = (damage + rand_range(0, 10)) * - collision_n
+func spawn_gib(damage, collision_n, collision_p):
+	if get_tree().network_peer != null and is_network_master():
+		var gibs_names = []
 		
-			rpc("_spawn_gib_client", get_parent().get_path(), gib, damage, collision_n, collision_p, gibType, new_gib.name)
+		for gib in GIBS:
+			if head.get_head_health() > 0 and gib == G_HEAD or gib != G_HEAD:
+				var new_gib = gib.instance()
+				new_gib.set_name(new_gib.name + "#" + str(new_gib.get_instance_id()))
+				gibs_names.append(new_gib.name)
+				get_parent().add_child(new_gib)
+				new_gib.global_transform.origin = collision_p
+				if "velocity" in new_gib:
+					new_gib.velocity = (damage + rand_range(0, 10)) * - collision_n
+				elif "body" in new_gib:
+					new_gib.body.velocity = (damage + rand_range(0, 10)) * - collision_n
+		
+		rpc("_spawn_gib_client", get_parent().get_path(), gibs_names, head.get_head_health() > 0)
+
+puppet func _spawn_drop_client(parentPath, drop, drop_name):
+	var new_drop = DROPS[drop].instance()
+	new_drop.set_name(drop_name)
+	get_node(parentPath).add_child(new_drop)
+
+func spawn_drop(drop, damage, collision_n, collision_p):
+	var new_drop = DROPS[drop].instance()
+	new_drop.set_name(new_drop.name + "#" + str(new_drop.get_instance_id()))
+	get_parent().add_child(new_drop)
+	new_drop.global_transform.origin = collision_p
+	if "velocity" in new_drop:
+		new_drop.velocity = (damage + rand_range(0, 10)) * - collision_n
+	elif "body" in new_drop:
+		new_drop.body.velocity = (damage + rand_range(0, 10)) * - collision_n
+	
+	rpc("_spawn_drop_client", get_parent().get_path(), drop, new_drop.name)
 
 master func remove_weapon():
 	if get_tree().network_peer != null and is_network_master():

@@ -1,6 +1,6 @@
 extends Node
 
-var version = "Beta 051024/2343"
+var version = "Beta 091024/2024"
 
 enum errorType {UNKNOW, TIME_OUT, WRONG_PASSWORD, WRONG_VERSION, PASSWORD_REQUIRE, SERVER_CLOSED, UPNP_ERROR}
 
@@ -112,7 +112,7 @@ func clear_connection(recivedError):
 	
 	leave_server()
 
-func host_server(port):
+func host_server():
 	hostSettings.helpTimer = config.helpTimer
 	hostSettings.canRespawn = config.canRespawn
 	hostSettings.changeModeOnDeath = config.changeModeOnDeath
@@ -124,7 +124,7 @@ func host_server(port):
 	$Debug/VBoxContainer/GameType.text = "Player is host"
 	
 	var server = NetworkedMultiplayerENet.new()
-	server.create_server(port, 16)
+	server.create_server(config.hostPort, 16)
 	get_tree().set_network_peer(server)
 
 	players[1] = playerInfo
@@ -475,6 +475,8 @@ func restart_map():
 
 puppet func hide_death_screen():
 	DeathScreen.hide()
+	if playerPuppet != null:
+		playerPuppet.respawn_puppet()
 
 func player_respawn():
 	if get_tree().network_peer != null and is_network_master():
@@ -506,7 +508,7 @@ func disable_menu():
 
 func game_init(level) -> bool:
 	if get_tree().network_peer == null:
-		host_server(config.hostPort)
+		host_server()
 	
 	if get_tree().is_network_server():
 		goto_scene_host(level)
