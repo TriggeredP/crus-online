@@ -4,65 +4,65 @@
 
 <img src="crus_online_logo.png" width="600" alt="Cruelty Squad Online logo">
 
-English | [Русский](README_RU.md) 
+[English](README.md) | Русский
 
 </div>
 
 > [!WARNING]
-> This modification is in open **Beta** testing
+> Данная модификация находится в открытом **Бета** тестировании
 > 
-> You may encounter bugs and poor performance.
+> Вы можете столкнуться с багами и плохой производительностью
 
-## About
-Cruelty Squad Online (CruS Online) is a huge modification for game [Cruelty Squad](https://store.steampowered.com/app/1388770/Cruelty_Squad/) that add a lobby style LAN multiplayer
+## Описание
+Cruelty Squad Online (CruS Online) это большая модификация для игры [Cruelty Squad](https://store.steampowered.com/app/1388770/Cruelty_Squad/) которая добавляет в игру LAN мултиплеер на базе лобби
 
-## Installation
-CruS Online is installed in the same way as other modifications
+## Установка
+CruS Online устанавливается таким-же образом как и другие модификации
 
-1. Install [CruS Modloader](https://github.com/CruS-Modding-Infrastructure/crus-modloader)
-2. Download latest version of CruS Online from [here](https://github.com/TriggeredP/crus-online/releases)
-3. Extract CruS Online folder into this directory: `%appdata%\Godot\app_userdata\Cruelty Squad\mods`
-4. Launch the game
+1. Установить [CruS Modloader](https://github.com/CruS-Modding-Infrastructure/crus-modloader)
+2. Скачать последнию версию CruS Online [отсюда](https://github.com/TriggeredP/crus-online/releases)
+3. Распаковать архив CruS Online по пути: `%appdata%\Godot\app_userdata\Cruelty Squad\mods`
+4. Запустить игру
 
-## Hosting lobby
-Due to the fact that the modification adds LAN multiplayer, there are two ways to host the lobby:
+## Создание лобби
+В связи с тем что данная модификация добавляет LAN мултиплеер, есть два способа создания лобби:
 
-1. Port forwarding
-2. Using a VPN software (like Radmin VPN)
+1. Переадресация портов
+2. Использование VPN приложения (По типу Radmin VPN)
 
-The best way would be to port forwarding because this will help improve performance, but if you can't forward ports, you can use Radmin VPN or similar applications
+Лучшим способом была бы переадресация портов, поскольку это поможет повысить производительность, но если вы не можете переадресовывать порты, вы можете использовать Radmin VPN или аналогичные приложения
 
-Also, the host must have a good computer, otherwise it may affect performance
+Так-же, у хоста должен быть хороший компьютер, иначе это может повлиять на производительность
 
-To create a lobby in the game, you need to:
+Что-бы создать лобби в игре нужно:
 
-1. Open the CruS Online menu (The second icon in the main menu)
-2. Go to the `Host` tab and set the port (It doesn't matter if Radmin VPN is used)
-3. Go to the `Main` tab and click to a `Host` button
-4. Share IP and port with those you are going to play with
+1. Открыть меню CruS Online (Вторая иконка в главном меню)
+2. Перейти во вкладку `Host` и указать открытый порт (Не важно если вы используете Radmin VPN)
+3. Перейти во вкладку `Main` и нажать на кнопку `Host`
+4. Поделится своим IP и портом с теми, с кем вы собираетесь играть
 
-## Connecting to lobby
-After the host has created a lobby, players must:
+## Подключение к лобби
+После того как хост создал лобби, игроки должны:
 
-1. Open the CruS Online menu (The second icon in the main menu)
-2. Enter the IP and port received from the host
-3. Press `Join` button
+1. Открыть меню CruS Online (Вторая иконка в главном меню)
+2. Ввести полученный от хоста IP и порт
+3. Нажать на кнопку `Join`
 
-## Starting game
-After everyone has entered the lobby, players must choose weapons and implants
+## Запуск игры
+После того как все подключились к лобби, игроки должны выбрать оружие и импланты
 
-Once all the players are ready the host must select a level and press `Start misson` button to play map from the main game
+После того как все игроки готовы, хост должен выбрать уровень и нажать на кнопку `Start misson` для игры в уровни основной игры
 
-You can also play maps embedded in the modification, they can be found in the CruS Online menu in the `DM` tab
+Так-же вы можете сыграть на картах которые есть модификации, найти вы можете их во вкладке `DM`
 
-After the game starts, players will not be able to join the lobby
+После того как игра начнется, новые игроки не смогут подключится к лобби
 
-## Usefull information
+## Полезная информация
 
-You can change the nickname, color and skin in the `Player` tab
+Вы можете сменить ник, цвет и скин во вкладке `Player`
 
-## Links
-My site: https://triggeredp.site
+## Ссылки
+Мой сайт: https://triggeredp.site
 
 YouTube: https://www.youtube.com/@triggeredp
 
