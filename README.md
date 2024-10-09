@@ -1,6 +1,12 @@
 # Cruelty Squad Online
 
+<div align="center">
+
 <img src="crus_online_logo.png" width="600" alt="Cruelty Squad Online logo">
+
+English | [Русский](README_RU.md) 
+
+</div>
 
 > [!WARNING]
 > This modification is in open **Beta** testing
