@@ -1,4 +1,4 @@
-[gd_scene load_steps=47 format=2]
+[gd_scene load_steps=57 format=2]
 
 [ext_resource path="res://Menu/menu_theme.tres" type="Theme" id=1]
 [ext_resource path="res://Textures/Misc/mainguy_clothes.png" type="Texture" id=2]
@@ -28,17 +28,52 @@
 [ext_resource path="res://Sfx/UI/implant_unequip.wav" type="AudioStream" id=26]
 [ext_resource path="res://Fonts/gamefont(1).ttf" type="DynamicFontData" id=27]
 
+[sub_resource type="StyleBoxEmpty" id=30]
+
+[sub_resource type="GDScript" id=31]
+script/source = "extends PanelContainer
+
+onready var NetworkBridge = Global.get_node(\"Multiplayer/NetworkBridge\")
+onready var main_tab = get_parent()
+
+onready var Multiplayer = Global.get_node(\"Multiplayer\")
+
+func _ready():
+	main_tab.current_tab = 0
+
+func lan_selected():
+	NetworkBridge.set_mode(NetworkBridge.MULTIPLAYER_TYPE.LAN)
+	main_tab.current_tab = 1
+
+func steam_selected():
+	if Multiplayer.SteamInit.is_online:
+		NetworkBridge.set_mode(NetworkBridge.MULTIPLAYER_TYPE.STEAM)
+		$\"../Steam\".get_lobbies()
+		main_tab.current_tab = 2
+"
+
+[sub_resource type="GDScript" id=18]
+script/source = "extends Label
+
+func _ready():
+	text = get_tree().get_nodes_in_group(\"Multiplayer\")[0].version
+"
+
 [sub_resource type="GDScript" id=12]
 script/source = "extends PanelContainer
+
+onready var main_tab = get_parent()
 
 onready var playersList = $VBoxContainer/PlayersList/PlayersListLabel
 onready var status = $VBoxContainer/Status/StatusLabel
 
+onready var Multiplayer = Global.get_node(\"Multiplayer\")
+
 func _ready():
 	playersList.bbcode_text = \"\"
 	
-	get_tree().get_nodes_in_group(\"Multiplayer\")[0].connect(\"status_update\", self, \"update_status\")
-	get_tree().get_nodes_in_group(\"Multiplayer\")[0].connect(\"players_update\", self, \"update_players_info\")
+	Multiplayer.connect(\"status_update\", self, \"update_status\")
+	Multiplayer.connect(\"players_update\", self, \"update_players_info\")
 
 func update_status(new_status):
 	status.text = new_status
@@ -57,14 +92,188 @@ func update_players_info(info):
 			playersList.bbcode_text += \"\\n\"
 		
 		playerNumber += 1
+
+func back_to_menu():
+	main_tab.current_tab = 0
+	Multiplayer.leave_server()
 "
 
-[sub_resource type="GDScript" id=18]
-script/source = "extends Label
+[sub_resource type="StyleBoxEmpty" id=39]
+content_margin_left = 5.0
+content_margin_right = 5.0
+
+[sub_resource type="GDScript" id=37]
+script/source = "extends PanelContainer
+
+onready var main_tab = get_parent()
+
+onready var Multiplayer = Global.get_node(\"Multiplayer\")
+onready var NetworkBridge = Global.get_node(\"Multiplayer/NetworkBridge\")
+
+onready var SteamLobby = Global.get_node(\"Multiplayer/SteamInit/SteamLobby\")
+onready var SteamInit = Global.get_node(\"Multiplayer/SteamInit\")
+onready var SteamNetwork = Global.get_node(\"Multiplayer/SteamInit/SteamNetwork\")
+
+onready var playersList = $VBoxContainer/PlayersList/PlayersListLabel
+
+onready var LobbyList = $VBoxContainer/PlayersList/LobbyList
+
+onready var status = $VBoxContainer/Status/StatusLabel
+
+var lobbies = []
+var selected = 0
 
 func _ready():
-	text = get_tree().get_nodes_in_group(\"Multiplayer\")[0].version
+	SteamLobby.connect(\"lobby_list\", self, \"_on_match_list\")
+	
+	SteamLobby.connect(\"player_joined_lobby\", self, \"player_list_update\")
+	SteamLobby.connect(\"player_left_lobby\", self, \"player_list_update\")
+	
+	SteamLobby.connect(\"lobby_joined\", self, \"player_list_update\")
+	
+	Multiplayer.connect(\"status_update\", self, \"update_status\")
+	
+	$\"%PasswordInput\".connect(\"password_set\", self, \"connect_lobby\")
+	
+	SteamNetwork.register_rpcs(self,[
+		[\"_rpc_client\", SteamNetwork.PERMISSION.SERVER],
+		[\"_rpc_server\", SteamNetwork.PERMISSION.CLIENT_ALL]
+	])
+
+func create_lobby():
+	SteamLobby.create_lobby(2, 16)
+	$VBoxContainer/Buttons/Create.hide()
+	$VBoxContainer/Buttons/Join.hide()
+	$VBoxContainer/Buttons/Refresh.hide()
+	$VBoxContainer/Buttons/Leave.show()
+	
+	$VBoxContainer/PlayersList/PlayersListLabel.show()
+	LobbyList.hide()
+
+func join_lobby():
+	if not SteamInit.Steam.getLobbyData(lobbies[selected], \"password\"):
+		connect_lobby()
+	else:
+		$\"%PasswordInput\".steam_check_password()
+
+func connect_lobby():
+	SteamLobby.join_lobby(lobbies[selected])
+	$VBoxContainer/Buttons/Create.hide()
+	$VBoxContainer/Buttons/Join.hide()
+	$VBoxContainer/Buttons/Refresh.hide()
+	$VBoxContainer/Buttons/Leave.show()
+	
+	$VBoxContainer/PlayersList/PlayersListLabel.show()
+	LobbyList.hide()
+
+func leave_lobby():
+	SteamLobby.leave_lobby()
+	Multiplayer.emit_signal(\"status_update\", \"Offline\")
+	$VBoxContainer/Buttons/Create.show()
+	$VBoxContainer/Buttons/Join.show()
+	$VBoxContainer/Buttons/Refresh.show()
+	$VBoxContainer/Buttons/Leave.hide()
+	
+	$VBoxContainer/PlayersList/PlayersListLabel.hide()
+	LobbyList.show()
+
+func lobby_selected(id):
+	print(id)
+	selected = id
+
+func get_lobbies():
+	SteamLobby.request_lobby_list()
+
+func _on_match_list(recived_lobbies):
+	LobbyList.clear()
+	lobbies = recived_lobbies
+	
+	for this_lobby in recived_lobbies:
+		if SteamInit.Steam.getLobbyData(this_lobby, \"crus_online\"):
+			var lobby_name = SteamInit.Steam.getLobbyData(this_lobby, \"name\")
+			var lobby_max_players = SteamInit.Steam.getLobbyMemberLimit(this_lobby)
+			var lobby_num_members = SteamInit.Steam.getNumLobbyMembers(this_lobby)
+			
+			LobbyList.add_item(\"%s / %s/%s\" % [lobby_name, str(lobby_num_members), str(16)])
+
+func player_list_update(placeholder):
+	print(\"[CRUS ONLINE / STEAM] player list update\")
+	var players = SteamLobby.get_lobby_members()
+	playersList.bbcode_text = \"\"
+	
+	var playerNumber = 1
+	
+	for player in players:
+		playersList.bbcode_text += str(playerNumber) + \": \" + players[player]
+		
+		if SteamLobby.is_owner(player):
+			playersList.bbcode_text += \" (host)\\n\"
+		else:
+			playersList.bbcode_text += \"\\n\"
+		
+		playerNumber += 1
+
+func back_to_menu():
+	main_tab.current_tab = 0
+	leave_lobby()
+
+func update_status(new_status):
+	status.text = new_status
+
+func _rpc_test():
+	if NetworkBridge.check_connection():
+		print(\"[CRUS ONLINE / STEAM / TEST]: connection - true\")
+		print(\"[CRUS ONLINE / STEAM / TEST]: peers - \", NetworkBridge.get_peers())
+		if NetworkBridge.r_is_network_master(self):
+			print(\"[CRUS ONLINE / STEAM / TEST]: sending rpc, type - server\")
+			NetworkBridge.r_rpc(self, \"_rpc_client\")
+		else:
+			print(\"[CRUS ONLINE / STEAM / TEST]: sending rpc, type - client\")
+			NetworkBridge.r_rpc(self, \"_rpc_server\")
+	else:
+		print(\"[CRUS ONLINE / STEAM / TEST]: connection - false\")
+
+master func _rpc_server(id):
+	print(\"[CRUS ONLINE / STEAM / TEST]: recived rpc from client\")
+
+puppet func _rpc_client(id):
+	print(\"[CRUS ONLINE / STEAM / TEST]: recived rpc from server\")
 "
+
+[sub_resource type="StyleBoxTexture" id=32]
+texture = ExtResource( 3 )
+region_rect = Rect2( 0, 0, 256, 256 )
+margin_left = 10.0
+margin_right = 10.0
+margin_top = 10.0
+margin_bottom = 10.0
+modulate_color = Color( 0.298039, 0.0352941, 0.0352941, 1 )
+
+[sub_resource type="StyleBoxEmpty" id=38]
+content_margin_left = 5.0
+content_margin_right = 5.0
+
+[sub_resource type="StyleBoxFlat" id=36]
+bg_color = Color( 0.6, 0.6, 0.6, 0 )
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color( 0.0392157, 1, 0, 1 )
+
+[sub_resource type="StyleBoxEmpty" id=34]
+
+[sub_resource type="StyleBoxFlat" id=35]
+bg_color = Color( 0.6, 0.6, 0.6, 0 )
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color( 0.188235, 1, 0, 1 )
+
+[sub_resource type="StyleBoxEmpty" id=33]
+content_margin_left = 5.0
+content_margin_right = 5.0
 
 [sub_resource type="GDScript" id=25]
 script/source = "extends Button
@@ -349,10 +558,16 @@ onready var Multiplayer = get_tree().get_nodes_in_group(\"Multiplayer\")[0]
 
 onready var passwordEdit = $Panel/MarginContainer/RichTextLabel/PasswordEdit
 
+signal password_set()
+
 func _ready():
 	rect_scale = Vector2(Global.resolution[0] / 1280 ,Global.resolution[1] / 720 )
 	
 	Multiplayer.connect(\"disconnected_from_server\", self, \"check_password\")
+
+func steam_check_password():
+	rect_scale = Vector2(Global.resolution[0] / 1280 ,Global.resolution[1] / 720 )
+	popup_centered()
 
 func check_password(error):
 	if error == Multiplayer.errorType.PASSWORD_REQUIRE:
@@ -363,8 +578,11 @@ func set_password():
 	Multiplayer.password = passwordEdit.text
 	passwordEdit.text = \"\"
 	
-	Multiplayer.passwordEntered = true
-	Multiplayer.join_to_server(Multiplayer.config.lastIp, Multiplayer.config.lastPort)
+	if Multiplayer.NetworkBridge.multiplayer_mode == 0:
+		Multiplayer.passwordEntered = true
+		Multiplayer.join_to_server(Multiplayer.config.lastIp, Multiplayer.config.lastPort)
+	else:
+		emit_signal(\"password_set\")
 
 func password_entered(text):
 	hide()
@@ -383,7 +601,7 @@ func popup_warning():
 [node name="MultiplayerMenu" type="Control" groups=["MultiplayerMenu"]]
 anchor_right = 1.0
 anchor_bottom = 1.0
-rect_pivot_offset = Vector2( -35, -71 )
+rect_pivot_offset = Vector2( 880, 333 )
 mouse_filter = 2
 theme = ExtResource( 1 )
 script = ExtResource( 5 )
@@ -404,16 +622,95 @@ margin_right = 856.0
 margin_bottom = 634.0
 rect_min_size = Vector2( 661, 549 )
 
-[node name="Main" type="PanelContainer" parent="CenterContainer/TabContainer"]
+[node name="Main" type="TabContainer" parent="CenterContainer/TabContainer"]
 anchor_right = 1.0
 anchor_bottom = 1.0
 margin_left = 7.0
 margin_top = 39.0
 margin_right = -7.0
 margin_bottom = -7.0
+custom_styles/panel = SubResource( 30 )
+tabs_visible = false
+
+[node name="Select" type="PanelContainer" parent="CenterContainer/TabContainer/Main"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = SubResource( 31 )
+
+[node name="CenterContainer" type="CenterContainer" parent="CenterContainer/TabContainer/Main/Select"]
+margin_left = 3.0
+margin_top = 3.0
+margin_right = 644.0
+margin_bottom = 500.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/TabContainer/Main/Select/CenterContainer"]
+margin_left = 170.0
+margin_top = 183.0
+margin_right = 470.0
+margin_bottom = 314.0
+custom_constants/separation = 50
+
+[node name="Label" type="Label" parent="CenterContainer/TabContainer/Main/Select/CenterContainer/VBoxContainer"]
+margin_right = 300.0
+margin_bottom = 55.0
+text = "Cruelty Squad Online
+Select mode"
+align = 1
+
+[node name="HBoxContainer" type="HBoxContainer" parent="CenterContainer/TabContainer/Main/Select/CenterContainer/VBoxContainer"]
+margin_top = 105.0
+margin_right = 300.0
+margin_bottom = 131.0
+custom_constants/separation = 35
+alignment = 1
+
+[node name="LAN" type="Button" parent="CenterContainer/TabContainer/Main/Select/CenterContainer/VBoxContainer/HBoxContainer"]
+margin_left = 12.0
+margin_right = 117.0
+margin_bottom = 26.0
+text = "  LAN  "
+
+[node name="Steam" type="Button" parent="CenterContainer/TabContainer/Main/Select/CenterContainer/VBoxContainer/HBoxContainer"]
+margin_left = 152.0
+margin_right = 287.0
+margin_bottom = 26.0
+text = "  Steam  "
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/TabContainer/Main/Select"]
+margin_left = 3.0
+margin_top = 3.0
+margin_right = 644.0
+margin_bottom = 500.0
+mouse_filter = 2
+alignment = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="CenterContainer/TabContainer/Main/Select/VBoxContainer"]
+margin_top = 471.0
+margin_right = 641.0
+margin_bottom = 497.0
+mouse_filter = 2
+alignment = 2
+
+[node name="CruSOnline" type="Label" parent="CenterContainer/TabContainer/Main/Select/VBoxContainer/HBoxContainer"]
+margin_right = 299.0
+margin_bottom = 26.0
+text = "Cruelty Squad Online"
+
+[node name="Version" type="Label" parent="CenterContainer/TabContainer/Main/Select/VBoxContainer/HBoxContainer"]
+margin_left = 387.0
+margin_right = 641.0
+margin_bottom = 26.0
+size_flags_horizontal = 10
+text = "Alpha 000000/0000"
+script = SubResource( 18 )
+
+[node name="LAN" type="PanelContainer" parent="CenterContainer/TabContainer/Main"]
+visible = false
+anchor_right = 1.0
+anchor_bottom = 1.0
 script = SubResource( 12 )
 
-[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/TabContainer/Main"]
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/TabContainer/Main/LAN"]
 margin_left = 3.0
 margin_top = 3.0
 margin_right = 644.0
@@ -422,20 +719,20 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 custom_constants/separation = 5
 
-[node name="Label" type="Label" parent="CenterContainer/TabContainer/Main/VBoxContainer"]
+[node name="Label" type="Label" parent="CenterContainer/TabContainer/Main/LAN/VBoxContainer"]
 margin_right = 641.0
 margin_bottom = 26.0
 text = "Main menu"
 align = 1
 
-[node name="IpPort" type="HBoxContainer" parent="CenterContainer/TabContainer/Main/VBoxContainer"]
+[node name="IpPort" type="HBoxContainer" parent="CenterContainer/TabContainer/Main/LAN/VBoxContainer"]
 margin_top = 31.0
 margin_right = 641.0
 margin_bottom = 67.0
 custom_constants/separation = 10
 alignment = 1
 
-[node name="IpEdit" type="LineEdit" parent="CenterContainer/TabContainer/Main/VBoxContainer/IpPort"]
+[node name="IpEdit" type="LineEdit" parent="CenterContainer/TabContainer/Main/LAN/VBoxContainer/IpPort"]
 margin_right = 258.0
 margin_bottom = 36.0
 rect_min_size = Vector2( 249, 36 )
@@ -446,7 +743,7 @@ align = 1
 max_length = 15
 placeholder_text = "127.0.0.1"
 
-[node name="PortEdit" type="LineEdit" parent="CenterContainer/TabContainer/Main/VBoxContainer/IpPort"]
+[node name="PortEdit" type="LineEdit" parent="CenterContainer/TabContainer/Main/LAN/VBoxContainer/IpPort"]
 margin_left = 268.0
 margin_right = 436.0
 margin_bottom = 36.0
@@ -456,41 +753,41 @@ align = 1
 max_length = 5
 placeholder_text = "25567"
 
-[node name="Buttons" type="HBoxContainer" parent="CenterContainer/TabContainer/Main/VBoxContainer/IpPort"]
+[node name="Buttons" type="HBoxContainer" parent="CenterContainer/TabContainer/Main/LAN/VBoxContainer/IpPort"]
 margin_left = 446.0
 margin_right = 641.0
 margin_bottom = 36.0
 custom_constants/separation = 15
 
-[node name="Join" type="Button" parent="CenterContainer/TabContainer/Main/VBoxContainer/IpPort/Buttons"]
+[node name="Join" type="Button" parent="CenterContainer/TabContainer/Main/LAN/VBoxContainer/IpPort/Buttons"]
 margin_right = 90.0
 margin_bottom = 36.0
 text = " Join "
 
-[node name="Host" type="Button" parent="CenterContainer/TabContainer/Main/VBoxContainer/IpPort/Buttons"]
+[node name="Host" type="Button" parent="CenterContainer/TabContainer/Main/LAN/VBoxContainer/IpPort/Buttons"]
 margin_left = 105.0
 margin_right = 195.0
 margin_bottom = 36.0
 text = " Host "
 
-[node name="Leave" type="Button" parent="CenterContainer/TabContainer/Main/VBoxContainer/IpPort/Buttons"]
+[node name="Leave" type="Button" parent="CenterContainer/TabContainer/Main/LAN/VBoxContainer/IpPort/Buttons"]
 visible = false
 margin_left = 210.0
 margin_right = 315.0
 margin_bottom = 36.0
 text = " Leave "
 
-[node name="Status" type="HBoxContainer" parent="CenterContainer/TabContainer/Main/VBoxContainer"]
+[node name="Status" type="HBoxContainer" parent="CenterContainer/TabContainer/Main/LAN/VBoxContainer"]
 margin_top = 72.0
 margin_right = 641.0
 margin_bottom = 98.0
 
-[node name="Label" type="Label" parent="CenterContainer/TabContainer/Main/VBoxContainer/Status"]
+[node name="Label" type="Label" parent="CenterContainer/TabContainer/Main/LAN/VBoxContainer/Status"]
 margin_right = 104.0
 margin_bottom = 26.0
 text = "Status:"
 
-[node name="StatusLabel" type="Label" parent="CenterContainer/TabContainer/Main/VBoxContainer/Status"]
+[node name="StatusLabel" type="Label" parent="CenterContainer/TabContainer/Main/LAN/VBoxContainer/Status"]
 margin_left = 104.0
 margin_right = 641.0
 margin_bottom = 26.0
@@ -498,33 +795,185 @@ size_flags_horizontal = 3
 text = "Offline"
 align = 2
 
-[node name="PlayersList" type="PanelContainer" parent="CenterContainer/TabContainer/Main/VBoxContainer"]
+[node name="PlayersList" type="PanelContainer" parent="CenterContainer/TabContainer/Main/LAN/VBoxContainer"]
 margin_top = 103.0
 margin_right = 641.0
-margin_bottom = 466.0
+margin_bottom = 435.0
 size_flags_vertical = 3
 custom_styles/panel = ExtResource( 11 )
 
-[node name="PlayersListLabel" type="RichTextLabel" parent="CenterContainer/TabContainer/Main/VBoxContainer/PlayersList"]
+[node name="PlayersListLabel" type="RichTextLabel" parent="CenterContainer/TabContainer/Main/LAN/VBoxContainer/PlayersList"]
 margin_left = 10.0
 margin_top = 5.0
 margin_right = 631.0
-margin_bottom = 358.0
+margin_bottom = 327.0
 size_flags_horizontal = 3
 size_flags_vertical = 3
+custom_styles/normal = SubResource( 39 )
 bbcode_enabled = true
 
-[node name="HBoxContainer" type="HBoxContainer" parent="CenterContainer/TabContainer/Main/VBoxContainer"]
+[node name="BackContainer" type="HBoxContainer" parent="CenterContainer/TabContainer/Main/LAN/VBoxContainer"]
+margin_top = 440.0
+margin_right = 641.0
+margin_bottom = 466.0
+alignment = 1
+
+[node name="Back" type="Button" parent="CenterContainer/TabContainer/Main/LAN/VBoxContainer/BackContainer"]
+margin_left = 215.0
+margin_right = 425.0
+margin_bottom = 26.0
+text = " Back to menu "
+
+[node name="HBoxContainer" type="HBoxContainer" parent="CenterContainer/TabContainer/Main/LAN/VBoxContainer"]
 margin_top = 471.0
 margin_right = 641.0
 margin_bottom = 497.0
 
-[node name="CruSOnline" type="Label" parent="CenterContainer/TabContainer/Main/VBoxContainer/HBoxContainer"]
+[node name="CruSOnline" type="Label" parent="CenterContainer/TabContainer/Main/LAN/VBoxContainer/HBoxContainer"]
 margin_right = 299.0
 margin_bottom = 26.0
 text = "Cruelty Squad Online"
 
-[node name="Version" type="Label" parent="CenterContainer/TabContainer/Main/VBoxContainer/HBoxContainer"]
+[node name="Version" type="Label" parent="CenterContainer/TabContainer/Main/LAN/VBoxContainer/HBoxContainer"]
+margin_left = 387.0
+margin_right = 641.0
+margin_bottom = 26.0
+size_flags_horizontal = 10
+text = "Alpha 000000/0000"
+script = SubResource( 18 )
+
+[node name="Steam" type="PanelContainer" parent="CenterContainer/TabContainer/Main"]
+visible = false
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = SubResource( 37 )
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/TabContainer/Main/Steam"]
+margin_left = 3.0
+margin_top = 3.0
+margin_right = 644.0
+margin_bottom = 500.0
+custom_constants/separation = 5
+
+[node name="Label" type="Label" parent="CenterContainer/TabContainer/Main/Steam/VBoxContainer"]
+margin_right = 641.0
+margin_bottom = 26.0
+text = "Main menu"
+align = 1
+
+[node name="Buttons" type="HBoxContainer" parent="CenterContainer/TabContainer/Main/Steam/VBoxContainer"]
+margin_top = 31.0
+margin_right = 641.0
+margin_bottom = 57.0
+custom_constants/separation = 10
+alignment = 1
+
+[node name="Leave" type="Button" parent="CenterContainer/TabContainer/Main/Steam/VBoxContainer/Buttons"]
+visible = false
+margin_left = 18.0
+margin_right = 213.0
+margin_bottom = 26.0
+text = " Leave Lobby "
+
+[node name="Refresh" type="Button" parent="CenterContainer/TabContainer/Main/Steam/VBoxContainer/Buttons"]
+margin_left = 138.0
+margin_right = 273.0
+margin_bottom = 26.0
+text = " Refresh "
+
+[node name="Join" type="Button" parent="CenterContainer/TabContainer/Main/Steam/VBoxContainer/Buttons"]
+margin_left = 283.0
+margin_right = 373.0
+margin_bottom = 26.0
+text = " Join "
+
+[node name="Create" type="Button" parent="CenterContainer/TabContainer/Main/Steam/VBoxContainer/Buttons"]
+margin_left = 383.0
+margin_right = 503.0
+margin_bottom = 26.0
+text = " Create "
+
+[node name="Test" type="Button" parent="CenterContainer/TabContainer/Main/Steam/VBoxContainer/Buttons"]
+visible = false
+margin_left = 463.0
+margin_right = 553.0
+margin_bottom = 26.0
+text = " Test "
+
+[node name="Status" type="HBoxContainer" parent="CenterContainer/TabContainer/Main/Steam/VBoxContainer"]
+margin_top = 62.0
+margin_right = 641.0
+margin_bottom = 88.0
+
+[node name="Label" type="Label" parent="CenterContainer/TabContainer/Main/Steam/VBoxContainer/Status"]
+margin_right = 104.0
+margin_bottom = 26.0
+text = "Status:"
+
+[node name="StatusLabel" type="Label" parent="CenterContainer/TabContainer/Main/Steam/VBoxContainer/Status"]
+margin_left = 104.0
+margin_right = 641.0
+margin_bottom = 26.0
+size_flags_horizontal = 3
+text = "Offline"
+align = 2
+
+[node name="PlayersList" type="PanelContainer" parent="CenterContainer/TabContainer/Main/Steam/VBoxContainer"]
+margin_top = 93.0
+margin_right = 641.0
+margin_bottom = 435.0
+size_flags_vertical = 3
+custom_styles/panel = SubResource( 32 )
+
+[node name="PlayersListLabel" type="RichTextLabel" parent="CenterContainer/TabContainer/Main/Steam/VBoxContainer/PlayersList"]
+visible = false
+margin_left = 10.0
+margin_top = 10.0
+margin_right = 631.0
+margin_bottom = 332.0
+mouse_filter = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+custom_styles/normal = SubResource( 38 )
+bbcode_enabled = true
+
+[node name="LobbyList" type="ItemList" parent="CenterContainer/TabContainer/Main/Steam/VBoxContainer/PlayersList"]
+margin_left = 10.0
+margin_top = 10.0
+margin_right = 631.0
+margin_bottom = 332.0
+rect_pivot_offset = Vector2( -843, 287 )
+size_flags_horizontal = 3
+custom_colors/guide_color = Color( 0, 0, 0, 0 )
+custom_styles/selected_focus = SubResource( 36 )
+custom_styles/bg_focus = SubResource( 34 )
+custom_styles/selected = SubResource( 35 )
+custom_styles/bg = SubResource( 33 )
+allow_reselect = true
+
+[node name="BackContainer" type="HBoxContainer" parent="CenterContainer/TabContainer/Main/Steam/VBoxContainer"]
+margin_top = 440.0
+margin_right = 641.0
+margin_bottom = 466.0
+alignment = 1
+
+[node name="Back" type="Button" parent="CenterContainer/TabContainer/Main/Steam/VBoxContainer/BackContainer"]
+margin_left = 215.0
+margin_right = 425.0
+margin_bottom = 26.0
+text = " Back to menu "
+
+[node name="HBoxContainer" type="HBoxContainer" parent="CenterContainer/TabContainer/Main/Steam/VBoxContainer"]
+margin_top = 471.0
+margin_right = 641.0
+margin_bottom = 497.0
+
+[node name="CruSOnline" type="Label" parent="CenterContainer/TabContainer/Main/Steam/VBoxContainer/HBoxContainer"]
+margin_right = 299.0
+margin_bottom = 26.0
+text = "Cruelty Squad Online"
+
+[node name="Version" type="Label" parent="CenterContainer/TabContainer/Main/Steam/VBoxContainer/HBoxContainer"]
 margin_left = 387.0
 margin_right = 641.0
 margin_bottom = 26.0
@@ -1212,6 +1661,7 @@ __meta__ = {
 }
 
 [node name="PasswordInput" type="WindowDialog" parent="."]
+unique_name_in_owner = true
 margin_top = 21.0
 margin_right = 388.0
 margin_bottom = 90.0
@@ -1314,9 +1764,19 @@ __meta__ = {
 one_shot = true
 autostart = true
 
-[connection signal="pressed" from="CenterContainer/TabContainer/Main/VBoxContainer/IpPort/Buttons/Join" to="." method="join"]
-[connection signal="pressed" from="CenterContainer/TabContainer/Main/VBoxContainer/IpPort/Buttons/Host" to="." method="host"]
-[connection signal="pressed" from="CenterContainer/TabContainer/Main/VBoxContainer/IpPort/Buttons/Leave" to="." method="leave"]
+[connection signal="pressed" from="CenterContainer/TabContainer/Main/Select/CenterContainer/VBoxContainer/HBoxContainer/LAN" to="CenterContainer/TabContainer/Main/Select" method="lan_selected"]
+[connection signal="pressed" from="CenterContainer/TabContainer/Main/Select/CenterContainer/VBoxContainer/HBoxContainer/Steam" to="CenterContainer/TabContainer/Main/Select" method="steam_selected"]
+[connection signal="pressed" from="CenterContainer/TabContainer/Main/LAN/VBoxContainer/IpPort/Buttons/Join" to="." method="join"]
+[connection signal="pressed" from="CenterContainer/TabContainer/Main/LAN/VBoxContainer/IpPort/Buttons/Host" to="." method="host"]
+[connection signal="pressed" from="CenterContainer/TabContainer/Main/LAN/VBoxContainer/IpPort/Buttons/Leave" to="." method="leave"]
+[connection signal="pressed" from="CenterContainer/TabContainer/Main/LAN/VBoxContainer/BackContainer/Back" to="CenterContainer/TabContainer/Main/LAN" method="back_to_menu"]
+[connection signal="pressed" from="CenterContainer/TabContainer/Main/Steam/VBoxContainer/Buttons/Leave" to="CenterContainer/TabContainer/Main/Steam" method="leave_lobby"]
+[connection signal="pressed" from="CenterContainer/TabContainer/Main/Steam/VBoxContainer/Buttons/Refresh" to="CenterContainer/TabContainer/Main/Steam" method="get_lobbies"]
+[connection signal="pressed" from="CenterContainer/TabContainer/Main/Steam/VBoxContainer/Buttons/Join" to="CenterContainer/TabContainer/Main/Steam" method="join_lobby"]
+[connection signal="pressed" from="CenterContainer/TabContainer/Main/Steam/VBoxContainer/Buttons/Create" to="CenterContainer/TabContainer/Main/Steam" method="create_lobby"]
+[connection signal="pressed" from="CenterContainer/TabContainer/Main/Steam/VBoxContainer/Buttons/Test" to="CenterContainer/TabContainer/Main/Steam" method="_rpc_test"]
+[connection signal="item_selected" from="CenterContainer/TabContainer/Main/Steam/VBoxContainer/PlayersList/LobbyList" to="CenterContainer/TabContainer/Main/Steam" method="lobby_selected"]
+[connection signal="pressed" from="CenterContainer/TabContainer/Main/Steam/VBoxContainer/BackContainer/Back" to="CenterContainer/TabContainer/Main/Steam" method="back_to_menu"]
 [connection signal="pressed" from="CenterContainer/TabContainer/Host/Save" to="." method="save_host"]
 [connection signal="pressed" from="CenterContainer/TabContainer/Host/Save" to="CenterContainer/TabContainer/Host/Save" method="button_pressed"]
 [connection signal="timeout" from="CenterContainer/TabContainer/Host/Save/Timer" to="CenterContainer/TabContainer/Host/Save" method="button_reset"]

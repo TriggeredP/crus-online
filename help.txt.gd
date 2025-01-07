@@ -4,6 +4,8 @@ extends Node # extends my balls
 
 var frustration_count = 289
 
+# https://datatracker.ietf.org/doc/html/rfc2795
+
 var objectInstance
 
 func sync_object_spawn(objectParent):

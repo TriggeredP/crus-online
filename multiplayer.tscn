@@ -1,4 +1,4 @@
-[gd_scene load_steps=34 format=2]
+[gd_scene load_steps=38 format=2]
 
 [ext_resource path="res://MOD_CONTENT/CruS Online/multiplayer.gd" type="Script" id=1]
 [ext_resource path="res://Maps/textures/trauma/bugs.png" type="Texture" id=2]
@@ -22,6 +22,10 @@
 [ext_resource path="res://Sfx/NPCs/night_creep_pain_1.wav" type="AudioStream" id=20]
 [ext_resource path="res://MOD_CONTENT/CruS Online/Stats.gd" type="Script" id=21]
 [ext_resource path="res://MOD_CONTENT/CruS Online/RelayServer.gd" type="Script" id=22]
+[ext_resource path="res://MOD_CONTENT/CruS Online/Steam.gd" type="Script" id=23]
+[ext_resource path="res://MOD_CONTENT/CruS Online/NetworkBridge.gd" type="Script" id=24]
+[ext_resource path="res://MOD_CONTENT/CruS Online/SteamLobby.gd" type="Script" id=25]
+[ext_resource path="res://MOD_CONTENT/CruS Online/SteamNetwork.gd" type="Script" id=26]
 
 [sub_resource type="DynamicFont" id=12]
 use_filter = true
@@ -98,6 +102,19 @@ script = ExtResource( 1 )
 __meta__ = {
 "_edit_horizontal_guides_": [  ]
 }
+
+[node name="NetworkBridge" type="Node" parent="."]
+script = ExtResource( 24 )
+
+[node name="SteamInit" type="Node" parent="."]
+pause_mode = 2
+script = ExtResource( 23 )
+
+[node name="SteamNetwork" type="Node" parent="SteamInit"]
+script = ExtResource( 26 )
+
+[node name="SteamLobby" type="Node" parent="SteamInit"]
+script = ExtResource( 25 )
 
 [node name="Players" type="Node" parent="."]
 script = ExtResource( 3 )

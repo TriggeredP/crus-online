@@ -3,8 +3,8 @@ extends Control
 var ip = "127.0.0.1"
 var port = 25567
 
-onready var IpEdit = $CenterContainer/TabContainer/Main/VBoxContainer/IpPort/IpEdit
-onready var PortEdit = $CenterContainer/TabContainer/Main/VBoxContainer/IpPort/PortEdit
+onready var IpEdit = $CenterContainer/TabContainer/Main/LAN/VBoxContainer/IpPort/IpEdit
+onready var PortEdit = $CenterContainer/TabContainer/Main/LAN/VBoxContainer/IpPort/PortEdit
 
 onready var NicknameEdit = $CenterContainer/TabContainer/Player/VBoxContainer/Nickname/NicknameEdit
 onready var NicknameColor = $CenterContainer/TabContainer/Player/VBoxContainer/Color/ColorRect
@@ -127,14 +127,14 @@ func leave():
 	Multiplayer.leave_server()
 
 func disable_buttons():
-	$CenterContainer/TabContainer/Main/VBoxContainer/IpPort/Buttons/Join.hide()
-	$CenterContainer/TabContainer/Main/VBoxContainer/IpPort/Buttons/Host.hide()
-	$CenterContainer/TabContainer/Main/VBoxContainer/IpPort/Buttons/Leave.show()
+	$CenterContainer/TabContainer/Main/LAN/VBoxContainer/IpPort/Buttons/Join.hide()
+	$CenterContainer/TabContainer/Main/LAN/VBoxContainer/IpPort/Buttons/Host.hide()
+	$CenterContainer/TabContainer/Main/LAN/VBoxContainer/IpPort/Buttons/Leave.show()
 
 func enable_buttons():
-	$CenterContainer/TabContainer/Main/VBoxContainer/IpPort/Buttons/Join.show()
-	$CenterContainer/TabContainer/Main/VBoxContainer/IpPort/Buttons/Host.show()
-	$CenterContainer/TabContainer/Main/VBoxContainer/IpPort/Buttons/Leave.hide()
+	$CenterContainer/TabContainer/Main/LAN/VBoxContainer/IpPort/Buttons/Join.show()
+	$CenterContainer/TabContainer/Main/LAN/VBoxContainer/IpPort/Buttons/Host.show()
+	$CenterContainer/TabContainer/Main/LAN/VBoxContainer/IpPort/Buttons/Leave.hide()
 
 func disable_tabs():
 	$CenterContainer/TabContainer.set_tab_hidden(1, true)
@@ -147,7 +147,7 @@ func enable_tabs():
 	$CenterContainer/TabContainer.set_tab_hidden(5, true)
 
 func _on_connected():
-	$CenterContainer/TabContainer/Main/VBoxContainer/IpPort/Buttons.current_tab = 1
+	$CenterContainer/TabContainer/Main/LAN/VBoxContainer/IpPort/Buttons.current_tab = 1
 
 func enable_menu():
 	if not $CenterContainer/TabContainer/Implants.updated:
