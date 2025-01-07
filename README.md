@@ -24,6 +24,9 @@ CruS Online is installed in the same way as other modifications
 3. Extract CruS Online folder into this directory: `%appdata%\Godot\app_userdata\Cruelty Squad\mods`
 4. Launch the game
 
+> [!CAUTION]
+> CruS Online is currently incompatible with other modifications
+
 ## Hosting lobby
 Due to the fact that the modification adds LAN multiplayer, there are two ways to host the lobby:
 
