@@ -25,26 +25,28 @@ var transform_lerp : Transform
 onready var animTree = $Puppet/PlayerModel/AnimTree
 
 onready var Multiplayer = Global.get_node("Multiplayer")
+onready var NetworkBridge = Global.get_node("Multiplayer/NetworkBridge")
+onready var SteamInit = Global.get_node("Multiplayer/NetworkBridge")
 
 var canDamage = false
 
-remote func _set_toxic():
+remote func _set_toxic(id):
 	Global.player.set_toxic()
 
-remote func _set_cancer():
+remote func _set_cancer(id):
 	Global.player.cancer()
 
-remote func _do_damage(damage, collision_n, collision_p, shooter_pos, weapon_type, damagerId):
-	Global.player.set_last_damager_id(damagerId, weapon_type)
+remote func _do_damage(id, damage, collision_n, collision_p, shooter_pos, weapon_type):
+	Global.player.set_last_damager_id(id, weapon_type)
 	Global.player.damage(damage, collision_n, collision_p, shooter_pos)
 
-remote func _drop_weapon():
+remote func _drop_weapon(id):
 	Input.action_press("drop")
 
-remote func _set_fire(value):
+remote func _set_fire(id, value):
 	Global.player.fakeFire.emitting = value
 
-remote func _set_death(death):
+remote func _set_death(id, death):
 	if death:
 		animTree.set("parameters/DEATH1/active", true)
 	else:
@@ -52,6 +54,23 @@ remote func _set_death(death):
 		animTree.active = true
 
 func _ready():
+	NetworkBridge.register_rpcs(self,[
+		["_update_puppet", NetworkBridge.PERMISSION.ALL],
+		["respawn_puppet", NetworkBridge.PERMISSION.ALL],
+		["set_current_weapon", NetworkBridge.PERMISSION.ALL],
+		["_set_toxic", NetworkBridge.PERMISSION.ALL],
+		["_set_cancer", NetworkBridge.PERMISSION.ALL],
+		["_do_damage", NetworkBridge.PERMISSION.ALL],
+		["_drop_weapon", NetworkBridge.PERMISSION.ALL],
+		["_set_fire", NetworkBridge.PERMISSION.ALL],
+		["_set_death", NetworkBridge.PERMISSION.ALL],
+		["set_is_on_floor", NetworkBridge.PERMISSION.ALL],
+		["set_kick", NetworkBridge.PERMISSION.ALL],
+		["set_crouch", NetworkBridge.PERMISSION.ALL],
+		["set_gravity", NetworkBridge.PERMISSION.ALL],
+		["shoot_commit", NetworkBridge.PERMISSION.ALL]
+	])
+	
 	weaponsMesh = $Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons.get_children()
 	var skinMaterial = SpatialMaterial.new()
 	skinMaterial.albedo_texture = load(skinPath)
@@ -63,8 +82,9 @@ func _ready():
 	
 	rset_config("transform_lerp", MultiplayerAPI.RPC_MODE_REMOTE)
 	
-	if get_tree().network_peer != null and is_network_master():
-		get_tree().get_nodes_in_group("Multiplayer")[0].playerPuppet = self
+	print(int(self.name))
+	if int(self.name) == NetworkBridge.get_id():
+		Multiplayer.playerPuppet = self
 	
 	canDamage = false
 	$RespawnDamage.start()
@@ -128,31 +148,31 @@ func _process(delta):
 		$Puppet/PlayerModel/SFX/IED_alert.pitch_scale += 0.025
 
 func _physics_process(delta):
-	if get_tree().network_peer != null:
+	if NetworkBridge.check_connection():
 		Multiplayer.packages_count += 1
-		if is_network_master():
-			rpc_unreliable("_update_puppet",
-				Global.player.global_transform,
-				[Global.player.cmd.forward_move,Global.player.cmd.right_move],
-				Global.player.rotation_helper.rotation.x
-			)
+		if int(self.name) == NetworkBridge.get_id():
+			NetworkBridge.n_rpc_unreliable(self, "_update_puppet", [Global.player.global_transform, [Global.player.cmd.forward_move,Global.player.cmd.right_move], Global.player.rotation_helper.rotation.x])
 			hide()
 
-remote func _update_puppet(recivedTransform, recivedPlayerMovement, recivedPlayerAim):
-	transform_lerp = recivedTransform
-	playerMovement = recivedPlayerMovement
-	playerAim = recivedPlayerAim
+remote func _update_puppet(id, recivedTransform, recivedPlayerMovement, recivedPlayerAim):
+	if int(self.name) != NetworkBridge.get_id():
+		transform_lerp = recivedTransform
+		playerMovement = recivedPlayerMovement
+		playerAim = recivedPlayerAim
+	
+	if NetworkBridge.n_is_network_master(self):
+		NetworkBridge.n_rpc_unreliable(self, "_update_puppet", [recivedTransform, recivedPlayerMovement, recivedPlayerAim])
 
-puppet func respawn_puppet():
-	if is_network_master():
-		rpc("respawn_puppet")
+puppet func respawn_puppet(id):
+	if int(self.name) == NetworkBridge.get_id():
+		NetworkBridge.n_rpc(self, "respawn_puppet")
 	else:
 		animTree.set("parameters/DEATH1/active", false)
 		animTree.active = true
 
-puppet func set_current_weapon(value):
-	if is_network_master():
-		rpc("set_current_weapon", value)
+puppet func set_current_weapon(id, value):
+	if int(self.name) == NetworkBridge.get_id():
+		NetworkBridge.n_rpc(self, "set_current_weapon", [value])
 	else:
 		if value == null:
 			weaponHold = true
@@ -164,27 +184,27 @@ puppet func set_current_weapon(value):
 			weaponsMesh[value].get_child(0).hide()
 			currentWeaponId = value
 
-puppet func set_is_on_floor(value):
-	if is_network_master():
-		rpc("set_is_on_floor", value)
+puppet func set_is_on_floor(id, value):
+	if int(self.name) == NetworkBridge.get_id():
+		NetworkBridge.n_rpc(self, "set_is_on_floor", [value])
 	else:
 		playerOnFloor = value
 
-puppet func set_kick():
-	if is_network_master():
-		rpc("set_kick")
+puppet func set_kick(id):
+	if int(self.name) == NetworkBridge.get_id():
+		NetworkBridge.n_rpc(self, "set_kick")
 	else:
 		animTree.set("parameters/KICK/active", true)
 
-puppet func set_crouch(value):
-	if is_network_master():
-		rpc("set_crouch", value)
+puppet func set_crouch(id, value):
+	if int(self.name) == NetworkBridge.get_id():
+		NetworkBridge.n_rpc(self, "set_crouch", [value])
 	else:
 		playerCrouch = value
 
-puppet func set_gravity(value):
-	if is_network_master():
-		rpc("set_gravity", value)
+puppet func set_gravity(id, value):
+	if int(self.name) == NetworkBridge.get_id():
+		NetworkBridge.n_rpc(self, "set_gravity", [value])
 	else:
 		if value > 0:
 			$Puppet/PlayerModel.rotation.z = deg2rad(0)
@@ -193,30 +213,30 @@ puppet func set_gravity(value):
 
 func do_damage(damage, collision_n, collision_p, shooter_pos, weapon_type = null):
 	if canDamage:
-		rpc_id(int(self.name),"_do_damage", damage, collision_n, collision_p, shooter_pos, weapon_type, get_tree().get_network_unique_id())
+		NetworkBridge.n_rpc_id(self, int(self.name), "_do_damage", [damage, collision_n, collision_p, shooter_pos, weapon_type])
 
 func set_toxic():
-	rpc_id(int(self.name),"_set_toxic")
+	NetworkBridge.n_rpc_id(self, int(self.name), "_set_toxic")
 
 func set_cancer():
-	rpc_id(int(self.name),"_set_cancer")
+	NetworkBridge.n_rpc_id(self, int(self.name), "_set_cancer")
 
 func drop_weapon():
-	rpc_id(int(self.name),"_drop_weapon")
+	NetworkBridge.n_rpc_id(self, int(self.name), "_drop_weapon")
 
 func set_fire(value):
-	rpc_id(int(self.name),"_set_fire", value)
+	NetworkBridge.n_rpc_id(self, int(self.name), "_set_fire", [value])
 
 func respawn_player():
-	rpc_id(int(self.name),"_respawn_player")
+	NetworkBridge.n_rpc_id(self, int(self.name), "_respawn_player")
 	hideHelpLabel()
-	rpc("hideHelpLabel")
+	NetworkBridge.n_rpc(self, "hideHelpLabel")
 
-remote func _respawn_player():
+remote func _respawn_player(id):
 	if Global.player.died:
 		Global.get_node('DeathScreen').respawn()
 
-remote func hideHelpLabel():
+remote func hideHelpLabel(id = null):
 	$Puppet/PlayerModel/HelpSound.play()
 	$Puppet/PlayerModel/HelpLabel.hide()
 	
@@ -224,18 +244,18 @@ remote func hideHelpLabel():
 	$RespawnDamage.start()
 
 func setup_puppet(id):
-	$Puppet/PlayerModel/Armature/Skeleton/Chest/Body.set_meta("puppetId",id)
+	$Puppet/PlayerModel/Armature/Skeleton/Chest/Body.set_meta("puppetId", id)
 
 func shoot_play(pitch, soundId = 0):
-	rpc("shoot_commit", pitch, soundId)
+	NetworkBridge.n_rpc(self, "shoot_commit", [pitch, soundId])
 
 func flashlight(state):
-	rpc("set_flashlight", state)
+	NetworkBridge.n_rpc(self, "set_flashlight", [state])
 
-remote func set_flashlight(state):
+remote func set_flashlight(id, state):
 	$Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons/Flashlight_Mesh/SpotLight.visible = state
 
-remote func shoot_commit(pitch, soundId):
+remote func shoot_commit(id, pitch, soundId):
 	weaponsMesh[currentWeaponId].get_child(0).show()
 	weaponsMesh[currentWeaponId].get_child(1 + soundId).pitch_scale = pitch
 	weaponsMesh[currentWeaponId].get_child(1 + soundId).play()

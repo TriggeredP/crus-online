@@ -1,6 +1,6 @@
 extends Node
 
-var version = "Beta 070125/2215"
+var version = "Beta 080125/2325"
 
 enum errorType {UNKNOW, TIME_OUT, WRONG_PASSWORD, WRONG_VERSION, PASSWORD_REQUIRE, SERVER_CLOSED, UPNP_ERROR}
 
@@ -63,7 +63,7 @@ signal disconnected_from_server(error)
 signal throw_error(error)
 
 # SERVER = PUPPET
-# CLIENT_ALL = MASTER
+# CLIENT_ALL = REMOTE
 
 func _ready():
 	SteamNetwork.register_rpcs(self,[
@@ -79,14 +79,14 @@ func _ready():
 		["scene_loaded_signal", SteamNetwork.PERMISSION.SERVER],
 		["set_death_label", SteamNetwork.PERMISSION.SERVER],
 		["hide_death_screen", SteamNetwork.PERMISSION.SERVER],
-		["ping_host", SteamNetwork.PERMISSION.CLIENT_ALL],
-		["password_require_check", SteamNetwork.PERMISSION.CLIENT_ALL],
-		["connect_init", SteamNetwork.PERMISSION.CLIENT_ALL],
-		["host_add_player", SteamNetwork.PERMISSION.CLIENT_ALL],
-		["host_remove_player", SteamNetwork.PERMISSION.CLIENT_ALL],
-		["load_check", SteamNetwork.PERMISSION.CLIENT_ALL],
-		["_player_died", SteamNetwork.PERMISSION.CLIENT_ALL],
-		["_player_respawn", SteamNetwork.PERMISSION.CLIENT_ALL],
+		["ping_host", SteamNetwork.PERMISSION.ALL],
+		["password_require_check", SteamNetwork.PERMISSION.ALL],
+		["connect_init", SteamNetwork.PERMISSION.ALL],
+		["host_add_player", SteamNetwork.PERMISSION.ALL],
+		["host_remove_player", SteamNetwork.PERMISSION.ALL],
+		["load_check", SteamNetwork.PERMISSION.ALL],
+		["_player_died", SteamNetwork.PERMISSION.ALL],
+		["_player_respawn", SteamNetwork.PERMISSION.ALL],
 		["connected", SteamNetwork.PERMISSION.SERVER],
 		["client_peer_connect", SteamNetwork.PERMISSION.SERVER]
 	])
@@ -110,15 +110,21 @@ func _input(event):
 	if event is InputEventKey and not event.echo and event.pressed:
 		var key = event.scancode
 
-		if key == KEY_F1:
-			$Debug.visible = !$Debug.visible
+		match key:
+			KEY_F1:
+				$Debug.visible = !$Debug.visible
+			KEY_F2:
+				print("[CRUS ONLINE / DEBUG] players: ")
+				for player in players:
+					print(str(player) + ": ", players[player])
 
 func _physics_process(delta):
-	if get_tree().network_peer != null and get_tree().network_peer.get_connection_status() == 0:
-		goto_menu_client(null)
-		clear_connection(errorType.SERVER_CLOSED)
-	
-	if get_tree().network_peer != null and is_network_master() and tick % config.tickRate == 0:
+	if NetworkBridge.is_lan():
+		if get_tree().network_peer != null and get_tree().network_peer.get_connection_status() == 0:
+			goto_menu_client(null)
+			clear_connection(errorType.SERVER_CLOSED)
+		
+	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master() and tick % config.tickRate == 0:
 		emit_signal("host_tick")
 		tick = 0
 	tick += 1
@@ -128,15 +134,15 @@ puppet func set_packages_count(id, value):
 
 func ping_check():
 	if NetworkBridge.check_connection():
-		if not NetworkBridge.r_is_network_master(self):
-			NetworkBridge.r_rpc(self, "ping_host", [OS.get_ticks_msec()])
+		if not NetworkBridge.n_is_network_master(self):
+			NetworkBridge.n_rpc(self, "ping_host", [OS.get_ticks_msec()])
 		else:
 			$Debug/VBoxContainer/PPT.text = "Packages per sec: " + str(packages_count + 1)
-			NetworkBridge.r_rpc(self, "set_packages_count", [packages_count])
-		packages_count = 0
+			NetworkBridge.n_rpc(self, "set_packages_count", [packages_count])
+			packages_count = 0
 
 master func ping_host(id, recived_ping):
-	NetworkBridge.r_rpc_id(self, id, "ping_set", [recived_ping])
+	NetworkBridge.n_rpc_id(self, id, "ping_set", [recived_ping])
 
 puppet func ping_set(id, recived_ping):
 	$Debug/VBoxContainer/Ping.text = "Ping: " + str(OS.get_ticks_msec() - recived_ping)
@@ -147,9 +153,8 @@ func clear_connection(recivedError):
 	
 	leave_server()
 
-# LAN only
 func host_server():
-	if NetworkBridge.multiplayer_mode == 0:
+	if NetworkBridge.is_lan():
 		hostSettings.helpTimer = config.helpTimer
 		hostSettings.canRespawn = config.canRespawn
 		hostSettings.changeModeOnDeath = config.changeModeOnDeath
@@ -172,9 +177,8 @@ func host_server():
 		dataLoaded = true
 		print("[CRUS ONLINE / MAIN]: Server hosted")
 
-# LAN only
 func join_to_server(ip, port):
-	if NetworkBridge.multiplayer_mode == 0:
+	if NetworkBridge.is_lan():
 		config.lastIp = ip
 		config.lastPort = port
 		
@@ -187,21 +191,21 @@ func join_to_server(ip, port):
 		print("[CRUS ONLINE / MAIN]: Client try to connect")
 
 func leave_server():
-	if NetworkBridge.multiplayer_mode == 0: # LAN
+	dataLoaded = false
+	players = {}
+	
+	$Debug/VBoxContainer/GameType.text = "Player is not connected"
+	$Debug/VBoxContainer/PPT.text = "Packages per sec: 0"
+	$Debug/VBoxContainer/Ping.text = "Ping: 0"
+	
+	emit_signal("status_update", "Offline")
+	emit_signal("players_update", players)
+	
+	if NetworkBridge.is_lan():
 		get_tree().network_peer = null
-		dataLoaded = false
-		players = {}
-		
-		$Debug/VBoxContainer/GameType.text = "Player is not connected"
-		$Debug/VBoxContainer/PPT.text = "Packages per sec: 0"
-		$Debug/VBoxContainer/Ping.text = "Ping: 0"
-		
-		emit_signal("status_update", "Offline")
-		emit_signal("players_update", players)
-	else: # Steam
+	else:
 		SteamLobby.leave_lobby()
-		dataLoaded = false
-		players = {}
+	
 	print("[CRUS ONLINE / MAIN]: Server leaved")
 
 ################################################################################
@@ -216,14 +220,22 @@ func leave_server():
 
 func steam_peers_connect():
 	emit_signal("status_update", "Lobby owner")
-	NetworkBridge.r_rpc(self, "client_peer_connect")
+	
+	playerInfo.nickname = SteamInit.steam_username
+	players[NetworkBridge.get_host_id()] = playerInfo
+	
+	$Debug/VBoxContainer/GameType.text = "Player is host"
+	NetworkBridge.n_rpc(self, "client_peer_connect")
 
 puppet func client_peer_connect(id):
 	emit_signal("status_update", "Connected to Lobby")
+	$Debug/VBoxContainer/GameType.text = "Player is client"
+	
+	playerInfo.nickname = SteamInit.steam_username
+	NetworkBridge.n_rpc(self, "connect_init", [password, version])
 
-# LAN only
 func disconnected(id):
-	if NetworkBridge.multiplayer_mode == 0:
+	if NetworkBridge.is_lan():
 		var playerPuppet = get_node_or_null("Players/" + str(id))
 		
 		if playerPuppet != null:
@@ -237,11 +249,10 @@ func disconnected(id):
 		emit_signal("players_update", players)
 		print("[CRUS ONLINE / MAIN]: Disconnected")
 
-# LAN only
 puppet func connected(id):
-	if NetworkBridge.multiplayer_mode == 0:
+	if NetworkBridge.is_lan():
 		if not dataLoaded:
-			NetworkBridge.r_rpc(self, "password_require_check", [passwordEntered])
+			NetworkBridge.n_rpc(self, "password_require_check", [passwordEntered])
 			print("[CRUS ONLINE / CLIENT]: Connect Init")
 
 puppet func disconnect_client(id, recivedError):
@@ -252,44 +263,45 @@ puppet func disconnect_client(id, recivedError):
 
 master func password_require_check(id, recivedPasswordEntered):
 	if recivedPasswordEntered:
-		NetworkBridge.r_rpc_id(self, id, "password_checked")
+		NetworkBridge.n_rpc_id(self, id, "password_checked")
 	else:
 		if config.hostPassword != "":
-			NetworkBridge.r_rpc_id(self, id, "disconnect_client", [errorType.PASSWORD_REQUIRE])
+			NetworkBridge.n_rpc_id(self, id, "disconnect_client", [errorType.PASSWORD_REQUIRE])
 		else:
-			NetworkBridge.r_rpc_id(self, id, "password_not_require")
+			NetworkBridge.n_rpc_id(self, id, "password_not_require")
 
 puppet func password_not_require(id):
 		password = ""
-		NetworkBridge.r_rpc(self, "connect_init", [password, version])
+		NetworkBridge.n_rpc(self, "connect_init", [password, version])
 
 puppet func password_checked(id):
-	NetworkBridge.r_rpc(self, "connect_init", [password, version])
+	NetworkBridge.n_rpc(self, "connect_init", [password, version])
 
 master func connect_init(id, recivedPassword, recivedVersion):
 	if recivedVersion != version:
-		NetworkBridge.r_rpc_id(self, id, "disconnect_client", [errorType.WRONG_VERSION])
+		NetworkBridge.n_rpc_id(self, id, "disconnect_client", [errorType.WRONG_VERSION])
 	else:
 		if recivedPassword == config.hostPassword:
-			NetworkBridge.r_rpc_id(self, id, "client_connect_init", [hostSettings, players, Global.CURRENT_LEVEL])
+			NetworkBridge.n_rpc_id(self, id, "client_connect_init", [hostSettings, players])
 			print("[CRUS ONLINE / HOST]: Client Connect Init")
 		else:
-			NetworkBridge.r_rpc_id(self, id, "disconnect_client", [errorType.WRONG_PASSWORD])
+			NetworkBridge.n_rpc_id(self, id, "disconnect_client", [errorType.WRONG_PASSWORD])
 
-puppet func client_connect_init(id, recivedHostSettings, recivedPlayerInfo, level):
+puppet func client_connect_init(id, recivedHostSettings, recivedPlayerInfo):
 	players = recivedPlayerInfo
 	hostSettings = recivedHostSettings
 	
-	passwordEntered = false
-	password = ""
-	
 	dataLoaded = true
-	NetworkBridge.r_rpc(self, "host_add_player", [playerInfo])
-
-	emit_signal("status_update", "Connected to server")
-	emit_signal("connected_to_server")
+	NetworkBridge.n_rpc(self, "host_add_player", [playerInfo])
 	
-	print("[CRUS ONLINE / CLIENT]: Player connected")
+	if NetworkBridge.is_lan():
+		passwordEntered = false
+		password = ""
+
+		emit_signal("status_update", "Connected to server")
+		emit_signal("connected_to_server")
+		
+		print("[CRUS ONLINE / CLIENT]: Player connected")
 
 remote func connect_notify(id, nickname):
 	Global.UI.notify(nickname + " connected", Color(1, 0, 0))
@@ -297,7 +309,7 @@ remote func connect_notify(id, nickname):
 master func host_add_player(id, info):
 	if players[id] == null:
 		players[id] = info
-		NetworkBridge.r_rpc(self, "sync_players", [players])
+		NetworkBridge.n_rpc(self, "sync_players", [players])
 		print("[CRUS ONLINE / HOST]: Sync player info")
 		
 		emit_signal("players_update", players)
@@ -305,7 +317,7 @@ master func host_add_player(id, info):
 master func host_remove_player(id):
 	if players[id] != null:
 		players.erase(id)
-		NetworkBridge.r_rpc(self, "sync_players", [players])
+		NetworkBridge.n_rpc(self, "sync_players", [players])
 
 puppet func sync_players(id, info):
 	players = info
@@ -329,10 +341,15 @@ func goto_menu_host(levelFinished = false):
 	Global.border.show()
 	
 	enable_menu()
-	get_tree().network_peer.refuse_new_connections = false
+	
+	if NetworkBridge.is_lan():
+		get_tree().network_peer.refuse_new_connections = true
+	else:
+		SteamInit.Steam.setLobbyJoinable(SteamLobby.get_lobby_id(), false)
+	
 	Global.CURRENT_LEVEL = 0
 	Global.goto_scene(menuPath)
-	NetworkBridge.r_rpc(self, "goto_menu_client", [levelFinished])
+	NetworkBridge.n_rpc(self, "goto_menu_client", [levelFinished])
 	print("[CRUS ONLINE / HOST]: Goto to menu")
 	
 	Players.remove_players()
@@ -420,9 +437,14 @@ func goto_scene_host(scene):
 	Global.border.show()
 	
 	disable_menu()
-	get_tree().network_peer.refuse_new_connections = true
+	
+	if NetworkBridge.is_lan():
+		get_tree().network_peer.refuse_new_connections = true
+	else:
+		SteamInit.Steam.setLobbyJoinable(SteamLobby.get_lobby_id(), false)
+		
 	Global.goto_scene(scene)
-	NetworkBridge.r_rpc(self, "goto_scene_client", [scene, Global.CURRENT_LEVEL])
+	NetworkBridge.n_rpc(self, "goto_scene_client", [scene, Global.CURRENT_LEVEL])
 	print("[CRUS ONLINE / HOST]: Goto to scene [" + scene + "]")
 	
 	Players.load_players()
@@ -448,11 +470,11 @@ func _scene_loaded():
 		player_scene_loaded = true
 		get_tree().paused = true
 		
-		if get_tree().network_peer != null and is_network_master():
-			loaded_players.append(1)
+		if NetworkBridge.n_is_network_master(self):
+			loaded_players.append(NetworkBridge.get_host_id())
 			connect("host_tick", self, "check_players_load")
 		else:
-			rpc("load_check")
+			NetworkBridge.n_rpc(self, "load_check")
 
 func check_players_load():
 	var is_players_loaded = true
@@ -469,10 +491,10 @@ func check_players_load():
 		get_tree().paused = false
 		$SyncLoad.hide()
 		emit_signal("scene_loaded")
-		NetworkBridge.r_rpc(self, "scene_loaded_signal")
+		NetworkBridge.n_rpc(self, "scene_loaded_signal")
 
 master func load_check(id):
-	loaded_players.append(get_tree().get_rpc_sender_id())
+	loaded_players.append(id)
 
 puppet func scene_loaded_signal(id):
 	get_tree().paused = false
@@ -486,18 +508,18 @@ puppet func scene_loaded_signal(id):
 var died_players = []
 
 func player_died():
-	if get_tree().network_peer != null and is_network_master():
+	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		_player_died(true)
 	else:
-		rpc("_player_died")
+		NetworkBridge.n_rpc(self, "_player_died")
 
 master func _player_died(id, host = false):
 	if host:
-		if not died_players.has(1):
-			died_players.append(1)
+		if not died_players.has(NetworkBridge.get_host_id()):
+			died_players.append(NetworkBridge.get_host_id())
 	else:
-		if not died_players.has(get_tree().get_rpc_sender_id()):
-			died_players.append(get_tree().get_rpc_sender_id())
+		if not died_players.has(id):
+			died_players.append(id)
 	
 	var all_player_died = true
 
@@ -509,14 +531,14 @@ master func _player_died(id, host = false):
 		print("[CRUS ONLINE / HOST]: All players is dead lol")
 		$RestartTimer.start()
 		set_death_label(null)
-		NetworkBridge.r_rpc(self, "set_death_label")
+		NetworkBridge.n_rpc(self, "set_death_label")
 
 puppet func set_death_label(id):
 	DeathScreen.set_death_label()
 
 func restart_map():
 	hide_death_screen(null)
-	NetworkBridge.r_rpc(self, "hide_death_screen")
+	NetworkBridge.n_rpc(self, "hide_death_screen")
 	goto_scene_host(hostSettings.map)
 
 puppet func hide_death_screen(id):
@@ -525,18 +547,18 @@ puppet func hide_death_screen(id):
 		playerPuppet.respawn_puppet()
 
 func player_respawn():
-	if get_tree().network_peer != null and is_network_master():
+	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		_player_respawn(true)
 	else:
-		NetworkBridge.r_rpc(self, "_player_respawn")
+		NetworkBridge.n_rpc(self, "_player_respawn")
 
 master func _player_respawn(id, host = false):
 	if host:
-		if died_players.has(1):
-			died_players.erase(1)
+		if died_players.has(NetworkBridge.get_host_id()):
+			died_players.erase(NetworkBridge.get_host_id())
 	else:
-		if died_players.has(get_tree().get_rpc_sender_id()):
-			died_players.erase(get_tree().get_rpc_sender_id())
+		if died_players.has(id):
+			died_players.erase(id)
 
 ################################################################################
 
@@ -553,10 +575,11 @@ func disable_menu():
 ################################################################################
 
 func game_init(level) -> bool:
-	if get_tree().network_peer == null:
+	if not NetworkBridge.check_connection():
+		NetworkBridge.set_mode(0)
 		host_server()
 	
-	if get_tree().is_network_server():
+	if NetworkBridge.n_is_network_master(self):
 		goto_scene_host(level)
 		return true
 	return false

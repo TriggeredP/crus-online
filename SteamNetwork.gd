@@ -6,7 +6,7 @@ signal all_peers_connected()
 
 enum PACKET_TYPE { HANDSHAKE = 1, HANDSHAKE_REPLY = 2, PEER_STATE = 3, NODE_PATH_UPDATE = 4, NODE_PATH_CONFIRM = 5, RPC = 6, RPC_WITH_NODE_PATH = 7, RSET = 8, RSET_WITH_NODE_PATH = 9 }
 
-enum PERMISSION {SERVER, CLIENT_ALL}
+enum PERMISSION {SERVER, ALL}
 
 var _peers = {}
 var _my_steam_id := 0
@@ -149,7 +149,7 @@ func _sender_has_permission(sender_id: int, node_path: NodePath, method: String 
 	match permission:
 		PERMISSION.SERVER:
 			return sender_id == get_server_steam_id()
-		PERMISSION.CLIENT_ALL:
+		PERMISSION.ALL:
 			return true
 	return false
 

@@ -1,5 +1,7 @@
 extends Container
 
+onready var Multiplayer = Global.get_node("Multiplayer")
+
 func multiplayer_exit():
 	visible = true
 	in_game = false
@@ -200,8 +202,6 @@ onready var clear_button = $Settings / GridContainer / PanelContainer6 / VBoxCon
 class Menu extends Control:
 	var buttons:Array
 	var elements:Array
-
-onready var Multiplayer = get_tree().get_nodes_in_group("Multiplayer")[0]
 
 func _physics_process(delta):
 	time += 1

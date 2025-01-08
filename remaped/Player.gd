@@ -146,7 +146,9 @@ onready var orbWalkSound = preload("res://Sfx/orbwalk.wav")
 var playerWalkSound
 
 ################################################################################
+
 onready var Multiplayer = Global.get_node("Multiplayer")
+onready var NetworkBridge = Global.get_node("Multiplayer/NetworkBridge")
 onready var playerPuppet = Multiplayer.playerPuppet
 
 const deathMessages = {
@@ -178,8 +180,8 @@ func reset_last_damager_id():
 	lastDamagerId = null
 	weaponType = null
 
-remote func send_death_nofify(killerId):
-	var deadNickname = Multiplayer.players[get_tree().get_rpc_sender_id()].nickname
+remote func send_death_nofify(id, killerId):
+	var deadNickname = Multiplayer.players[id].nickname
 	
 	if killerId == null:
 		Global.UI.notify(deathMessages.general[randi() % deathMessages.general.size()] % deadNickname, Color(1, 0, 0))
@@ -187,27 +189,26 @@ remote func send_death_nofify(killerId):
 		var killerNickname = Multiplayer.players[killerId].nickname
 		Global.UI.notify(deathMessages.killedByPlayer[randi() % deathMessages.killedByPlayer.size()] % [deadNickname,killerNickname], Color(1, 0, 0))
 
-remote func _spawn_gib(parentPath, gib, gibName, gibPos, recivedDamage):
+remote func _spawn_gib(id, parentPath, gib, gibName, gibPos, recivedDamage):
 	var new_gib = gibs[gib].instance()
 	new_gib.set_name(gibName)
 	get_node(parentPath).add_child(new_gib)
 	new_gib.global_transform.origin = gibPos
 	new_gib.damage(recivedDamage[0], recivedDamage[1], recivedDamage[2], recivedDamage[3])
 
-remote func _play_sound(soundName):
-	var netId = get_tree().get_rpc_sender_id()
-	Multiplayer.players[netId].puppet.get_node("Puppet/PlayerModel/SFX/" + soundName).play()
+remote func _play_sound(id, soundName):
+	Multiplayer.players[id].puppet.get_node("Puppet/PlayerModel/SFX/" + soundName).play()
 
-remote func _play_death_sound():
-	Multiplayer.players[get_tree().get_rpc_sender_id()].puppet.play_death_sound()
+remote func _play_death_sound(id):
+	Multiplayer.players[id].puppet.play_death_sound()
 
-remote func _spawn_explosion(pos):
-	if get_tree().get_network_unique_id() != get_tree().get_rpc_sender_id():
+remote func _spawn_explosion(id, pos):
+	if NetworkBridge.get_id() != id:
 		var n_explosion = preload("res://MOD_CONTENT/CruS Online/effects/fake_self_destruct_explosion.tscn").instance()
 		get_parent().add_child(n_explosion)
 		n_explosion.global_transform.origin = pos
 		
-		Multiplayer.players[get_tree().get_rpc_sender_id()].puppet.play_explosion_sound()
+		Multiplayer.players[id].puppet.play_explosion_sound()
 
 ################################################################################
 
@@ -308,6 +309,14 @@ func update_implants():
 var fakeFire = null
 
 func _ready():
+	NetworkBridge.register_rpcs(self,[
+		["send_death_nofify", NetworkBridge.PERMISSION.ALL],
+		["_spawn_gib", NetworkBridge.PERMISSION.ALL],
+		["_play_sound", NetworkBridge.PERMISSION.ALL],
+		["_play_death_sound", NetworkBridge.PERMISSION.ALL],
+		["_spawn_explosion", NetworkBridge.PERMISSION.ALL]
+	])
+	
 	fakeFire = load("res://MOD_CONTENT/CruS Online/effects/fake_Fire_Child.tscn").instance()
 	add_child(fakeFire)
 	fakeFire.transform.origin += Vector3.UP
@@ -647,7 +656,7 @@ func _physics_process(delta):
 			$Crush_Check / CrouchCrush.disabled = true
 			rotation_helper.transform.origin.y = 0
 			set_move_speed()
-		playerPuppet.set_crouch(crouch_flag)
+		playerPuppet.set_crouch(null, crouch_flag)
 	if toxic and not crouch_flag:
 		move_speed = 7 + sin(time_2)
 	if Input.is_action_pressed("Lean_Left"):
@@ -707,7 +716,7 @@ func _process(delta):
 			if crouch_flag:
 				rotation_helper.transform.origin.y = - 0.7
 		drug_gravity_flag = false
-		playerPuppet.set_gravity(max_gravity)
+		playerPuppet.set_gravity(null, max_gravity)
 	queue_jump()
 
 func suicide():
@@ -723,7 +732,7 @@ func move(delta):
 
 	if on_floor != is_on_floor():
 		on_floor = is_on_floor()
-		playerPuppet.set_is_on_floor(on_floor)
+		playerPuppet.set_is_on_floor(null, on_floor)
 	
 	if Vector3(cmd.right_move, 0, cmd.forward_move).length() != 0:
 		ray_rotation.look_at(global_transform.origin + Vector3(cmd.right_move, 0, cmd.forward_move), Vector3.UP)
@@ -810,7 +819,7 @@ func move(delta):
 		if foot_step_counter > 4:
 			$Foot_Step.pitch_scale = 0.8 + rand_range( - 0.2, 0.2)
 			$Foot_Step.play()
-			rpc("_play_sound","FootStep")
+			NetworkBridge.n_rpc(self, "_play_sound", ["FootStep"])
 			foot_step_counter = 0
 			if cancer_count > 5:
 					var space = get_world().direct_space_state
@@ -1126,7 +1135,7 @@ func damage(damage, collision_n, collision_p, shooter_pos):
 	UI.set_health(health)
 	if damage > 5:
 		pain_sound.play()
-		rpc("_play_sound","Pain")
+		NetworkBridge.n_rpc(self, "_play_sound", ["Pain"])
 	if health <= 0 and not dead and not died:
 		die(damage, collision_n, collision_p, shooter_pos)
 	if health < - 40 and not dead:
@@ -1146,7 +1155,7 @@ func die(damage, collision_n, collision_p, shooter_pos):
 	$SFX / IED2.play()
 	$SFX / IED_alert.play()
 	
-	rpc("_play_death_sound")
+	NetworkBridge.n_rpc(self, "_play_death_sound")
 
 	death_timer.start()
 
@@ -1168,7 +1177,7 @@ func instadie(damage = 100, collision_n = Vector3.ZERO, collision_p = Vector3.ZE
 
 	weapon.set_process(false)
 	weapon.hide()
-	rpc("_spawn_explosion",global_transform.origin)
+	NetworkBridge.n_rpc(self, "_spawn_explosion", [global_transform.origin])
 	var n_explosion = EXPLOSION.instance()
 	get_parent().add_child(n_explosion)
 	n_explosion.global_transform.origin = global_transform.origin
@@ -1180,7 +1189,7 @@ func instadie(damage = 100, collision_n = Vector3.ZERO, collision_p = Vector3.ZE
 	GLOBAL.get_node('DeathScreen').player_died()
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	
-	rpc("send_death_nofify",lastDamagerId)
+	NetworkBridge.n_rpc(self, "send_death_nofify", [lastDamagerId])
 
 func _on_Crush_Check_body_entered(body):
 		if body.get_class() == "StaticBody":
@@ -1213,14 +1222,14 @@ func spawn_gib(gib, count, damage, collision_n, collision_p):
 		var damageArgs = [damage * 10, - collision_n + Vector3(rand_range(0, 0.1), rand_range(0, 0.1), rand_range(0, 0.1)), collision_p, Vector3.ZERO]
 		new_gib.damage(damageArgs[0], damageArgs[1], damageArgs[2], damageArgs[3])
 
-		rpc("_spawn_gib", get_parent().get_path(), gib, new_gib.name, new_gib.global_transform.origin, damageArgs)
+		NetworkBridge.n_rpc(self, "_spawn_gib", [get_parent().get_path(), gib, new_gib.name, new_gib.global_transform.origin, damageArgs])
 		return new_gib
 
 func add_health(a_health):
 	if health > 0:
 		UI.notify(str(a_health) + " health absorbed", Color(1, 0.3, 0.3))
 		$SFX / Health.play()
-		rpc("_play_sound","Health")
+		NetworkBridge.n_rpc(self, "_play_sound", ["Health"])
 		health += a_health
 		if health > 100:
 			if not orb:

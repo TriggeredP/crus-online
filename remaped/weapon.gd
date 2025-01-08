@@ -225,7 +225,7 @@ func update_implants():
 		weapon1 = null
 		weapon2 = null
 		
-		playerPuppet.set_current_weapon(current_weapon)
+		playerPuppet.set_current_weapon(null, current_weapon)
 	else :
 		orb = false
 		$orbarms.hide()
@@ -346,7 +346,7 @@ func _ready()->void :
 			weapon1 = null
 			weapon2 = null
 		
-		playerPuppet.set_current_weapon(current_weapon)
+		playerPuppet.set_current_weapon(null, current_weapon)
 		
 		regentimer1 = Timer.new()
 		add_child(regentimer1)
@@ -667,7 +667,7 @@ func _process(delta)->void :
 				weapon2 = null
 			current_weapon = null
 			
-			playerPuppet.set_current_weapon(current_weapon)
+			playerPuppet.set_current_weapon(null, current_weapon)
 			
 			zoom_flag = false
 			player_weapon.hide()
@@ -872,7 +872,7 @@ func _process(delta)->void :
 			$Player_Leg / AnimationPlayer.play("Kick")
 			$Kicksound2.play()
 			rpc("_play_sound","Kicksound2")
-			playerPuppet.set_kick()
+			playerPuppet.set_kick(null)
 			kicktimer = 0
 			kickflag = true
 		elif glob.implants.torso_implant.thrust and Input.is_action_just_pressed("kick") and kicktimer >= 40:
@@ -1092,7 +1092,7 @@ func _process(delta)->void :
 			current_weapon = weapon1
 			held_weapon = 1
 			
-			playerPuppet.set_current_weapon(current_weapon)
+			playerPuppet.set_current_weapon(null, current_weapon)
 			
 			if current_weapon == null:
 				player_weapon.hide()
@@ -1108,7 +1108,7 @@ func _process(delta)->void :
 			elif current_weapon == weapon2:
 				current_weapon = weapon1
 			
-			playerPuppet.set_current_weapon(current_weapon)
+			playerPuppet.set_current_weapon(null, current_weapon)
 			
 			set_UI_ammo()
 			if current_weapon == null:
@@ -1128,7 +1128,7 @@ func _process(delta)->void :
 			held_weapon = 2
 			current_weapon = weapon2
 			
-			playerPuppet.set_current_weapon(current_weapon)
+			playerPuppet.set_current_weapon(null, current_weapon)
 			
 			set_UI_ammo()
 			if current_weapon == null:
@@ -1139,10 +1139,10 @@ func _process(delta)->void :
 		
 		if current_weapon == W_FLASHLIGHT and flash_light_switch:
 			flashlight.show()
-			playerPuppet.flashlight(true)
+			playerPuppet.flashlight(null, true)
 		else :
 			flashlight.hide()
-			playerPuppet.flashlight(false)
+			playerPuppet.flashlight(null, false)
 		if Input.is_action_just_pressed("Use") and $Use_Raycast.is_colliding():
 			var collider = $Use_Raycast.get_collider()
 			if collider.has_method("use"):
@@ -1187,7 +1187,7 @@ func _process(delta)->void :
 			current_weapon = W_LIGHT
 			weapon1 = current_weapon
 			
-			playerPuppet.set_current_weapon(current_weapon)
+			playerPuppet.set_current_weapon(null, current_weapon)
 			
 			set_UI_ammo()
 		if Input.is_action_just_pressed("weapon6") and reload_timer.is_stopped() and glob.debug:
@@ -1198,7 +1198,7 @@ func _process(delta)->void :
 			current_weapon = W_NAILER
 			weapon1 = current_weapon
 			
-			playerPuppet.set_current_weapon(current_weapon)
+			playerPuppet.set_current_weapon(null, current_weapon)
 			
 			set_UI_ammo()
 		
@@ -1215,7 +1215,7 @@ func cancer()->void :
 		timer.start(0.2)
 		audio[0].play()
 		if player:
-			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+			playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
 		if player:
 			magazine_ammo[current_weapon] -= 1
 		raycast.rotation = raycast_init_rot
@@ -1272,7 +1272,7 @@ func smg()->void :
 		audio[current_weapon].play()
 		audio[current_weapon].pitch_scale = float(magazine_ammo[current_weapon]) / MAX_MAG_AMMO[current_weapon] + 0.4 + rand_range( - 0.1, 0.1)
 		if player:
-			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+			playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
 		magazine_ammo[current_weapon] -= 1
 
 func steyr()->void :
@@ -1287,7 +1287,7 @@ func steyr()->void :
 			rpc("npc_muzzleflash", current_weapon, null)
 		audio[current_weapon].play()
 		if player:
-			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+			playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
 		
 		
 		timer.start(0.2)
@@ -1427,7 +1427,7 @@ func mkr()->void :
 		audio[current_weapon].play()
 		audio[current_weapon].pitch_scale = float(magazine_ammo[current_weapon]) / MAX_MAG_AMMO[current_weapon] + 0.4 + rand_range( - 0.1, 0.1)
 		if player:
-			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+			playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
 		magazine_ammo[current_weapon] -= 1
 
 func blackjack()->void :
@@ -1445,7 +1445,7 @@ func blackjack_timeout():
 			if global_transform.origin.distance_to(col_p) < 3 and is_instance_valid(col):
 				$Batonsound.play()
 				if player:
-					playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+					playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
 				glob.player.player_velocity += 5 * col_n
 				glob.player.player_view.fov *= 1.02
 				if col.has_method("tranq_timeout"):
@@ -1509,7 +1509,7 @@ func mg3()->void :
 				get_parent().get_parent().muzzleflash.show()
 		audio[current_weapon][0].play()
 		if player:
-			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+			playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
 		
 
 		magazine_ammo[current_weapon] -= 1
@@ -1546,7 +1546,7 @@ func silenced_smg()->void :
 		audio[current_weapon].play()
 		audio[current_weapon].pitch_scale = float(magazine_ammo[current_weapon]) / MAX_MAG_AMMO[current_weapon] + 0.4
 		if player:
-			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+			playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
 		magazine_ammo[current_weapon] -= 1
 
 func nailer()->void :
@@ -1584,7 +1584,7 @@ func nailer()->void :
 			rpc("npc_muzzleflash", current_weapon, null)
 		audio[current_weapon].play()
 		if player:
-			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+			playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
 
 		magazine_ammo[current_weapon] -= 1
 
@@ -1637,7 +1637,7 @@ func an94_internal():
 			rpc("npc_muzzleflash", current_weapon, null)
 		audio[current_weapon].play()
 		if player:
-			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+			playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
 
 		magazine_ammo[current_weapon] -= 1
 
@@ -1686,7 +1686,7 @@ func ar_internal():
 			anim.play(FIRE_ANIM[current_weapon])
 		audio[current_weapon].play()
 		if player:
-			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+			playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
 
 		magazine_ammo[current_weapon] -= 1
 func zippy()->void :
@@ -1732,7 +1732,7 @@ func zippy()->void :
 			audio[current_weapon].play()
 			audio[current_weapon].pitch_scale = float(magazine_ammo[current_weapon]) / MAX_MAG_AMMO[current_weapon] + 0.4
 			if player:
-				playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+				playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
 			magazine_ammo[current_weapon] -= 1
 		elif rand == 1:
 			timer.start(0.07)
@@ -1741,7 +1741,7 @@ func zippy()->void :
 			magazine_ammo[current_weapon] -= 1
 			audio[current_weapon].play()
 			if player:
-				playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+				playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
 			glob.player.damage(5, Vector3.ZERO, global_transform.origin, global_transform.origin)
 func pistol()->void :
 	if timer.is_stopped():
@@ -1789,7 +1789,7 @@ func pistol()->void :
 		audio[current_weapon].play()
 		audio[current_weapon].pitch_scale = float(magazine_ammo[current_weapon]) / MAX_MAG_AMMO[current_weapon] + 0.4
 		if player:
-			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+			playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
 		magazine_ammo[current_weapon] -= 1
 
 
@@ -1837,7 +1837,7 @@ func vag72()->void :
 			
 		audio[current_weapon].play()
 		if player:
-			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+			playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
 		magazine_ammo[current_weapon] -= 1
 
 func sks()->void :
@@ -1876,7 +1876,7 @@ func sks()->void :
 				dmg = 20000
 				$SKS_Sound2.play()
 				if player:
-					playerPuppet.shoot_play(audio[current_weapon].pitch_scale, 1)
+					playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale, 1)
 			damage[current_weapon] = dmg
 			print(damage[current_weapon])
 			do_damage(collider)
@@ -1901,7 +1901,7 @@ func sks()->void :
 			
 		$SKS_Sound.play()
 		if player:
-			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+			playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
 		
 		
 
@@ -1941,7 +1941,7 @@ func skullgun_internal():
 			
 		audio[0].play()
 		if player:
-			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+			playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
 		
 
 
@@ -1983,7 +1983,7 @@ func nambu()->void :
 		audio[current_weapon].play()
 		audio[current_weapon].pitch_scale = float(magazine_ammo[current_weapon]) / MAX_MAG_AMMO[current_weapon] + 0.4
 		if player:
-			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+			playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
 		
 	
 func nambu_fire():
@@ -2011,7 +2011,7 @@ func nambu_fire():
 		audio[current_weapon].play()
 		audio[current_weapon].pitch_scale = float(magazine_ammo[current_weapon]) / MAX_MAG_AMMO[current_weapon] + 0.4
 		if player:
-			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+			playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
 	
 func shoot_through(collider, collision_p):
 	if collider.has_method("damage"):
@@ -2100,7 +2100,7 @@ func sniper()->void :
 		
 		audio[current_weapon].play()
 		if player:
-			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+			playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
 		magazine_ammo[current_weapon] -= 1
 		if player:
 			yield (get_tree().create_timer(0.1), "timeout")
@@ -2157,7 +2157,7 @@ func mauser()->void :
 		audio[current_weapon].play()
 		audio[current_weapon].pitch_scale = float(magazine_ammo[current_weapon]) / MAX_MAG_AMMO[current_weapon]
 		if player:
-			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+			playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
 		magazine_ammo[current_weapon] -= 1
 		if player:
 			yield (get_tree().create_timer(0.2), "timeout")
@@ -2190,7 +2190,7 @@ func shock()->void :
 		audio[current_weapon].play()
 		audio[current_weapon].pitch_scale = float(magazine_ammo[current_weapon]) / MAX_MAG_AMMO[current_weapon] + 0.4
 		if player:
-			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+			playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
 		magazine_ammo[current_weapon] -= 1
 		
 		if player:
@@ -2221,7 +2221,7 @@ func shotgun()->void :
 		audio[current_weapon].play()
 		audio[current_weapon].pitch_scale = float(magazine_ammo[current_weapon]) / MAX_MAG_AMMO[current_weapon] + 0.4
 		if player:
-			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+			playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
 		magazine_ammo[current_weapon] -= 1
 		
 		if player:
@@ -2255,7 +2255,7 @@ func autoshotgun()->void :
 			rpc("npc_muzzleflash", current_weapon, null)
 		audio[current_weapon].play()
 		if player:
-			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+			playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
 		magazine_ammo[current_weapon] -= 1
 		
 		if player:
@@ -2292,7 +2292,7 @@ func rocket_launcher()->void :
 				anim.play(FIRE_ANIM[current_weapon])
 				audio[current_weapon].play()
 				if player:
-					playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+					playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
 				glob.player.reticle.shoot()
 			else:
 				rpc("npc_muzzleflash", current_weapon, null)
@@ -2317,7 +2317,7 @@ func light()->void :
 				anim.play(FIRE_ANIM[current_weapon])
 				audio[current_weapon].play()
 				if player:
-					playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+					playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
 				glob.player.reticle.shoot()
 				get_parent().rotation.x -= rand_range(0, 0.03)
 				player_weapon.rotation.z = 0 + rand_range( - 0.1, 0.1)
@@ -2363,7 +2363,7 @@ func gas()->void :
 			
 			audio[current_weapon].play()
 			if player:
-				playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+				playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
 			if player:
 				magazine_ammo[current_weapon] -= 1
 				anim.stop()
@@ -2417,7 +2417,7 @@ func bore()->void :
 			anim.play(FIRE_ANIM[current_weapon])
 			audio[current_weapon].play()
 			if player:
-				playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+				playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
 			else:
 				rpc("npc_muzzleflash", current_weapon, null)
 			glob.player.reticle.shoot()
@@ -2429,7 +2429,7 @@ func radiator()->void :
 	if not audio[current_weapon].playing:
 		audio[current_weapon].play()
 		if player:
-			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+			playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
 		else:
 			rpc("npc_muzzleflash", current_weapon, null)
 	cylinder_velocity += 0.005
@@ -2439,7 +2439,7 @@ func radiator()->void :
 	if timer.is_stopped():
 		$Rad_Sound2.play()
 		if player:
-			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+			playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
 		timer.start(0.8)
 		$Radiation_Area / MeshInstance.scale.z = 1
 		$Radiation_Area / MeshInstance.scale.x = 1
@@ -2481,7 +2481,7 @@ func tranq()->void :
 			
 			audio[current_weapon].play()
 			if player:
-				playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+				playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
 			if player:
 				magazine_ammo[current_weapon] -= 1
 				anim.stop()
@@ -2643,7 +2643,7 @@ func shoot()->void :
 				if Input.is_action_pressed("mouse_1"):
 					audio[current_weapon].play()
 					if player:
-						playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
+						playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
 		W_NAILER:
 			nailer()
 	set_UI_ammo()
@@ -2719,7 +2719,7 @@ func set_weapon(weapon_index):
 			weapon2 = weapon_index
 		current_weapon = weapon_index
 		
-		playerPuppet.set_current_weapon(current_weapon)
+		playerPuppet.set_current_weapon(null, current_weapon)
 		
 		anim.stop()
 		anim.play("Nogun", - 1, 100)

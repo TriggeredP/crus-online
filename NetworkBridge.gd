@@ -3,6 +3,11 @@ extends Node
 enum MULTIPLAYER_TYPE {LAN, STEAM}
 enum RPC_MODE {CLIENT, SERVER}
 
+# SERVER = PUPPET = Server -> Clients only
+# ALL = REMOTE = Server <-> Clients
+
+enum PERMISSION {SERVER, ALL}
+
 export(MULTIPLAYER_TYPE) var multiplayer_mode = 0
 
 onready var Multiplayer = Global.get_node("Multiplayer")
@@ -37,14 +42,31 @@ func check_connection():
 func get_peers():
 	return SteamNetwork.get_peers()
 
-func r_is_network_master(node):
+func get_id():
+	match multiplayer_mode:
+		MULTIPLAYER_TYPE.LAN:
+			return get_tree().get_network_unique_id()
+		MULTIPLAYER_TYPE.STEAM:
+			return SteamInit.steam_id
+
+func get_host_id():
+	match multiplayer_mode:
+		MULTIPLAYER_TYPE.LAN:
+			return 1
+		MULTIPLAYER_TYPE.STEAM:
+			return SteamLobby.get_lobby_owner()
+
+func n_is_network_master(node):
 	match multiplayer_mode:
 		MULTIPLAYER_TYPE.LAN:
 			return node.is_network_master()
 		MULTIPLAYER_TYPE.STEAM:
 			return SteamNetwork.is_server()
 
-func r_rpc(caller : Node, method = null, args = []):
+func register_rpcs(caller : Node, args):
+	SteamNetwork.register_rpcs(caller, args)
+
+func n_rpc(caller : Node, method = null, args = []):
 	if method == null:
 		return
 	
@@ -57,12 +79,12 @@ func r_rpc(caller : Node, method = null, args = []):
 			caller.callv("rpc", rpc_args)
 			#caller.rpc(method, get_tree().network_peer.get_unique_id(), args)
 		MULTIPLAYER_TYPE.STEAM:
-			if r_is_network_master(caller):
+			if n_is_network_master(caller):
 				SteamNetwork.rpc_all_clients(caller, method, args)
 			else:
 				SteamNetwork.rpc_on_server(caller, method, args)
 
-func r_rpc_unreliable(caller : Node, method = null, args = []):
+func n_rpc_unreliable(caller : Node, method = null, args = []):
 	if method == null:
 		return
 	
@@ -74,9 +96,9 @@ func r_rpc_unreliable(caller : Node, method = null, args = []):
 			#caller.rpc_unreliable(method, get_tree().network_peer.get_unique_id(), args)
 			Multiplayer.packages_count += 1
 		MULTIPLAYER_TYPE.STEAM:
-			r_rpc(caller, method, args)
+			n_rpc(caller, method, args)
 
-func r_rpc_id(caller : Node, id = 0, method = null, args = []):
+func n_rpc_id(caller : Node, id = 0, method = null, args = []):
 	if method == null:
 		return
 	
@@ -91,7 +113,7 @@ func r_rpc_id(caller : Node, id = 0, method = null, args = []):
 		MULTIPLAYER_TYPE.STEAM:
 			SteamNetwork.rpc_on_client(int(id), caller, method, args)
 
-func r_rpc_unreliable_id(caller : Node, id = 0, method = null, args = []):
+func n_rpc_unreliable_id(caller : Node, id = 0, method = null, args = []):
 	if method == null:
 		return
 	
@@ -103,4 +125,4 @@ func r_rpc_unreliable_id(caller : Node, id = 0, method = null, args = []):
 			#caller.rpc_unreliable_id(id, method, get_tree().network_peer.get_unique_id(), args)
 			Multiplayer.packages_count += 1
 		MULTIPLAYER_TYPE.STEAM:
-			r_rpc_id(caller, id, method, args)
+			n_rpc_id(caller, id, method, args)
