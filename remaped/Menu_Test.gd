@@ -1,5 +1,7 @@
 extends Container
 
+onready var NetworkBridge = Global.get_node("Multiplayer/NetworkBridge")
+
 onready var Multiplayer = Global.get_node("Multiplayer")
 
 func multiplayer_exit():

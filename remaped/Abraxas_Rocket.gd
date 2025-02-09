@@ -1,5 +1,7 @@
 extends KinematicBody
 
+onready var NetworkBridge = Global.get_node("Multiplayer/NetworkBridge")
+
 var health = 300
 var type = 1
 var frequency = 50
@@ -29,7 +31,7 @@ func _ready():
 	pass
 
 func _physics_process(delta):
-	if get_tree().network_peer != null and is_network_master():
+	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		t += 1
 		if destroyed:
 			return 
@@ -57,7 +59,7 @@ func _physics_process(delta):
 	else:
 		set_physics_process(false)
 
-puppet func create_missile(parentPath, missileName, missileTransform):
+puppet func create_missile(id, parentPath, missileName, missileTransform):
 	var missile_new = fakeBULLETS.instance()
 	
 	missile_new.set_name(missileName)
@@ -74,23 +76,26 @@ func rocket_launcher()->void :
 	missile_new.global_transform.origin = global_transform.origin
 	missile_new.set_velocity(30, (global_transform.origin - (Global.player.global_transform.origin + Vector3.UP * 50 + Vector3(0, 0, sin(t * 0.5) * 25))).normalized(), global_transform.origin)
 	
-	rpc("create_missile", get_parent().get_parent().get_parent().get_path(), missile_new.name, missile_new.global_transform)
+	NetworkBridge.n_rpc(self, "create_missile", [get_parent().get_parent().get_parent().get_path(), missile_new.name, missile_new.global_transform])
 
-puppet func died():
+puppet func died(id):
 	get_parent().get_node("Sphere001").hide()
 	get_parent().get_node("Particle").show()
 
-master func damage(dmg, nrml, pos, shoot_pos):
-	if get_tree().network_peer != null and is_network_master():
+func damage(dmg, nrml, pos, shoot_pos):
+	network_damage(null, dmg, nrml, pos, shoot_pos)
+
+master func network_damage(id, dmg, nrml, pos, shoot_pos):
+	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		if not activated:
 			return 
 		health -= dmg
 		if health <= 0:
 			destroyed = true
-			died()
-			rpc("died")
+			died(null)
+			NetworkBridge.n_rpc(self, "died")
 	else:
-		rpc("damage", dmg, nrml, pos, shoot_pos)
+		NetworkBridge.n_rpc(self, "damage", [dmg, nrml, pos, shoot_pos])
 
 func get_type():
 	return type;

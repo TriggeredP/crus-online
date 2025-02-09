@@ -1,5 +1,7 @@
 extends Node
 
+onready var NetworkBridge = Global.get_node("Multiplayer/NetworkBridge")
+
 var loader:ResourceInteractiveLoader
 var wait_frames:int
 var time_max:float = 100

@@ -1,5 +1,7 @@
 extends KinematicBody
 
+onready var NetworkBridge = Global.get_node("Multiplayer/NetworkBridge")
+
 var velocity = Vector3(0, 0, 0)
 var gravity = 22
 var held = false
@@ -56,7 +58,7 @@ var holdId = 0
 
 var playerIgnoreId = 0
 
-remote func _sync_vars(recDisabled,recUsable,recGrill_health,recSphere_collision,recDamager,recHeld):
+remote func _sync_vars(id, recDisabled,recUsable,recGrill_health,recSphere_collision,recDamager,recHeld):
 	disabled = recDisabled
 	usable = recUsable
 	grill_health = recGrill_health
@@ -64,28 +66,28 @@ remote func _sync_vars(recDisabled,recUsable,recGrill_health,recSphere_collision
 	damager = recDamager
 	held = recHeld
 
-remote func _set_grill(value):
+remote func _set_grill(id, value):
 	grill = value
 
-remote func _spawn_fake_gas(pos):
+remote func _spawn_fake_gas(id, pos):
 	var fake_gas_cloud = preload("res://MOD_CONTENT/CruS Online/effects/fake_poison_gas.tscn").instance()
 	get_parent().add_child(fake_gas_cloud)
 	fake_gas_cloud.global_transform.origin = pos
 
-remote func _grill(recivedPos):
+remote func _grill(id, recivedPos):
 	grill_flag = true
 	$Gib.get_child(0).material_override = load("res://Materials/grilled.tres")
 	var new_healing = grill_healing_item.instance()
 	add_child(new_healing)
 	new_healing.global_transform.origin = recivedPos
 
-remote func _create_blood_decal(collider,recivedTransform,recivedBasis):
+remote func _create_blood_decal(id, collider,recivedTransform,recivedBasis):
 	var new_blood_decal = blood_decal.instance()
 	get_node(collider).add_child(new_blood_decal)
 	new_blood_decal.global_transform.origin = recivedTransform
 	new_blood_decal.transform.basis = recivedBasis
 
-remote func _remove():
+remote func _remove(id):
 	queue_free()
 
 func syncUpdate():
@@ -97,7 +99,7 @@ var last_transform : Transform
 
 func host_tick():
 	if (global_transform.origin - last_transform.origin).length() > 0.01:
-		rset_unreliable("lerp_transform", global_transform)
+		NetworkBridge.n_rset_unreliable(self, "lerp_transform", global_transform)
 		Multiplayer.packages_count += 1
 		last_transform = global_transform
 
@@ -147,19 +149,19 @@ func _ready()->void :
 		yield (get_tree(), "idle_frame")
 		angular_velocity = Vector2(velocity.x, velocity.z).length()
 	
-	if get_tree().network_peer != null and not is_network_master():
+	if NetworkBridge.check_connection() and not NetworkBridge.n_is_network_master(self):
 		axis_lock_motion_x = true
 		axis_lock_motion_y = true
 		axis_lock_motion_z = true
 		
-		rpc("_get_transform")
+		NetworkBridge.n_rpc(self, "_get_transform")
 
-master func _get_transform():
-	rset_unreliable("lerp_transform", lerp_transform)
-	rset_unreliable("global_transform", global_transform)
+master func _get_transform(id):
+	NetworkBridge.n_rset_unreliable(self, "lerp_transform", lerp_transform)
+	NetworkBridge.n_rset_unreliable(self, "global_transform", global_transform)
 
-master func set_transform(recivedTransform, only_origin = false):
-	if is_network_master():
+master func set_network_transform(id, recivedTransform, only_origin = false):
+	if NetworkBridge.n_is_network_master(self):
 		finished = false
 		t = 0
 		velocity = Vector3.ZERO
@@ -171,19 +173,19 @@ master func set_transform(recivedTransform, only_origin = false):
 			lerp_transform = recivedTransform
 			global_transform = recivedTransform
 	else:
-		rpc("set_transform", recivedTransform, only_origin)
+		NetworkBridge.n_rpc(self, "set_network_transform", [recivedTransform, only_origin])
 
-master func add_velocity(recivedVelocity):
-	if is_network_master():
+master func add_velocity(id, recivedVelocity):
+	if NetworkBridge.n_is_network_master(self):
 		velocity += recivedVelocity
 	else:
-		rpc("add_velocity", recivedVelocity)
+		NetworkBridge.n_rpc(self, "add_velocity", [recivedVelocity])
 
 func set_hold_collision(recived_holding):
-	_set_hold_collision(recived_holding)
-	rpc("_set_hold_collision", recived_holding)
+	_set_hold_collision(null, recived_holding)
+	NetworkBridge.n_rpc(self, "_set_hold_collision", [recived_holding])
 
-remote func _set_hold_collision(recived_holding):
+remote func _set_hold_collision(id, recived_holding):
 	if recived_holding:
 		$CollisionShape.disabled = true
 		set_collision_layer_bit(6, 0)
@@ -197,7 +199,7 @@ remote func _set_hold_collision(recived_holding):
 		held = false
 
 func _physics_process(delta):
-	if get_tree().network_peer != null:
+	if NetworkBridge.check_connection():
 		if disabled:
 			$CollisionShape.disabled = true
 			set_physics_process(false)
@@ -208,7 +210,7 @@ func _physics_process(delta):
 #		if held and get_tree().get_network_unique_id() == holdId:
 #			lerp_transform.origin = Global.player.weapon.hold_pos.global_transform.origin
 
-		if is_network_master():
+		if NetworkBridge.n_is_network_master(self):
 			host_tick()
 			
 			if fmod(t, 300) == 0 and (velocity.x < 0.01 and velocity.y < 0.01):
@@ -235,19 +237,19 @@ func _physics_process(delta):
 				var new_healing = grill_healing_item.instance()
 				add_child(new_healing)
 				new_healing.global_transform.origin = global_transform.origin
-				rpc("_grill",new_healing.global_transform.origin)
+				NetworkBridge.n_rpc(self, "_grill", [new_healing.global_transform.origin])
 			
 #			if collidable:
 #				if Vector2(velocity.x, velocity.z).length() > 5:
 #					set_collision_layer_bit(0, 0)
 #					set_collision_mask_bit(2, 1)
 #					set_collision_mask_bit(3, 1)
-#					rpc("_set_collision",0,1)
+#					NetworkBridge.n_rpc(self, "_set_collision",0,1)
 #				elif not held:
 #					set_collision_layer_bit(0, 1)
 #					set_collision_mask_bit(2, 0)
 #					set_collision_mask_bit(3, 0)
-#					rpc("_set_collision",1,0)
+#					NetworkBridge.n_rpc(self, "_set_collision",1,0)
 			
 			if player_head:
 				rot_towards = lerp(rot_towards, global_transform.origin - velocity, 5 * delta)
@@ -288,7 +290,7 @@ func _physics_process(delta):
 					collision.collider.add_child(new_blood_decal)
 					new_blood_decal.global_transform.origin = collision.position
 					new_blood_decal.transform.basis = align_up(new_blood_decal.transform.basis, collision.normal)
-					rpc("_create_blood_decal",collision.collider.get_path(),new_blood_decal.global_transform.origin,new_blood_decal.transform.basis)
+					NetworkBridge.n_rpc(self, "_create_blood_decal", [collision.collider.get_path(),new_blood_decal.global_transform.origin,new_blood_decal.transform.basis])
 				if Vector2(velocity.x, velocity.z).length() > 5 and (gun_rotation or glob.implants.arm_implant.throw_bonus > 0):
 					if collision.collider.has_method("damage"):
 						if collision.collider.client.name != str(playerIgnoreId):
@@ -305,8 +307,8 @@ func _physics_process(delta):
 					var new_gas_cloud = gas_cloud.instance()
 					get_parent().add_child(new_gas_cloud)
 					new_gas_cloud.global_transform.origin = global_transform.origin
-					rpc("_spawn_fake_gas",new_gas_cloud.global_transform.origin)
-					rpc("_remove")
+					NetworkBridge.n_rpc(self, "_spawn_fake_gas", [new_gas_cloud.global_transform.origin])
+					NetworkBridge.n_rpc(self, "_remove")
 					queue_free()
 				velocity = velocity.bounce(collision.normal) * 0.6
 				angular_velocity = Vector2(velocity.x, velocity.z).length()
@@ -339,7 +341,7 @@ func align_up(node_basis, normal)->Basis:
 func set_grill(value):
 	if grillable:
 		grill = value
-		rset("grill",value)
+		NetworkBridge.n_rset(self, "grill",value)
 
 func player_use():
 	if not usable or held:
@@ -349,14 +351,14 @@ func player_use():
 
 	if glob.implants.arm_implant.throw_bonus > 0:
 		damager = true
-		rset("damager",true)
+		NetworkBridge.n_rset(self, "damager",true)
 	
-	rset("held",true)
+	NetworkBridge.n_rset(self, "held",true)
 	
 	stay_active = true
-	rset("stay_active",true)
+	NetworkBridge.n_rset(self, "stay_active",true)
 	finished = false
-	rset("finished",false)
+	NetworkBridge.n_rset(self, "finished",false)
 	glob.player.weapon.hold(self)
 
 func damage(damage, collision_n, collision_p, shooter_pos):
@@ -364,17 +366,17 @@ func damage(damage, collision_n, collision_p, shooter_pos):
 		var new_gas_cloud = gas_cloud.instance()
 		get_parent().add_child(new_gas_cloud)
 		new_gas_cloud.global_transform.origin = global_transform.origin
-		if get_tree().network_peer != null:
-				rpc("_spawn_fake_gas",new_gas_cloud.global_transform.origin)
-				rpc("_remove")
+		if NetworkBridge.check_connection():
+				NetworkBridge.n_rpc(self, "_spawn_fake_gas", [new_gas_cloud.global_transform.origin])
+				NetworkBridge.n_rpc(self, "_remove")
 		queue_free()
 	if damage < 3:
 		return 
 	
-	if get_tree().network_peer == null or get_tree().network_peer != null and is_network_master():
+	if get_tree().network_peer == null or NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		velocity -= collision_n * damage / mass
 	else:
-		rset("velocity", velocity - collision_n * damage / mass)
+		NetworkBridge.n_rset(self, "velocity", velocity - collision_n * damage / mass)
 	if not no_rot:
 		look_at((global_transform.origin - collision_n * damage + Vector3(1e-05, 0, 0)), Vector3.UP)
 		rot_changed = Vector3(0, rand_range( - PI, PI), rand_range( - PI, PI))
@@ -383,7 +385,7 @@ func damage(damage, collision_n, collision_p, shooter_pos):
 		angular_velocity = velocity.length()
 	
 func set_water(a):
-	if get_tree().network_peer == null or get_tree().network_peer != null and is_network_master():
+	if get_tree().network_peer == null or NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		water = a
 		velocity *= 0.5
 		velocity.y = 0

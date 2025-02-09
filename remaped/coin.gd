@@ -1,5 +1,7 @@
 extends Area
 
+onready var NetworkBridge = Global.get_node("Multiplayer/NetworkBridge")
+
 export  var value = 10
 export  var id = "N"
 
@@ -17,8 +19,8 @@ func player_use():
 	Global.save_game()
 	
 	if fromSlotMachine:
-		rpc("hide_coin")
+		NetworkBridge.n_rpc(self, "hide_coin")
 	get_parent().queue_free()
 
-remote func hide_coin():
+remote func hide_coin(id):
 	get_parent().queue_free()

@@ -1,5 +1,7 @@
 extends Spatial
 
+onready var NetworkBridge = Global.get_node("Multiplayer/NetworkBridge")
+
 var t = 0
 
 onready var torus = $"Armature/Skeleton/BoneAttachment 2/Torus"
@@ -13,7 +15,7 @@ var enemy_spawn_frequency = 200
 var kill_flag = false
 var activated = false
 
-puppet func set_animation(animation:String, speed:float)->void :
+puppet func set_animation(id, animation:String, speed:float)->void :
 	anim.play(animation)
 	anim.playback_speed = speed
 
@@ -38,12 +40,12 @@ func _ready():
 func _process(delta):
 	torus.rotate_object_local(Vector3.BACK, deg2rad(1))
 
-puppet func die():
+puppet func die(id):
 	anim.play("Die")
 	Global.remove_objective()
 
 func _physics_process(delta):
-	if get_tree().network_peer != null and is_network_master():
+	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		t += 1
 		
 		if not activated and fmod(t, 20) == 0:
@@ -62,11 +64,11 @@ func _physics_process(delta):
 			kill_flag = true
 			anim.play("Die")
 			Global.remove_objective()
-			rpc("die")
+			NetworkBridge.n_rpc(self, "die")
 		
 		elif not kill_flag:
 			anim.play("Idle")
-			rpc_unreliable("set_animation", "Idle", 1)
+			NetworkBridge.n_rpc_unreliable(self, "set_animation", ["Idle", 1])
 		
 		if laser.destroyed or rocket.destroyed:
 			enemy_spawn_frequency = 150
@@ -99,14 +101,14 @@ func _physics_process(delta):
 			get_parent().add_child(new_enemy)
 			new_enemy.global_transform.origin = head.global_transform.origin
 			
-			rpc("spawn_enemy", selectedEnemy, get_parent().get_path(), new_enemy.name, new_enemy.global_transform)
+			NetworkBridge.n_rpc(self, "spawn_enemy", [selectedEnemy, get_parent().get_path(), new_enemy.name, new_enemy.global_transform])
 			
 			yield (get_tree(), "idle_frame")
 			new_enemy.add_velocity(40, (global_transform.origin - get_near_player(self).player.global_transform.origin).normalized())
 	else:
 		set_physics_process(false)
 
-puppet func spawn_enemy(selectedEnemy, parentPath, enemyName, enemyTransform):
+puppet func spawn_enemy(id, selectedEnemy, parentPath, enemyName, enemyTransform):
 	var new_enemy = SPAWNS[selectedEnemy].instance()
 	get_node(parentPath).add_child(new_enemy)
 	new_enemy.set_name(enemyName)

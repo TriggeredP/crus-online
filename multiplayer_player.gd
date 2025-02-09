@@ -30,29 +30,6 @@ onready var SteamInit = Global.get_node("Multiplayer/NetworkBridge")
 
 var canDamage = false
 
-remote func _set_toxic(id):
-	Global.player.set_toxic()
-
-remote func _set_cancer(id):
-	Global.player.cancer()
-
-remote func _do_damage(id, damage, collision_n, collision_p, shooter_pos, weapon_type):
-	Global.player.set_last_damager_id(id, weapon_type)
-	Global.player.damage(damage, collision_n, collision_p, shooter_pos)
-
-remote func _drop_weapon(id):
-	Input.action_press("drop")
-
-remote func _set_fire(id, value):
-	Global.player.fakeFire.emitting = value
-
-remote func _set_death(id, death):
-	if death:
-		animTree.set("parameters/DEATH1/active", true)
-	else:
-		animTree.set("parameters/DEATH1/active", false)
-		animTree.active = true
-
 func _ready():
 	NetworkBridge.register_rpcs(self,[
 		["_update_puppet", NetworkBridge.PERMISSION.ALL],
@@ -88,6 +65,13 @@ func _ready():
 	
 	canDamage = false
 	$RespawnDamage.start()
+
+remote func _set_death(id, death):
+	if death:
+		animTree.set("parameters/DEATH1/active", true)
+	else:
+		animTree.set("parameters/DEATH1/active", false)
+		animTree.active = true
 
 func player_restart():
 	$Puppet/PlayerModel/HelpLabel.hide()
@@ -196,6 +180,9 @@ puppet func set_kick(id):
 	else:
 		animTree.set("parameters/KICK/active", true)
 
+remote func _set_cancer(id):
+	Global.player.cancer()
+
 puppet func set_crouch(id, value):
 	if int(self.name) == NetworkBridge.get_id():
 		NetworkBridge.n_rpc(self, "set_crouch", [value])
@@ -215,8 +202,15 @@ func do_damage(damage, collision_n, collision_p, shooter_pos, weapon_type = null
 	if canDamage:
 		NetworkBridge.n_rpc_id(self, int(self.name), "_do_damage", [damage, collision_n, collision_p, shooter_pos, weapon_type])
 
+remote func _do_damage(id, damage, collision_n, collision_p, shooter_pos, weapon_type):
+	Global.player.set_last_damager_id(id, weapon_type)
+	Global.player.damage(damage, collision_n, collision_p, shooter_pos)
+
 func set_toxic():
 	NetworkBridge.n_rpc_id(self, int(self.name), "_set_toxic")
+
+remote func _set_toxic(id):
+	Global.player.set_toxic()
 
 func set_cancer():
 	NetworkBridge.n_rpc_id(self, int(self.name), "_set_cancer")
@@ -224,8 +218,14 @@ func set_cancer():
 func drop_weapon():
 	NetworkBridge.n_rpc_id(self, int(self.name), "_drop_weapon")
 
+remote func _drop_weapon(id):
+	Input.action_press("drop")
+
 func set_fire(value):
 	NetworkBridge.n_rpc_id(self, int(self.name), "_set_fire", [value])
+
+remote func _set_fire(id, value):
+	Global.player.fakeFire.emitting = value
 
 func respawn_player():
 	NetworkBridge.n_rpc_id(self, int(self.name), "_respawn_player")

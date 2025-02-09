@@ -1,5 +1,7 @@
 extends Area
 
+onready var NetworkBridge = Global.get_node("Multiplayer/NetworkBridge")
+
 export  var soul = true
 var gib = preload("res://Entities/Physics_Objects/Chest_Gib.tscn")
 
@@ -21,7 +23,7 @@ func player_use():
 			get_parent().get_parent().add_child(new_gib)
 			new_gib.global_transform.origin = global_transform.origin
 			new_gib.damage(20, Vector3.FORWARD.rotated(Vector3.UP, rand_range( - PI, PI)), global_transform.origin, global_transform.origin)
-			rpc("spawn_gib", get_parent().get_parent().get_path(), new_gib.name)
+			NetworkBridge.n_rpc(self, "spawn_gib", [get_parent().get_parent().get_path(), new_gib.name])
 		get_parent().get_node("AudioStreamPlayer3D").play()
 		queue_free()
 		return 
@@ -29,7 +31,7 @@ func player_use():
 	get_parent().get_node("AudioStreamPlayer3D").play()
 	queue_free()
 
-master func spawn_gib(recivedPath, recivedName):
+master func spawn_gib(id, recivedPath, recivedName):
 	var new_gib = gib.instance()
 	get_node(recivedPath).add_child(new_gib)
 	new_gib.set_name(recivedName)

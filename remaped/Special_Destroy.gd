@@ -1,9 +1,11 @@
 extends StaticBody
 
-puppet func remove():
+onready var NetworkBridge = Global.get_node("Multiplayer/NetworkBridge")
+
+puppet func remove(id):
 	queue_free()
 
 func special_destroy():
-	if get_tree().network_peer != null and is_network_master():
+	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		queue_free()
-		rpc("remove")
+		NetworkBridge.n_rpc(self, "remove")

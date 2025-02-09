@@ -1,5 +1,7 @@
 extends KinematicBody
 
+onready var NetworkBridge = Global.get_node("Multiplayer/NetworkBridge")
+
 enum E_TYPE{GAS, EXPLOSION, NAIL, BLOOD, SLEEP}
 export (E_TYPE) var EXPLOSION_TYPE = 0
 var velocity = Vector3(0, 0, 0)
@@ -48,14 +50,14 @@ var fakeExplosionTypes = [
 	"res://Entities/Bullets/Sleep_Gas.tscn"
 ]
 
-puppet func _spawn_shrapnel(recivedPath, recivedObject, recivedName, recivedTransform, recivedShrapnel):
+puppet func _spawn_shrapnel(id, recivedPath, recivedObject, recivedName, recivedTransform, recivedShrapnel):
 	var newObject = load(recivedObject).instance()
 	newObject.set_name(recivedName)
 	get_node(recivedPath).add_child(newObject)
 	newObject.global_transform = recivedTransform
 	newObject.shrapnel_flag = recivedShrapnel
 
-puppet func _create_object(recivedPath, recivedObject, recivedName, recivedTransform):
+puppet func _create_object(id, recivedPath, recivedObject, recivedName, recivedTransform):
 	var newObject = load(recivedObject).instance()
 	newObject.set_name(recivedName)
 	get_node(recivedPath).add_child(newObject)
@@ -76,10 +78,10 @@ func get_near_player(object) -> Dictionary:
 		"distance" : oldDistance
 	}
 
-puppet func _set_transform(recivedTransform):
+puppet func _set_transform(id, recivedTransform):
 	global_transform = recivedTransform
 
-puppet func _delete():
+puppet func _delete(id):
 	queue_free()
 
 ################################################################################
@@ -99,7 +101,7 @@ func _ready():
 			sound.pitch_scale -= mass * 0.1
 
 func flechette(result)->void :
-	if is_network_master():
+	if NetworkBridge.n_is_network_master(self):
 		if result.collider.get_collision_layer_bit(0) and randi() % 2 == 1:
 			var decal_new
 			decal_new = flechette.instance()
@@ -110,9 +112,9 @@ func flechette(result)->void :
 			result.collider.damage(60, result.normal, result.position, global_transform.origin)
 
 func _physics_process(delta):
-	if get_tree().network_peer != null:
-		if is_network_master():
-			rpc_unreliable("_set_transform", global_transform)
+	if NetworkBridge.check_connection():
+		if NetworkBridge.n_is_network_master(self):
+			NetworkBridge.n_rpc_unreliable(self, "_set_transform", [global_transform])
 			
 			if timer != null:
 				if timer.is_stopped():
@@ -124,7 +126,7 @@ func _physics_process(delta):
 							var result = space_state.intersect_ray(global_transform.origin, global_transform.origin + dir, [self])
 							if result:
 								flechette(result)
-						rpc("_delete")
+						NetworkBridge.n_rpc(self, "_delete")
 						queue_free()
 						return 
 					var new_explosion = explosion_types[EXPLOSION_TYPE].instance()
@@ -132,8 +134,8 @@ func _physics_process(delta):
 					get_parent().add_child(new_explosion)
 					new_explosion.global_transform.origin = global_transform.origin
 					explosion_flag = true
-					rpc("_create_object", get_parent().get_path(), fakeExplosionTypes[EXPLOSION_TYPE], new_explosion.name, new_explosion.global_transform)
-					rpc("_delete")
+					NetworkBridge.n_rpc(self, "_create_object", [get_parent().get_path(), fakeExplosionTypes[EXPLOSION_TYPE], new_explosion.name, new_explosion.global_transform])
+					NetworkBridge.n_rpc(self, "_delete")
 					queue_free()
 			if home_on_player:
 				current_target = get_near_player(self).player
@@ -142,10 +144,10 @@ func _physics_process(delta):
 				velocity = lerp(velocity, - homing_speed * (global_transform.origin - (current_target.global_transform.origin + Vector3(0, 1, 0))).normalized(), homing_turn_rate)
 			if homing and velocity.length() < 3:
 				$Boresound.stop()
-				rpc("stop_sound", 0)
+				NetworkBridge.n_rpc(self, "stop_sound", [0])
 			elif homing and not $Boresound.playing:
 				$Boresound.play()
-				rpc("play_sound", 0)
+				NetworkBridge.n_rpc(self, "play_sound", [0])
 			if velocity.length() < 5 and not explosion_flag and not homing and not timed and not home_on_player and not tranq:
 				if not shrapnel_flag:
 					var shrapnel_rotation = Vector3(1, 1, 0).rotated(Vector3.UP, deg2rad(rand_range(0, 180)))
@@ -162,12 +164,12 @@ func _physics_process(delta):
 						shrapnel.global_transform.origin = global_transform.origin
 						shrapnel.set_velocity(30, (shrapnel.global_transform.origin - (shrapnel.global_transform.origin - shrapnel_rotation)).normalized(), global_transform.origin)
 
-						rpc("_spawn_shrapnel", get_parent().get_path(), "res://MOD_CONTENT/CruS Online/effects/fake_Grenade.tscn",shrapnel.name,shrapnel.global_transform,true)
+						NetworkBridge.n_rpc(self, "_spawn_shrapnel", [get_parent().get_path(), "res://MOD_CONTENT/CruS Online/effects/fake_Grenade.tscn",shrapnel.name,shrapnel.global_transform,true])
 				var new_explosion = explosion_types[EXPLOSION_TYPE].instance()
 				add_child(new_explosion)
 				new_explosion.global_transform.origin = global_transform.origin
 				explosion_flag = true
-				rpc("_create_object", get_parent().get_path(), fakeExplosionTypes[EXPLOSION_TYPE], new_explosion.name, new_explosion.global_transform)
+				NetworkBridge.n_rpc(self, "_create_object", [get_parent().get_path(), fakeExplosionTypes[EXPLOSION_TYPE], new_explosion.name, new_explosion.global_transform])
 			if water:
 				gravity = 2
 			else :
@@ -192,15 +194,15 @@ func _physics_process(delta):
 				if tranq:
 						if collision.collider.has_method("tranquilize"):
 							collision.collider.tranquilize(true)
-						rpc("_delete")
+						NetworkBridge.n_rpc(self, "_delete")
 						queue_free()
 				if detonate_on_impact or (collision.collider == Global.player and not shrapnel_flag):
 					var new_explosion = explosion_types[EXPLOSION_TYPE].instance()
 					get_parent().add_child(new_explosion)
 					new_explosion.global_transform.origin = global_transform.origin
 					explosion_flag = true
-					rpc("_create_object", get_parent().get_path(), fakeExplosionTypes[EXPLOSION_TYPE], new_explosion.name, new_explosion.global_transform)
-					rpc("_delete")
+					NetworkBridge.n_rpc(self, "_create_object", [get_parent().get_path(), fakeExplosionTypes[EXPLOSION_TYPE], new_explosion.name, new_explosion.global_transform])
+					NetworkBridge.n_rpc(self, "_delete")
 					queue_free()
 				if collision.collider.has_method("destroy"):
 					collision.collider.destroy(collision.normal, collision.position)
@@ -236,13 +238,13 @@ func physics_object():
 	pass
 
 func _on_Area_body_entered(body):
-	if is_network_master():
+	if NetworkBridge.n_is_network_master(self):
 		if "head" in body:
 			if body.head and current_target == null:
 				current_target = body
 
 func _on_Bore_entered(body):
-	if is_network_master():
+	if NetworkBridge.n_is_network_master(self):
 		if "head" in body:
 			if body.head:
 				var drillsound = $Boresound2
@@ -251,9 +253,9 @@ func _on_Bore_entered(body):
 				body.boresound = drillsound
 				if is_instance_valid(drillsound):
 					drillsound.play()
-					rpc("play_sound", 1)
+					NetworkBridge.n_rpc(self, "play_sound", [1])
 				body.bored = true
-				rpc("_delete")
+				NetworkBridge.n_rpc(self, "_delete")
 				queue_free()
 
 var boresounds = [
@@ -261,8 +263,8 @@ var boresounds = [
 	$Boresound2
 ]
 
-puppet func play_sound(soundId = 0):
+puppet func play_sound(id, soundId = 0):
 	boresounds[soundId].play()
 
-puppet func stop_sound(soundId = 0):
+puppet func stop_sound(id, soundId = 0):
 	boresounds[soundId].stop()

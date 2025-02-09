@@ -1,5 +1,7 @@
 extends KinematicBody
 
+onready var NetworkBridge = Global.get_node("Multiplayer/NetworkBridge")
+
 var PARTICLE = preload("res://Entities/Particles/Destruction_Particle.tscn")
 
 export  var door_health = 100
@@ -51,22 +53,22 @@ func _ready():
 	audio_player.max_db = 4
 	audio_player.pitch_scale = 0.6
 	
-	if not get_tree().network_peer != null and is_network_master():
-		rpc("_get_transform")
+	if not NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
+		NetworkBridge.n_rpc(self, "_get_transform")
 
-master func _get_transform():
-	rset_unreliable("global_transform", global_transform)
+master func _get_transform(id):
+	NetworkBridge.n_rset_unreliable(self, "global_transform", global_transform)
 
 func _physics_process(delta):
-	if get_tree().network_peer != null and is_network_master():
+	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		if not open and not stop:
 			rotation.y += rotation_speed * delta
 			rotation_counter += rad2deg(rotation_speed * delta)
-			rset_unreliable("global_transform", global_transform)
+			NetworkBridge.n_rset_unreliable(self, "global_transform", global_transform)
 		if open and not stop:
 			rotation.y -= rotation_speed * delta
 			rotation_counter += rad2deg(rotation_speed * delta)
-			rset_unreliable("global_transform", global_transform)
+			NetworkBridge.n_rset_unreliable(self, "global_transform", global_transform)
 		if rotation_counter > 90:
 			rotation_counter = 0
 			stop = true
@@ -74,12 +76,12 @@ func _physics_process(delta):
 func get_type():
 	return type;
 
-master func player_use():
+master func player_use(id):
 	if Global.soul_intact:
-		if get_tree().network_peer != null and is_network_master():
-			door_use()
+		if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
+			door_use(null)
 		else:
-			rpc("door_use")
+			NetworkBridge.n_rpc(self, "door_use")
 	elif Global.hope_discarded:
 		Global.player.UI.notify("It hurts.", Color(1, 0, 0))
 		Global.player.UI.notify("It hurts.", Color(1, 0, 0))
@@ -88,6 +90,6 @@ master func player_use():
 	else :
 		Global.player.UI.notify("Feels like something is missing. It won't budge.", Color(0.9, 0.9, 1))
 
-master func door_use():
+master func door_use(id):
 	stop = not stop
 	open = not open

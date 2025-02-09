@@ -1,5 +1,7 @@
 extends Area
 
+onready var NetworkBridge = Global.get_node("Multiplayer/NetworkBridge")
+
 export  var implant_name = "Hazmat Suit"
 
 func _ready():

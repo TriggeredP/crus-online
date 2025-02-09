@@ -1,5 +1,7 @@
 extends Area
 
+onready var NetworkBridge = Global.get_node("Multiplayer/NetworkBridge")
+
 enum {SPEED, FLOATY, TOXIC, PSYCHOSIS, CANCER, GRAVITY}
 
 export  var pills = false
@@ -9,21 +11,21 @@ export  var healing_amount = 25
 export  var kinematic = false
 
 func _ready():
-	if not get_tree().network_peer != null and is_network_master():
-		rpc("check_food")
+	if not NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
+		NetworkBridge.n_rpc(self, "check_food")
 
-master func check_food():
+master func check_food(id):
 	if $CollisionShape.disabled:
 		if kinematic:
 			rpc_id(get_tree().get_rpc_sender_id(),"kinematic_delete")
 		else:
 			rpc_id(get_tree().get_rpc_sender_id(),"delete")
 
-remote func delete():
+remote func delete(id):
 	$CollisionShape.disabled = true
 	hide()
 
-remote func kinematic_delete():
+remote func kinematic_delete(id):
 	$CollisionShape.disabled = true
 	get_parent().hide()
 
@@ -46,20 +48,20 @@ func player_use():
 		get_parent().get_node("AudioStreamPlayer3D").play()
 		get_parent().hide()
 		Global.player.UI.notify("You ate pills.", Color(1, 0.0, 1.0))
-		delete()
-		rpc("delete")
+		delete(null)
+		NetworkBridge.n_rpc(self, "delete")
 	if healing:
 		Global.player.add_health(healing_amount)
 		if kinematic:
-			kinematic_delete()
-			rpc("kinematic_delete")
-		delete()
-		rpc("delete")
+			kinematic_delete(null)
+			NetworkBridge.n_rpc(self, "kinematic_delete")
+		delete(null)
+		NetworkBridge.n_rpc(self, "delete")
 	if toxic:
 		Global.player.set_toxic()
-		delete()
-		rpc("delete")
+		delete(null)
+		NetworkBridge.n_rpc(self, "delete")
 	else :
 		Global.player.detox()
-		delete()
-		rpc("delete")
+		delete(null)
+		NetworkBridge.n_rpc(self, "delete")

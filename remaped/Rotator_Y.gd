@@ -1,5 +1,7 @@
 extends KinematicBody
 
+onready var NetworkBridge = Global.get_node("Multiplayer/NetworkBridge")
+
 export  var rotation_speed:float = 1
 
 func _ready():
@@ -7,6 +9,6 @@ func _ready():
 	rotation.y += rand_range(0, TAU)
 	
 func _physics_process(delta):
-	if get_tree().network_peer != null and is_network_master():
-		rset_unreliable("global_transform", global_transform)
+	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
+		NetworkBridge.n_rset_unreliable(self, "global_transform", [global_transform])
 		rotation.y -= rotation_speed * delta

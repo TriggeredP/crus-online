@@ -1,5 +1,7 @@
 extends Area
 
+onready var NetworkBridge = Global.get_node("Multiplayer/NetworkBridge")
+
 export  var damage = 50
 export  var gas = false
 export  var sleep = false
@@ -9,7 +11,7 @@ var particle
 
 var gas_timer = 0
 
-puppet func delete():
+puppet func delete(id):
 	queue_free()
 
 func _ready():
@@ -18,7 +20,7 @@ func _ready():
 	particle.emitting = true
 	
 func _physics_process(delta):
-	if is_network_master():
+	if NetworkBridge.n_is_network_master(self):
 		if particle.emitting == false:
 			if not gas:
 				c_shape.disabled = true
@@ -26,7 +28,7 @@ func _physics_process(delta):
 			else :
 				gas_timer += delta
 				if gas_timer >= 3:
-					rpc("delete")
+					NetworkBridge.n_rpc(self, "delete")
 					queue_free()
 		if gas and not sleep:
 			for overlap_body in get_overlapping_bodies():
@@ -36,11 +38,11 @@ func _physics_process(delta):
 					overlap_body.damage(damage, Vector3.ZERO, overlap_body.global_transform.origin, global_transform.origin)
 
 func _on_Explosion_area_entered(area):
-	if is_network_master():
+	if NetworkBridge.n_is_network_master(self):
 		do_damage(area)
 
 func _on_Explosion_body_entered(body):
-	if is_network_master():
+	if NetworkBridge.n_is_network_master(self):
 		do_damage(body)
 		if sleep and body.has_method("tranquilize"):
 			body.tranquilize(true)

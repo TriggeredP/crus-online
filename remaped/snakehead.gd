@@ -1,5 +1,7 @@
 extends KinematicBody
 
+onready var NetworkBridge = Global.get_node("Multiplayer/NetworkBridge")
+
 enum I{GOLEM, WEAPON, MONEY}
 export (I) var index = I.GOLEM
 var type = 1
@@ -55,7 +57,10 @@ func _process(delta):
 		particle.hide()
 		laser.scale.z = 400
 
-master func damage(dmg, nrml, pos, shoot_pos):
+func damage(dmg, nrml, pos, shoot_pos):
+	network_damage(null, dmg, nrml, pos, shoot_pos)
+
+master func network_damage(id, dmg, nrml, pos, shoot_pos):
 	if death_flag:
 		return 
 	active = true

@@ -1,5 +1,7 @@
 extends StaticBody
 
+onready var NetworkBridge = Global.get_node("Multiplayer/NetworkBridge")
+
 var rotation_counter = - 1
 var coin = preload("res://Entities/Physics_Objects/Coin.tscn")
 var junk_items:Array = [
@@ -13,24 +15,24 @@ var junk_items:Array = [
 func _ready():
 	rset_config("rotation_counter", MultiplayerAPI.RPC_MODE_MASTER)
 
-puppet func set_mech_rotation(value):
+puppet func set_mech_rotation(id, value):
 	$MeshInstance2.rotation.x = value
 
-puppet func notify(value, color):
+puppet func notify(id, value, color):
 	Global.player.UI.notify(value, color)
 
-puppet func play_audio():
+puppet func play_audio(id):
 	$Audio.play()
 
 func _physics_process(delta):
-	if get_tree().network_peer != null and is_network_master():
+	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		if rotation_counter >= 0:
 			rotation_counter -= 1
 			if not $Audio.playing:
 				$Audio.play()
-				rpc("play_audio")
+				NetworkBridge.n_rpc(self, "play_audio")
 			$MeshInstance2.rotation.x += 1
-			rpc_unreliable("set_mech_rotation", $MeshInstance2.rotation.x)
+			NetworkBridge.n_rpc_unreliable(self, "set_mech_rotation", [$MeshInstance2.rotation.x])
 		if rotation_counter == 0:
 			randomize()
 			if randi() % 1000 == 500:
@@ -41,7 +43,7 @@ func _physics_process(delta):
 				spawn_item()
 			else :
 				Global.player.UI.notify("You lose", Color(1, 0, 0))
-				rpc("notify", "You lose", Color(1, 0, 0))
+				NetworkBridge.n_rpc(self, "notify", ["You lose", Color(1, 0, 0)])
 	else:
 		set_physics_process(false)
 
@@ -52,36 +54,36 @@ func spawn_item():
 	add_child(new_coin)
 	new_coin.global_transform.origin = $Position3D.global_transform.origin
 	new_coin.damage(20, (global_transform.origin - ($Forward_Position.global_transform.origin + Vector3(rand_range( - 0.1, 0.1), rand_range( - 0.1, 0.1), rand_range( - 0.1, 0.1)))).normalized(), global_transform.origin, Vector3.ZERO)
-	rpc("client_spawn_item", selectedItem, get_path(), new_coin.name, new_coin.global_transform)
+	NetworkBridge.n_rpc(self, "client_spawn_item", [selectedItem, get_path(), new_coin.name, new_coin.global_transform])
 
-puppet func client_spawn_item(recivedItem, recivedPath, recivedName, recivedTransform):
+puppet func client_spawn_item(id, recivedItem, recivedPath, recivedName, recivedTransform):
 	var new_coin = junk_items[recivedItem].instance()
 	new_coin.set_name(recivedName)
 	get_node(recivedPath).add_child(new_coin)
 	new_coin.global_transform = recivedTransform
 
 func player_use():
-	if get_tree().network_peer != null and is_network_master():
+	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		check_use(true)
 	else:
-		rpc("check_use")
+		NetworkBridge.n_rpc(self, "check_use")
 
-master func check_use(host = false):
+master func check_use(id, host = false):
 	if rotation_counter >= 0:
 		return
 	
 	if host:
-		money_check()
+		money_check(null)
 	else:
-		rpc("money_check")
+		NetworkBridge.n_rpc(self, "money_check")
 
-puppet func money_check():
+puppet func money_check(id):
 	if Global.money < 10:
 		Global.player.UI.notify("$10 required to play", Color(1, 1, 1))
 		return 
 	Global.money -= 10
 	
-	if get_tree().network_peer != null and is_network_master():
+	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		rotation_counter = 50
 	else:
-		rset("rotation_counter", 50)
+		NetworkBridge.n_rset(self, "rotation_counter", 50)

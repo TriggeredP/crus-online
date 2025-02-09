@@ -1,5 +1,7 @@
 extends KinematicBody
 
+onready var NetworkBridge = Global.get_node("Multiplayer/NetworkBridge")
+
 export  var door_health = 100
 export  var speed = 2
 var open = false
@@ -67,10 +69,10 @@ func _physics_process(delta):
 		audio_player.stop()
 		movement_counter = 0
 		stop = true
-		if get_tree().network_peer != null and is_network_master():
-			rpc("set_door", stop, open, translation)
+		if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
+			NetworkBridge.n_rpc(self, "set_door", [stop, open, translation])
 
-puppet func set_door(recived_stop, recived_open, recived_translation = null):
+puppet func set_door(id, recived_stop, recived_open, recived_translation = null):
 	stop = recived_stop
 	open = recived_open
 	
@@ -81,17 +83,20 @@ func timeout():
 	stop = not stop
 	open = not open
 	
-	if get_tree().network_peer != null and is_network_master():
-		rpc("set_door", stop, open, translation)
+	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
+		NetworkBridge.n_rpc(self, "set_door", [stop, open, translation])
 
-master func use():
-	if get_tree().network_peer != null:
+func use():
+	network_use(null)
+	
+master func network_use(id):
+	if NetworkBridge.check_connection():
 		if stop and not open:
 			open = not open
 			stop = not stop
 			
 			timer.start()
-			if is_network_master():
-				rpc("set_door", stop, open)
+			if NetworkBridge.n_is_network_master(self):
+				NetworkBridge.n_rpc(self, "set_door", [stop, open])
 			else:
-				rpc("use")
+				NetworkBridge.n_rpc(self, "network_use")

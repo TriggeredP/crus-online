@@ -1,5 +1,7 @@
 extends KinematicBody
 
+onready var NetworkBridge = Global.get_node("Multiplayer/NetworkBridge")
+
 var PARTICLE = preload("res://Entities/Particles/Destruction_Particle.tscn")
 
 export  var door_health = 100
@@ -52,15 +54,15 @@ func _ready():
 	audio_player.pitch_scale = 0.6
 
 func _physics_process(delta):
-	if get_tree().network_peer != null and is_network_master():
+	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		if not open and not stop:
 			rotation.y += rotation_speed * delta
 			rotation_counter += rad2deg(rotation_speed * delta)
-			rset_unreliable("global_transform", global_transform)
+			NetworkBridge.n_rset_unreliable(self, "global_transform", global_transform)
 		if open and not stop:
 			rotation.y -= rotation_speed * delta
 			rotation_counter += rad2deg(rotation_speed * delta)
-			rset_unreliable("global_transform", global_transform)
+			NetworkBridge.n_rset_unreliable(self, "global_transform", global_transform)
 		if rotation_counter > 90:
 			rotation_counter = 0
 			stop = true
@@ -68,16 +70,16 @@ func _physics_process(delta):
 func get_type():
 	return type;
 
-master func player_use():
+master func player_use(id):
 	if Global.husk_mode:
-		if get_tree().network_peer != null and is_network_master():
-			door_use()
+		if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
+			door_use(null)
 		else:
-			rpc("door_use")
+			NetworkBridge.n_rpc(self, "door_use")
 	else:
 		Global.player.UI.notify("It repulses you.", Color(0.5, 0.5, 0))
 		Global.player.player_velocity -= (global_transform.origin - Global.player.global_transform.origin).normalized() * 5
 
-master func door_use():
+master func door_use(id):
 	stop = not stop
 	open = not open

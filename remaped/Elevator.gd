@@ -1,5 +1,7 @@
 extends KinematicBody
 
+onready var NetworkBridge = Global.get_node("Multiplayer/NetworkBridge")
+
 var stopped = true
 var speed = - 2
 var initpos = true
@@ -33,8 +35,8 @@ func _ready():
 	move_audio.stream = load("res://Sfx/Environment/Elevator_Move.wav")
 
 func _process(delta):
-	if get_tree().network_peer != null and is_network_master():
-		rset_unreliable("global_transform", global_transform)
+	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
+		NetworkBridge.n_rset_unreliable(self, "global_transform", global_transform)
 		
 		last_pos = global_transform.origin
 		if not stopped:
@@ -42,18 +44,21 @@ func _process(delta):
 				move_audio.play()
 			translate(Vector3(0, speed * delta, 0))
 
-master func stop():
-	if get_tree().network_peer != null and is_network_master():
+master func stop(id):
+	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		stopped = true
 		initpos = not initpos
 		speed = - speed
 		bell_audio.play()
 		move_audio.stop()
 	else:
-		rpc("stop")
+		NetworkBridge.n_rpc(self, "stop")
 
-master func use():
-	if get_tree().network_peer != null and is_network_master():
+func use():
+	network_use(null)
+	
+master func network_use(id):
+	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		stopped = false
 	else:
-		rpc("use")
+		NetworkBridge.n_rpc(self, "network_use")

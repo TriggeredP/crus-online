@@ -1,5 +1,7 @@
 extends KinematicBody
 
+onready var NetworkBridge = Global.get_node("Multiplayer/NetworkBridge")
+
 export  var speed = 10
 export  var homing = false
 export  var piercing = false
@@ -15,13 +17,13 @@ var explosion = preload("res://Entities/Bullets/Explosion.tscn")
 var shrapnel = preload("res://Entities/Bullets/Explosive_Grenade_Impact.tscn")
 var decal = preload("res://Entities/Decals/BigHole.tscn")
 
-puppet func _set_transform(recivedTransform):
+puppet func _set_transform(id, recivedTransform):
 	global_transform = recivedTransform
 
-puppet func _delete():
+puppet func _delete(id):
 	queue_free()
 
-puppet func _create_object(recivedPath, recivedObject, recivedName, recivedTransform, recivedShrapnel = null):
+puppet func _create_object(id, recivedPath, recivedObject, recivedName, recivedTransform, recivedShrapnel = null):
 	var newObject = load(recivedObject).instance()
 	newObject.set_name(recivedName)
 	get_node(recivedPath).add_child(newObject)
@@ -51,9 +53,9 @@ func _physics_process(delta):
 	if piercing:
 		$MeshInstance.scale = lerp($MeshInstance.scale, Vector3.ONE, 0.8)
 	
-	if get_tree().network_peer != null:
-		if is_network_master():
-			rpc("_set_transform",global_transform)
+	if NetworkBridge.check_connection():
+		if NetworkBridge.n_is_network_master(self):
+			NetworkBridge.n_rpc(self, "_set_transform", [global_transform])
 			
 			time += 1
 			if speed < 25:
@@ -77,7 +79,7 @@ func _physics_process(delta):
 					
 					collision.collider.get_parent().add_child(new_explosion)
 					new_explosion.global_transform.origin = global_transform.origin - Vector3(0, 1, 0)
-					rpc("_create_object", collision.collider.get_parent().get_path(), "res://Entities/Bullets/Explosion.tscn", new_explosion.name, new_explosion.global_transform)
+					NetworkBridge.n_rpc(self, "_create_object", [collision.collider.get_parent().get_path(), "res://Entities/Bullets/Explosion.tscn", new_explosion.name, new_explosion.global_transform])
 					$CollisionShape.disabled = true
 					var shrapnel_rotation = Vector3(1, 1, 0).rotated(Vector3.UP, deg2rad(rand_range(0, 180)))
 					for i in range(4):
@@ -88,28 +90,28 @@ func _physics_process(delta):
 						new_shrapnel.set_name(new_shrapnel.name + "#" + str(new_shrapnel.get_instance_id()))
 						new_shrapnel.global_transform.origin = global_transform.origin + Vector3.UP
 						new_shrapnel.set_velocity(rand_range(10, 30), (new_shrapnel.global_transform.origin - (new_shrapnel.global_transform.origin - shrapnel_rotation)).normalized(), global_transform.origin)
-						rpc("_create_object", get_parent().get_path(), "res://Entities/Bullets/Explosive_Grenade_Impact.tscn", new_shrapnel.name, new_shrapnel.global_transform, true)
-					rpc("_delete")
+						NetworkBridge.n_rpc(self, "_create_object", [get_parent().get_path(), "res://Entities/Bullets/Explosive_Grenade_Impact.tscn", new_shrapnel.name, new_shrapnel.global_transform, true])
+					NetworkBridge.n_rpc(self, "_delete")
 					queue_free()
 				else :
 					collisions += 1
 					if collisions > 10:
-						rpc("_delete")
+						NetworkBridge.n_rpc(self, "_delete")
 						queue_free()
 					if collision.collider.has_method("piercing_damage"):
 						collision.collider.piercing_damage(150, (global_transform.origin - collision.position).normalized(), global_transform.origin, global_transform.origin)
 					if collision.collider.has_method("damage"):
 						collision.collider.damage(150, (global_transform.origin - collision.position).normalized(), global_transform.origin, global_transform.origin)
 					else :
-						decal(collision.collider, collision.position, collision.normal)
-						rpc("_delete")
+						decal(null, collision.collider, collision.position, collision.normal)
+						NetworkBridge.n_rpc(self, "_delete")
 						queue_free()
 	
 func set_velocity(new_velocity, direction):
 	transform.basis = direction
 
-puppet func decal(collider:Spatial, c_point, c_normal)->void :
-	if is_network_master():
+puppet func decal(id, collider:Spatial, c_point, c_normal)->void :
+	if NetworkBridge.n_is_network_master(self):
 		if not is_instance_valid(collider):
 			return 
 		if collider.get_collision_layer_bit(0) == true:
@@ -118,10 +120,10 @@ puppet func decal(collider:Spatial, c_point, c_normal)->void :
 			decal_new.global_transform.basis = align_up(decal_new.global_transform.basis, c_normal)
 			decal_new.global_transform.origin = c_point + c_normal * 1e-08
 			
-			rpc("_create_object", collider.get_path(), "res://Entities/Decals/BigHole.tscn", decal_new.name, decal_new.global_transform)
+			NetworkBridge.n_rpc(self, "_create_object", [collider.get_path(), "res://Entities/Decals/BigHole.tscn", decal_new.name, decal_new.global_transform])
 
 func _on_Area_body_entered(body):
-	if is_network_master():
+	if NetworkBridge.n_is_network_master(self):
 		if body.get("alive_head") != null and target == null:
 			if body.alive_head == true:
 				target_pos_prev = body.global_transform.origin + Vector3(0, 0.75, 0)

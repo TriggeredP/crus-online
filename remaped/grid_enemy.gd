@@ -1,5 +1,7 @@
 extends KinematicBody
 
+onready var NetworkBridge = Global.get_node("Multiplayer/NetworkBridge")
+
 enum {FORWARD, RIGHT, BACK, LEFT}
 const DIR = [Vector3.FORWARD * 2, Vector3.RIGHT * 2, Vector3.BACK * 2, Vector3.LEFT * 2]
 var current_dir = DIR[FORWARD]
@@ -41,13 +43,13 @@ func _ready():
 	next_pos = global_transform.origin + current_dir
 
 func _physics_process(delta):
-	if get_tree().network_peer != null and is_network_master():
+	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		if get_near_player(self).distance > 20:
 			return 
 		
 		look()
 		
-		rset("global_transform", global_transform)
+		NetworkBridge.n_rset(self, "global_transform", global_transform)
 		
 		step_count += 1
 		if step_count == 60:
@@ -110,5 +112,5 @@ func _on_Area_area_entered(area):
 func _on_Area_body_entered(body):
 	if body.get_collision_layer_bit(0):
 		return 
-	if body.has_method("damage") and is_network_master():
+	if body.has_method("damage") and NetworkBridge.n_is_network_master(self):
 		body.damage(100, current_dir.normalized(), global_transform.origin, global_transform.origin)

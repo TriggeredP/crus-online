@@ -32,7 +32,7 @@ export var spawn_value = 1
 onready var parent = get_parent()
 
 func player_use():
-	parent.spawn_ball(spawn_value)
+	parent.spawn_ball(null, spawn_value)
 "
 
 [sub_resource type="BoxShape" id=7]

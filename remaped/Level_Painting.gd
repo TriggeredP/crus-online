@@ -1,5 +1,7 @@
 extends Spatial
 
+onready var NetworkBridge = Global.get_node("Multiplayer/NetworkBridge")
+
 export  var level_index = 13
 export  var level_name = "Darkworld"
 
@@ -12,15 +14,15 @@ func _ready():
 
 func _on_Area_body_entered(body):
 	if body == Global.player:
-		if get_tree().network_peer != null and is_network_master():
+		if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 			if Global.BONUS_UNLOCK.find(level_name) == -1:
 				Global.BONUS_UNLOCK.append(level_name)
-				rpc("unlock_level")
+				NetworkBridge.n_rpc(self, "unlock_level")
 			Global.save_game()
 			Multiplayer.goto_scene_host(Global.LEVELS[level_index])
 		else:
 			Global.UI.notify("It feels like a normal painting", Color(1, 0, 0))
 
-puppet func unlock_level():
+puppet func unlock_level(id):
 	if Global.BONUS_UNLOCK.find(level_name) == -1:
 		Global.BONUS_UNLOCK.append(level_name)

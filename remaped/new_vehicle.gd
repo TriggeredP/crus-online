@@ -1,5 +1,7 @@
 extends KinematicBody
 
+onready var NetworkBridge = Global.get_node("Multiplayer/NetworkBridge")
+
 export  var turn_amount = 0.3
 var in_use = false
 var init_player_basis
@@ -34,7 +36,7 @@ func align_up(node_basis, normal)->Basis:
 	return result
 
 func _physics_process(delta):
-	if get_tree().network_peer != null and is_network_master():
+	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		var roty = rotation.y
 		var n = Vector3.ZERO
 		var c = 0
@@ -49,7 +51,7 @@ func _physics_process(delta):
 		transform.basis = transform.basis.orthonormalized().slerp(align_up(transform.basis, n), 0.05)
 		rotation.y = roty
 		if in_use:
-			rset_unreliable("global_transform", global_transform)
+			NetworkBridge.n_rset_unreliable(self, "global_transform", global_transform)
 			
 			$SFX_Engine.pitch_scale = (abs(speed) + 0.01) * 0.1
 			$SFX_Engine.play()
@@ -86,11 +88,11 @@ func _physics_process(delta):
 		velocity.y -= gravity * delta
 		velocity = move_and_slide(velocity, Vector3.UP, false, 4)
 
-remote func _stop_sound():
+remote func _stop_sound(id):
 	$SFX_Engine.stop()
 
 func _process(delta):
-	if Input.is_action_just_pressed("Use") and in_use and get_tree().network_peer != null and is_network_master():
+	if Input.is_action_just_pressed("Use") and in_use and NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		$Car / Camera.current = false
 		Global.player.transform.basis = init_player_basis * $Car / Player_Pos.transform.basis
 		Global.player.player_velocity = Vector3.ZERO
@@ -99,7 +101,7 @@ func _process(delta):
 		Global.player.global_transform.origin = $ExitPos.global_transform.origin
 		
 		in_use = false
-		rset("in_use", false)
+		NetworkBridge.n_rset(self, "in_use", false)
 		
 		yield (get_tree(), "idle_frame")
 		$CollisionShape.disabled = false
@@ -114,9 +116,9 @@ func _process(delta):
 		Global.player.disabled = false
 		
 		set_network_master(1)
-		_stop_sound()
-		rpc("_stop_sound")
-		rpc("_set_master", 1)
+		_stop_sound(null)
+		NetworkBridge.n_rpc(self, "_stop_sound")
+		NetworkBridge.n_rpc(self, "_set_master", [1])
 
 func player_use():
 	if not in_use:
@@ -132,10 +134,10 @@ func player_use():
 		Global.player.set_collision_mask_bit(7, false)
 		yield (get_tree(), "idle_frame")
 		in_use = true
-		rset("in_use", true)
+		NetworkBridge.n_rset(self, "in_use", true)
 		
 		set_network_master(get_tree().get_network_unique_id())
-		rpc("_set_master",get_tree().get_network_unique_id())
+		NetworkBridge.n_rpc(self, "_set_master", [get_tree().get_network_unique_id()])
 
 func _on_VehicleBody_body_entered(body):
 	pass

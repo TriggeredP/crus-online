@@ -66,6 +66,9 @@ func n_is_network_master(node):
 func register_rpcs(caller : Node, args):
 	SteamNetwork.register_rpcs(caller, args)
 
+func register_rset(caller : Node, method, recived_permission):
+	SteamNetwork.register_rset(caller, method, recived_permission)
+
 func n_rpc(caller : Node, method = null, args = []):
 	if method == null:
 		return
@@ -79,7 +82,7 @@ func n_rpc(caller : Node, method = null, args = []):
 			caller.callv("rpc", rpc_args)
 			#caller.rpc(method, get_tree().network_peer.get_unique_id(), args)
 		MULTIPLAYER_TYPE.STEAM:
-			if n_is_network_master(caller):
+			if SteamNetwork.is_server():
 				SteamNetwork.rpc_all_clients(caller, method, args)
 			else:
 				SteamNetwork.rpc_on_server(caller, method, args)
@@ -111,7 +114,10 @@ func n_rpc_id(caller : Node, id = 0, method = null, args = []):
 			caller.callv("rpc_id", rpc_args)
 			#caller.rpc_id(id, method, get_tree().network_peer.get_unique_id(), args)
 		MULTIPLAYER_TYPE.STEAM:
-			SteamNetwork.rpc_on_client(int(id), caller, method, args)
+			if SteamNetwork.is_server():
+				SteamNetwork.rpc_on_client(int(id), caller, method, args)
+			else:
+				SteamNetwork.rpc_on_server(caller, method, args)
 
 func n_rpc_unreliable_id(caller : Node, id = 0, method = null, args = []):
 	if method == null:
@@ -126,3 +132,25 @@ func n_rpc_unreliable_id(caller : Node, id = 0, method = null, args = []):
 			Multiplayer.packages_count += 1
 		MULTIPLAYER_TYPE.STEAM:
 			n_rpc_id(caller, id, method, args)
+
+func n_rset(caller : Node, method = null, recived_value = null):
+	if method == null:
+		return
+	
+	match multiplayer_mode:
+		MULTIPLAYER_TYPE.LAN:
+			caller.rset(method, recived_value)
+			Multiplayer.packages_count += 1
+		MULTIPLAYER_TYPE.STEAM:
+			SteamNetwork.remote_set(caller, method, recived_value)
+
+func n_rset_unreliable(caller : Node, method = null, recived_value = null):
+	if method == null:
+		return
+	
+	match multiplayer_mode:
+		MULTIPLAYER_TYPE.LAN:
+			caller.rset_unreliable(method, recived_value)
+			Multiplayer.packages_count += 1
+		MULTIPLAYER_TYPE.STEAM:
+			SteamNetwork.remote_set(caller, method, recived_value)

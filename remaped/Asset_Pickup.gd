@@ -1,5 +1,7 @@
 extends Area
 
+onready var NetworkBridge = Global.get_node("Multiplayer/NetworkBridge")
+
 export  var value = "Liver"
 
 func player_use():
@@ -10,8 +12,8 @@ func player_use():
 	if Global.STOCKS.ORGANS_FOUND.find(value) == - 1:
 		Global.STOCKS.ORGANS_FOUND.append(value)
 	Global.STOCKS.save_stocks("user://stocks.save")
-	rpc("hide_asset")
+	NetworkBridge.n_rpc(self, "hide_asset")
 	get_parent().queue_free()
 
-remote func hide_asset():
+remote func hide_asset(id):
 	get_parent().queue_free()

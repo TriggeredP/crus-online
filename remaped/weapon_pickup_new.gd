@@ -1,4 +1,7 @@
 extends Area
+
+onready var NetworkBridge = Global.get_node("Multiplayer/NetworkBridge")
+
 enum WEAPON{W_PISTOL, W_SMG, W_TRANQ, W_BLACKJACK, W_SHOTGUN, W_ROCKET_LAUNCHER, W_SNIPER, W_AR, W_SILENCED_SMG, W_NAMBU, W_GAS, W_MG3, W_AUTOSHOTGUN, W_MAUSER, W_BORE, W_MKR, W_RADIATOR, W_FLASHLIGHT, W_ZIPPY, W_AN94, W_VAG72, W_STEYR, W_DNA, W_ROD, W_FLAMETHROWER, W_SKS, W_NAILER, W_SHOCK, W_LIGHT}
 onready var MESH = [$Pistol_Mesh, $SMG_Mesh, $Tranq_Mesh, $Baton_Mesh, $Shotgun_Mesh, $RL_Mesh, $Sniper_Mesh, $AR_Mesh, $S_SMG_Mesh, $Nambu_Mesh, $Gas_Mesh, $MG3_Mesh, $Autoshotgun_Mesh, $Mauser_Mesh, $Bore_Mesh, $MKR_Mesh, $Rad_Mesh, $Flashlight_Mesh, $Zippy_Mesh, $AN94_Mesh, $VAG72_Mesh, $Steyr_Mesh, $DNA_Mesh, $Rod_Mesh, $FT_Mesh, $SKS_Mesh, $Nailer_Mesh, $SHOCK_Mesh, $Light_Mesh]
 export (WEAPON) var current_weapon = 0
@@ -7,16 +10,16 @@ var ammo = 0
 
 ################################################################################
 
-remote func _update_vars(recivedWeapon,recivedAmmo):
+remote func _update_vars(id, recivedWeapon,recivedAmmo):
 	current_weapon = recivedWeapon
 	ammo = recivedAmmo
 
-remote func _change_visible(mesh,visibility):
+remote func _change_visible(id, mesh, visibility):
 	mesh.visible = visibility
 
 ################################################################################
 
-remote func syncUpdate():
+remote func syncUpdate(id):
 	for meshGun in MESH:
 		meshGun.hide()
 	MESH[current_weapon].show()
@@ -38,7 +41,7 @@ func player_use():
 				return 
 			Global.player.weapon.add_ammo(ammo, current_weapon, Spatial.new())
 			ammo = 0
-			rpc("_update_vars",current_weapon,ammo)
+			NetworkBridge.n_rpc(self, "_update_vars", [current_weapon, ammo])
 			return 
 		if Global.player.weapon.weapon1 == current_weapon or Global.player.weapon.weapon2 == current_weapon:
 			return 
@@ -55,15 +58,15 @@ func player_use():
 		Global.player.weapon.set_UI_ammo()
 		Global.player.weapon.player_weapon.show()
 		MESH[current_weapon].hide()
-		rpc("_change_visible",MESH[current_weapon],false)
+		NetworkBridge.n_rpc(self, "_change_visible", [MESH[current_weapon], false])
 		current_weapon = last_weapon
-		rpc("_update_vars",current_weapon,ammo)
+		NetworkBridge.n_rpc(self, "_update_vars", [current_weapon, ammo])
 		if current_weapon == null:
-			get_parent().rpc("_remove")
+			get_parent().NetworkBridge.n_rpc(self, "_remove")
 			get_parent().queue_free()
 			return 
 		ammo = last_ammo
-		rpc("_update_vars",current_weapon,ammo)
+		NetworkBridge.n_rpc(self, "_update_vars", [current_weapon, ammo])
 		MESH[current_weapon].show()
-		rpc("_change_visible",MESH[current_weapon],true)
-		rpc("syncUpdate")
+		NetworkBridge.n_rpc(self, "_change_visible", [MESH[current_weapon], true])
+		NetworkBridge.n_rpc(self, "syncUpdate")

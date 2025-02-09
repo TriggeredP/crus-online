@@ -1,5 +1,7 @@
 extends KinematicBody
 
+onready var NetworkBridge = Global.get_node("Multiplayer/NetworkBridge")
+
 export  var door_health = 100
 export  var speed = 2
 var open = false
@@ -32,8 +34,8 @@ func _ready():
 	collision_shape.transform = t
 
 func _physics_process(delta):
-	if get_tree().network_peer != null and is_network_master():
-		rset_unreliable("global_transform", global_transform)
+	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
+		NetworkBridge.n_rset_unreliable(self, "global_transform", global_transform)
 		
 		if not open and not stop:
 			if not audio_player.playing:
@@ -50,10 +52,10 @@ func _physics_process(delta):
 			movement_counter = 0
 			stop = true
 
-master func switch_use():
-	if get_tree().network_peer != null and is_network_master():
+master func switch_use(id):
+	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		if stop and not open:
 			open = not open
 			stop = not stop
 	else:
-		rpc("switch_use")
+		NetworkBridge.n_rpc(self, "switch_use")

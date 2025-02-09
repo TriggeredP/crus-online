@@ -1,5 +1,7 @@
 extends KinematicBody
 
+onready var NetworkBridge = Global.get_node("Multiplayer/NetworkBridge")
+
 var PARTICLE = preload("res://Entities/Particles/Destruction_Particle.tscn")
 
 export  var door_health = 100
@@ -32,44 +34,56 @@ func _ready():
 	destroy_check_timer.connect("timeout", self, "respawn")
 	
 	rset_config("door_health", MultiplayerAPI.RPC_MODE_PUPPET)
+	NetworkBridge.register_rset(self, "door_health", NetworkBridge.PERMISSION.SERVER)
 	
-	if not get_tree().network_peer != null and is_network_master():
-		rpc("check_removed")
+	NetworkBridge.register_rpcs(self, [
+		["check_removed", NetworkBridge.PERMISSION.ALL],
+		["destroy", NetworkBridge.PERMISSION.ALL],
+		["damage", NetworkBridge.PERMISSION.ALL],
+		["remove_on_ready", NetworkBridge.PERMISSION.SERVER],
+		["remove", NetworkBridge.PERMISSION.SERVER],
+	])
+	
+	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
+		NetworkBridge.n_rpc(self, "check_removed")
 
-master func check_removed():
+master func check_removed(id):
 	if isDestroyed:
-		rpc_id(get_tree().get_rpc_sender_id(),"remove_on_ready")
+		NetworkBridge.n_rpc_id(self, id, "remove_on_ready")
 
-master func destroy(collision_n, collision_p):
-	if get_tree().network_peer != null and is_network_master():
+master func destroy(id, collision_n, collision_p):
+	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		damage(200, collision_n, collision_p, Vector3.ZERO)
 	else:
-		remove(collision_n, collision_p)
-		rpc("destroy", collision_n, collision_p)
+		remove(null, collision_n, collision_p)
+		NetworkBridge.n_rpc(self, "destroy", [collision_n, collision_p])
 
-master func damage(damage, collision_n, collision_p, shooter_pos):
-	if get_tree().network_peer != null and is_network_master():
+func damage(dmg, nrml, pos, shoot_pos):
+	network_damage(null, dmg, nrml, pos, shoot_pos)
+
+master func network_damage(id, damage, collision_n, collision_p, shooter_pos):
+	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		door_health -= damage
 		if door_health <= 0:
-			remove(collision_n, collision_p)
-			rpc("remove", collision_n, collision_p, true)
-		rset("door_health", door_health)
+			remove(null, collision_n, collision_p)
+			NetworkBridge.n_rpc(self, "remove", [collision_n, collision_p, true])
+		NetworkBridge.n_rset(self, "door_health", door_health)
 	else:
 		door_health -= damage
 		if door_health <= 0:
-			remove(collision_n, collision_p)
+			remove(null, collision_n, collision_p)
 			destroy_check_timer.start()
-		rpc("damage", damage, collision_n, collision_p, shooter_pos)
+		NetworkBridge.n_rpc(self, "damage", [damage, collision_n, collision_p, shooter_pos])
 
 func get_type():
 	return type;
 
-puppet func remove_on_ready():
+puppet func remove_on_ready(id):
 	set_collision_layer_bit(0,false)
 	set_collision_mask_bit(0,false)
 	hide()
 
-puppet func remove(collision_n, collision_p, from_host = false):
+puppet func remove(id, collision_n, collision_p, from_host = false):
 	if not visible and from_host:
 		destroy_check_timer.stop()
 	else:

@@ -1,5 +1,7 @@
 extends KinematicBody
 
+onready var NetworkBridge = Global.get_node("Multiplayer/NetworkBridge")
+
 export  var door_health = 100
 export  var speed = 2
 var open = false
@@ -15,7 +17,8 @@ var audio_player:AudioStreamPlayer3D
 var timer:Timer
 
 func _ready():
-	rset_config("global_transform",MultiplayerAPI.RPC_MODE_PUPPET)
+	rset_config("global_transform", MultiplayerAPI.RPC_MODE_PUPPET)
+	NetworkBridge.register_rset(self, "global_transform", NetworkBridge.PERMISSION.SERVER)
 	
 	timer = Timer.new()
 	add_child(timer)
@@ -39,8 +42,8 @@ func _ready():
 	collision_shape.transform = t
 
 func _physics_process(delta):
-	if get_tree().network_peer != null and is_network_master():
-		rset_unreliable("global_transform", global_transform)
+	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
+		NetworkBridge.n_rset_unreliable(self, "global_transform", global_transform)
 		
 		if not open and not stop:
 			if not audio_player.playing:
@@ -63,15 +66,18 @@ func switch_use():
 		stop = not stop
 
 func timeout():
-	if get_tree().network_peer != null and is_network_master():
+	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		stop = not stop
 		open = not open
 
-master func use():
-	if get_tree().network_peer != null and is_network_master():
+func use():
+	network_use(null)
+
+master func network_use(id):
+	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		if stop and not open:
 			open = not open
 			stop = not stop
 			timer.start()
 	else:
-		rpc("use")
+		NetworkBridge.n_rpc(self, "network_use")
