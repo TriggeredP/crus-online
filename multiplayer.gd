@@ -1,8 +1,8 @@
 extends Node
 
-var version = "Beta 100225/2151"
+var version = "Beta 100225/2318"
 
-enum errorType {UNKNOW, TIME_OUT, WRONG_PASSWORD, WRONG_VERSION, PASSWORD_REQUIRE, SERVER_CLOSED, UPNP_ERROR}
+enum errorType {UNKNOW, TIME_OUT, WRONG_PASSWORD, WRONG_VERSION, PASSWORD_REQUIRE, SERVER_CLOSED, UPNP_ERROR, PLAYER_CONNECTED}
 
 var playerInfo = {
 	"nickname": "MT Foxtrot",
@@ -82,8 +82,6 @@ func _ready():
 		["ping_host", SteamNetwork.PERMISSION.ALL],
 		["password_require_check", SteamNetwork.PERMISSION.ALL],
 		["connect_init", SteamNetwork.PERMISSION.ALL],
-		["host_add_player", SteamNetwork.PERMISSION.ALL],
-		["host_remove_player", SteamNetwork.PERMISSION.ALL],
 		["load_check", SteamNetwork.PERMISSION.ALL],
 		["_player_died", SteamNetwork.PERMISSION.ALL],
 		["_player_respawn", SteamNetwork.PERMISSION.ALL],
@@ -232,7 +230,7 @@ puppet func client_peer_connect(id):
 	$Debug/VBoxContainer/GameType.text = "Player is client"
 	
 	playerInfo.nickname = SteamInit.steam_username
-	NetworkBridge.n_rpc(self, "connect_init", [password, version])
+	NetworkBridge.n_rpc(self, "connect_init", [password, version, playerInfo])
 
 func disconnected(id):
 	if NetworkBridge.is_lan():
@@ -272,17 +270,19 @@ master func password_require_check(id, recivedPasswordEntered):
 
 puppet func password_not_require(id):
 		password = ""
-		NetworkBridge.n_rpc(self, "connect_init", [password, version])
+		NetworkBridge.n_rpc(self, "connect_init", [password, version, playerInfo])
 
 puppet func password_checked(id):
-	NetworkBridge.n_rpc(self, "connect_init", [password, version])
+	NetworkBridge.n_rpc(self, "connect_init", [password, version, playerInfo])
 
-master func connect_init(id, recivedPassword, recivedVersion):
+master func connect_init(id, recivedPassword, recivedVersion, recivedPlayerInfo):
 	if recivedVersion != version:
 		NetworkBridge.n_rpc_id(self, id, "disconnect_client", [errorType.WRONG_VERSION])
 	else:
 		if recivedPassword == config.hostPassword:
 			NetworkBridge.n_rpc_id(self, id, "client_connect_init", [hostSettings, players])
+			host_add_player(id, recivedPlayerInfo)
+			emit_signal("throw_error", errorType.PLAYER_CONNECTED)
 			print("[CRUS ONLINE / HOST]: Client Connect Init")
 		else:
 			NetworkBridge.n_rpc_id(self, id, "disconnect_client", [errorType.WRONG_PASSWORD])
@@ -292,7 +292,6 @@ puppet func client_connect_init(id, recivedHostSettings, recivedPlayerInfo):
 	hostSettings = recivedHostSettings
 	
 	dataLoaded = true
-	NetworkBridge.n_rpc(self, "host_add_player", [playerInfo])
 	
 	if NetworkBridge.is_lan():
 		passwordEntered = false
@@ -306,7 +305,7 @@ puppet func client_connect_init(id, recivedHostSettings, recivedPlayerInfo):
 remote func connect_notify(id, nickname):
 	Global.UI.notify(nickname + " connected", Color(1, 0, 0))
 
-master func host_add_player(id, info):
+func host_add_player(id, info):
 	if players[id] == null:
 		players[id] = info
 		NetworkBridge.n_rpc(self, "sync_players", [players])

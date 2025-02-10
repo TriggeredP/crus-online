@@ -17,6 +17,7 @@ var audio_player:AudioStreamPlayer3D
 
 func _ready():
 	rset_config("global_transform", MultiplayerAPI.RPC_MODE_PUPPET)
+	NetworkBridge.register_rset(self, "global_transform", NetworkBridge.PERMISSION.SERVER)
 	
 	NetworkBridge.register_rpcs(self, [
 		["switch_use", NetworkBridge.PERMISSION.ALL]

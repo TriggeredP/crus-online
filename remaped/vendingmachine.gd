@@ -27,6 +27,9 @@ func _ready():
 	
 	rset_config("item_count", MultiplayerAPI.RPC_MODE_PUPPET)
 	rset_config("broken", MultiplayerAPI.RPC_MODE_PUPPET)
+	
+	NetworkBridge.register_rset(self, "item_count", NetworkBridge.PERMISSION.SERVER)
+	NetworkBridge.register_rset(self, "broken", NetworkBridge.PERMISSION.SERVER)
 
 master func activation(id, violence):
 	if NetworkBridge.n_is_network_master(self):

@@ -151,10 +151,15 @@ func create_lobby():
 	LobbyList.hide()
 
 func join_lobby():
-	if not SteamInit.Steam.getLobbyData(lobbies[selected], \"password\"):
-		connect_lobby()
-	else:
+	var password_require = SteamInit.Steam.getLobbyData(lobbies[selected], \"password\")
+	print(\"[CRUS ONLINE / LOBBY]: Password require: \", password_require)
+	if password_require:
 		$\"%PasswordInput\".steam_check_password()
+	else:
+		connect_lobby()
+
+func show_player_list():
+	$VBoxContainer/PlayersList/PlayersListLabel.show()
 
 func connect_lobby():
 	SteamLobby.join_lobby(lobbies[selected])
@@ -163,7 +168,9 @@ func connect_lobby():
 	$VBoxContainer/Buttons/Refresh.hide()
 	$VBoxContainer/Buttons/Leave.show()
 	
-	$VBoxContainer/PlayersList/PlayersListLabel.show()
+	Multiplayer.emit_signal(\"status_update\", \"Connecting...\")
+	
+	#$VBoxContainer/PlayersList/PlayersListLabel.show()
 	LobbyList.hide()
 
 func leave_lobby():
@@ -219,6 +226,9 @@ func back_to_menu():
 
 func update_status(new_status):
 	status.text = new_status
+	
+	if new_status == \"Connected to Lobby\":
+		show_player_list()
 
 func _rpc_test():
 	if NetworkBridge.check_connection():
@@ -527,7 +537,8 @@ var errorText = [
 	\"[center]The client and host mod versions do not match[/center]\",
 	\"[center]How did you get up here?[/center]\",
 	\"[center]The host forcibly terminated the connection[/center]\",
-	\"[center]UPnP can't be enabled[/center]\"
+	\"[center]UPnP can't be enabled[/center]\",
+	\"[center]New player connected to lobby[/center]\"
 ]
 
 func _ready():
@@ -1594,7 +1605,7 @@ Created by TriggeredP
 [color=blue][url=https://www.youtube.com/@triggeredp]YouTube[/url][/color]    >.<    [color=blue][url=https://boosty.to/triggeredp]Boosty[/url][/color]
 
 Special thanks:[/center]
-DX: [color=maroon]Helped with animations for the player and CruS Online testing[/color]
+DX: [color=maroon]Helped with animations for the player, menu icon and CruS Online testing[/color]
 Keith Mason: [color=maroon]creator of Construct map[/color]
 Xuesos (4cne): [color=maroon]My IRL friend who helped me with CruS Online testing[/color]
 
@@ -1605,7 +1616,7 @@ Created by TriggeredP
 YouTube    >.<    Boosty
 
 Special thanks:
-DX: Helped with animations for the player and CruS Online testing
+DX: Helped with animations for the player, menu icon and CruS Online testing
 Keith Mason: creator of Construct map
 Xuesos (4cne): My IRL friend who helped me with CruS Online testing
 
