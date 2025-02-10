@@ -1,5 +1,7 @@
 extends Area
 
+# WARN: По какой-то причине загружается до инициализации стима
+
 onready var NetworkBridge = Global.get_node("Multiplayer/NetworkBridge")
 
 enum WEAPON{W_PISTOL, W_SMG, W_TRANQ, W_BLACKJACK, W_SHOTGUN, W_ROCKET_LAUNCHER, W_SNIPER, W_AR, W_SILENCED_SMG, W_NAMBU, W_GAS, W_MG3, W_AUTOSHOTGUN, W_MAUSER, W_BORE, W_MKR, W_RADIATOR, W_FLASHLIGHT, W_ZIPPY, W_AN94, W_VAG72, W_STEYR, W_DNA, W_ROD, W_FLAMETHROWER, W_SKS, W_NAILER, W_SHOCK, W_LIGHT}
@@ -25,6 +27,12 @@ remote func syncUpdate(id):
 	MESH[current_weapon].show()
 
 func _ready():
+	NetworkBridge.register_rpcs(self, [
+		["_update_vars", NetworkBridge.PERMISSION.ALL],
+		["_change_visible", NetworkBridge.PERMISSION.ALL],
+		["syncUpdate", NetworkBridge.PERMISSION.ALL]
+	])
+	
 	MESH[current_weapon].show()
 	if not menu:
 		ammo = Global.player.weapon.MAX_MAG_AMMO[current_weapon]

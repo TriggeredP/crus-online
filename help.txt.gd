@@ -1,5 +1,7 @@
 extends Node # extends my balls
 
+# TODO: Не забыть убрать весь этот мусор...
+
 # Desine sperare qui hic intras
 
 var frustration_count = 312
@@ -23,7 +25,7 @@ puppet func _spawn_object(parentPath, recivedName, recivedTransform):
 onready var NetworkBridge = Global.get_node("Multiplayer/NetworkBridge")
 
 func _ready():
-	NetworkBridge.register_rpcs(self,[
+	NetworkBridge.register_rpcs(self, [
 		["_ass", NetworkBridge.PERMISSION.ALL],
 		["ass", NetworkBridge.PERMISSION.SERVER]
 	])

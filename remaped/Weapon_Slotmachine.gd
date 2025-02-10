@@ -19,6 +19,15 @@ var wep = 0
 
 func _ready():
 	rset_config("rotation_counter", MultiplayerAPI.RPC_MODE_MASTER)
+	
+	NetworkBridge.register_rpcs(self, [
+		["set_mech_rotation", NetworkBridge.PERMISSION.SERVER],
+		["notify", NetworkBridge.PERMISSION.SERVER],
+		["play_audio", NetworkBridge.PERMISSION.SERVER],
+		["client_spawn_item", NetworkBridge.PERMISSION.SERVER],
+		["money_check", NetworkBridge.PERMISSION.SERVER],
+		["check_use", NetworkBridge.PERMISSION.ALL]
+	])
 
 puppet func set_mech_rotation(id, value):
 	$MeshInstance2.rotation.x = value

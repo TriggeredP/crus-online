@@ -64,10 +64,12 @@ func n_is_network_master(node):
 			return SteamNetwork.is_server()
 
 func register_rpcs(caller : Node, args):
-	SteamNetwork.register_rpcs(caller, args)
+	if SteamInit.is_online:
+		SteamNetwork.register_rpcs(caller, args)
 
 func register_rset(caller : Node, method, recived_permission):
-	SteamNetwork.register_rset(caller, method, recived_permission)
+	if SteamInit.is_online:
+		SteamNetwork.register_rset(caller, method, recived_permission)
 
 func n_rpc(caller : Node, method = null, args = []):
 	if method == null:

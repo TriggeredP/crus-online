@@ -19,6 +19,11 @@ var timer:Timer
 var lerp_translation
 
 func _ready():
+	NetworkBridge.register_rpcs(self, [
+		["set_door", NetworkBridge.PERMISSION.SERVER],
+		["network_use", NetworkBridge.PERMISSION.ALL]
+	])
+	
 	timer = Timer.new()
 	add_child(timer)
 	timer.wait_time = 5

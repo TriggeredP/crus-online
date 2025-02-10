@@ -14,6 +14,16 @@ var isDestroyed = false
 var destroy_check_timer
 
 func _ready():
+	rset_config("door_health", MultiplayerAPI.RPC_MODE_PUPPET)
+	NetworkBridge.register_rset(self, "door_health", NetworkBridge.PERMISSION.SERVER)
+	
+	NetworkBridge.register_rpcs(self, [
+		["remove_on_ready", NetworkBridge.PERMISSION.SERVER],
+		["remove", NetworkBridge.PERMISSION.SERVER],
+		["check_removed", NetworkBridge.PERMISSION.ALL],
+		["network_piercing_damage", NetworkBridge.PERMISSION.ALL]
+	])
+	
 	for child in get_children():
 		if child is MeshInstance:
 			mesh_instance = child
@@ -32,9 +42,7 @@ func _ready():
 	destroy_check_timer.wait_time = 2.0
 	destroy_check_timer.one_shot = true
 	destroy_check_timer.connect("timeout", self, "respawn")
-	
-	rset_config("door_health", MultiplayerAPI.RPC_MODE_PUPPET)
-	
+
 	if not NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		NetworkBridge.n_rpc(self, "check_removed")
 
@@ -42,7 +50,10 @@ master func check_removed(id):
 	if isDestroyed:
 		rpc_id(get_tree().get_rpc_sender_id(),"remove_on_ready")
 
-master func piercing_damage(id, damage, collision_n, collision_p, shooter_pos):
+func piercing_damage(damage, collision_n, collision_p, shooter_pos):
+	network_piercing_damage(null, damage, collision_n, collision_p, shooter_pos)
+
+master func network_piercing_damage(id, damage, collision_n, collision_p, shooter_pos):
 	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		door_health -= damage
 		if door_health <= 0:
@@ -54,7 +65,7 @@ master func piercing_damage(id, damage, collision_n, collision_p, shooter_pos):
 		if door_health <= 0:
 			remove(null, collision_n, collision_p)
 			destroy_check_timer.start()
-		NetworkBridge.n_rpc(self, "damage", [damage, collision_n, collision_p, shooter_pos])
+		NetworkBridge.n_rpc(self, "network_piercing_damage", [damage, collision_n, collision_p, shooter_pos])
 
 func get_type():
 	return type;

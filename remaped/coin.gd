@@ -8,6 +8,10 @@ export  var id = "N"
 var fromSlotMachine = false
 
 func _ready():
+	NetworkBridge.register_rpcs(self, [
+		["hide_coin", NetworkBridge.PERMISSION.ALL]
+	])
+	
 	if Global.MONEY_ITEMS.find(id) != - 1:
 		get_parent().queue_free()
 

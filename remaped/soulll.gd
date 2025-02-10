@@ -6,7 +6,9 @@ export  var soul = true
 var gib = preload("res://Entities/Physics_Objects/Chest_Gib.tscn")
 
 func _ready():
-	pass
+	NetworkBridge.register_rpcs(self, [
+		["spawn_gib", NetworkBridge.PERMISSION.ALL]
+	])
 
 func player_use():
 	if soul:

@@ -8,6 +8,13 @@ var player_fire = false
 
 onready var f = load("res://Entities/Bullets/Fire_Child.tscn")
 
+func _ready():
+	NetworkBridge.register_rpcs(self, [
+		["_set_transform", NetworkBridge.PERMISSION.SERVER],
+		["_delete", NetworkBridge.PERMISSION.SERVER],
+		["_create_object", NetworkBridge.PERMISSION.SERVER]
+	])
+
 puppet func _set_transform(id, recivedTransform):
 	global_transform = recivedTransform
 

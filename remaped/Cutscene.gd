@@ -56,7 +56,7 @@ func _process(delta):
 		current_scene += 1
 		TIMER.start()
 	if TIMER.is_stopped() and current_scene == LINES.size():
-		if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
+		if get_tree().network_peer != null and NetworkBridge.n_is_network_master(self):
 			if oneshot:
 				get_tree().network_peer = null
 			if next_scene == "res://Menu/Main_Menu.tscn":
@@ -67,7 +67,7 @@ func _process(delta):
 func _input(event):
 	if event is InputEventKey:
 		if Input.is_action_just_pressed("ui_cancel") or Input.is_action_just_pressed("ui_accept"):
-			if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
+			if get_tree().network_peer != null and NetworkBridge.n_is_network_master(self):
 				if oneshot:
 					get_tree().network_peer = null
 				if next_scene == "res://Menu/Main_Menu.tscn":

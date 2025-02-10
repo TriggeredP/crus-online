@@ -14,6 +14,11 @@ var bell_audio:AudioStreamPlayer3D
 var move_audio:AudioStreamPlayer3D
 
 func _ready():
+	NetworkBridge.register_rpcs(self, [
+		["stop", NetworkBridge.PERMISSION.ALL],
+		["network_use", NetworkBridge.PERMISSION.ALL]
+	])
+	
 	rset_config("global_transform",MultiplayerAPI.RPC_MODE_PUPPET)
 	
 	for child in get_children():

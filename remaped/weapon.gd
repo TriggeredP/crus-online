@@ -216,8 +216,7 @@ remote func _spawn_object(id, parentPath, recivedObject, recivedName, recivedTra
 		newObject.velocity = recivedVelocity
 
 remote func _play_sound(id, soundName):
-	var netId = get_tree().get_rpc_sender_id()
-	Global.get_node("Multiplayer").players[netId].puppet.get_node("Puppet/PlayerModel/SFX/" + soundName).play()
+	Global.get_node("Multiplayer").players[id].puppet.get_node("Puppet/PlayerModel/SFX/" + soundName).play()
 
 func update_implants():
 	if Global.implants.torso_implant.orbsuit:
@@ -254,7 +253,14 @@ puppet func npc_muzzleflash(id, recivedWeapon, recivedPitch = null):
 
 ########################################
 
-func _ready()->void :
+func _ready() -> void :
+	NetworkBridge.register_rpcs(self, [
+		["npc_muzzleflash", NetworkBridge.PERMISSION.SERVER],
+		["_create_drop_weapon", NetworkBridge.PERMISSION.ALL],
+		["_spawn_object", NetworkBridge.PERMISSION.ALL],
+		["_play_sound", NetworkBridge.PERMISSION.ALL]
+	])
+	
 	glob = Global
 	if not player:
 		if Global.implants.head_implant.shrink:
@@ -726,7 +732,7 @@ func _process(delta)->void :
 					else :
 						calculatedVelocity = (20 + glob.implants.arm_implant.throw_bonus) * (global_transform.origin - hold_pos.global_transform.origin).normalized()
 					held_object.velocity += glob.player.player_velocity
-					NetworkBridge.n_rset(held_object, "velocity",held_object.velocity + glob.player.player_velocity - calculatedVelocity)
+					NetworkBridge.n_rset(held_object, "velocity", [held_object.velocity + glob.player.player_velocity - calculatedVelocity])
 				else:
 					if "alerter" in held_object:
 						held_object.alerter = true
@@ -919,11 +925,10 @@ func _process(delta)->void :
 							kick_multiplier = 2
 						glob.player.player_velocity += 5 * col_n * kick_multiplier
 						glob.player.player_view.fov *= 1.02
+						
 						if collider.has_method("destroy"):
-							
 							collider.destroy(col_n, col_p)
 						elif collider.has_method("damage"):
-							
 							collider.damage(kick_damage, col_n, col_p, global_transform.origin)
 						if collider.has_method("add_velocity"):
 							collider.add_velocity(40, col_n)

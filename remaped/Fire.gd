@@ -23,6 +23,12 @@ puppet func _create_object(id, recivedPath, recivedObject, recivedName, recivedT
 
 func _ready():
 	set_collision_mask_bit(1, 1)
+	
+	NetworkBridge.register_rpcs(self, [
+		["_set_transform", NetworkBridge.PERMISSION.SERVER],
+		["_delete", NetworkBridge.PERMISSION.SERVER],
+		["_create_object", NetworkBridge.PERMISSION.SERVER]
+	])
 
 func _physics_process(delta):
 	if NetworkBridge.n_is_network_master(self):

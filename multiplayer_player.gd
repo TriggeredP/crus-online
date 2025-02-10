@@ -31,7 +31,7 @@ onready var SteamInit = Global.get_node("Multiplayer/NetworkBridge")
 var canDamage = false
 
 func _ready():
-	NetworkBridge.register_rpcs(self,[
+	NetworkBridge.register_rpcs(self, [
 		["_update_puppet", NetworkBridge.PERMISSION.ALL],
 		["respawn_puppet", NetworkBridge.PERMISSION.ALL],
 		["set_current_weapon", NetworkBridge.PERMISSION.ALL],

@@ -1,5 +1,7 @@
 extends KinematicBody
 
+# WARN: По какой-то причине загружается до инициализации стима
+
 onready var NetworkBridge = Global.get_node("Multiplayer/NetworkBridge")
 
 var velocity = Vector3(0, 0, 0)
@@ -108,6 +110,22 @@ func host_tick():
 func _ready()->void :
 	lerp_transform = global_transform
 	
+	# TODO: Не забыть переработать весь этот пиздец
+	# Не, это реально не смешно. Мне самому страшно от того что я когда-то написал
+	
+	NetworkBridge.register_rpcs(self, [
+		["_get_transform", NetworkBridge.PERMISSION.ALL],
+		["set_network_transform", NetworkBridge.PERMISSION.ALL],
+		["add_velocity", NetworkBridge.PERMISSION.ALL],
+		["_sync_vars", NetworkBridge.PERMISSION.ALL],
+		["_set_grill", NetworkBridge.PERMISSION.ALL],
+		["_spawn_fake_gas", NetworkBridge.PERMISSION.ALL],
+		["_grill", NetworkBridge.PERMISSION.ALL],
+		["_create_blood_decal", NetworkBridge.PERMISSION.ALL],
+		["_remove", NetworkBridge.PERMISSION.ALL],
+		["_set_hold_collision", NetworkBridge.PERMISSION.ALL]
+	])
+	
 #	Multiplayer.connect("host_tick", self, "host_tick")
 	rset_config("lerp_transform", MultiplayerAPI.RPC_MODE_PUPPET)
 	rset_config("global_transform", MultiplayerAPI.RPC_MODE_PUPPET)
@@ -122,6 +140,20 @@ func _ready()->void :
 	rset_config("velocity",MultiplayerAPI.RPC_MODE_REMOTE)
 	rset_config("stay_active",MultiplayerAPI.RPC_MODE_REMOTE)
 	rset_config("finished",MultiplayerAPI.RPC_MODE_REMOTE)
+	
+	NetworkBridge.register_rset(self, "lerp_transform", NetworkBridge.PERMISSION.SERVER)
+	NetworkBridge.register_rset(self, "global_transform", NetworkBridge.PERMISSION.SERVER)
+	
+	NetworkBridge.register_rset(self, "holdId", NetworkBridge.PERMISSION.SERVER)
+	NetworkBridge.register_rset(self, "disabled", NetworkBridge.PERMISSION.SERVER)
+	NetworkBridge.register_rset(self, "usable", NetworkBridge.PERMISSION.SERVER)
+	NetworkBridge.register_rset(self, "grill_health", NetworkBridge.PERMISSION.SERVER)
+	NetworkBridge.register_rset(self, "damager", NetworkBridge.PERMISSION.SERVER)
+	NetworkBridge.register_rset(self, "held", NetworkBridge.PERMISSION.SERVER)
+	NetworkBridge.register_rset(self, "grill", NetworkBridge.PERMISSION.SERVER)
+	NetworkBridge.register_rset(self, "velocity", NetworkBridge.PERMISSION.SERVER)
+	NetworkBridge.register_rset(self, "stay_active", NetworkBridge.PERMISSION.SERVER)
+	NetworkBridge.register_rset(self, "finished", NetworkBridge.PERMISSION.SERVER)
 
 	glob = Global
 	if particle:
@@ -175,11 +207,14 @@ master func set_network_transform(id, recivedTransform, only_origin = false):
 	else:
 		NetworkBridge.n_rpc(self, "set_network_transform", [recivedTransform, only_origin])
 
-master func add_velocity(id, recivedVelocity):
+func add_velocity(recivedVelocity):
+	network_add_velocity(null, recivedVelocity)
+
+master func network_add_velocity(id, recivedVelocity):
 	if NetworkBridge.n_is_network_master(self):
 		velocity += recivedVelocity
 	else:
-		NetworkBridge.n_rpc(self, "add_velocity", [recivedVelocity])
+		NetworkBridge.n_rpc(self, "network_add_velocity", [recivedVelocity])
 
 func set_hold_collision(recived_holding):
 	_set_hold_collision(null, recived_holding)

@@ -36,6 +36,12 @@ func get_near_player(object) -> Dictionary:
 
 func _ready():
 	Global.objectives += 1
+	
+	NetworkBridge.register_rpcs(self, [
+		["set_animation", NetworkBridge.PERMISSION.SERVER],
+		["die", NetworkBridge.PERMISSION.SERVER],
+		["spawn_enemy", NetworkBridge.PERMISSION.SERVER]
+	])
 
 func _process(delta):
 	torus.rotate_object_local(Vector3.BACK, deg2rad(1))

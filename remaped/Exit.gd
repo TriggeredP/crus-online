@@ -13,6 +13,13 @@ func _ready():
 	connect("body_entered", self, "_on_Body_entered")
 	connect("body_exited", self, "_on_Body_exited")
 	
+	NetworkBridge.register_rpcs(self, [
+		["send_player_count", NetworkBridge.PERMISSION.SERVER],
+		["send_exit_message", NetworkBridge.PERMISSION.SERVER],
+		["player_exited", NetworkBridge.PERMISSION.ALL],
+		["player_entered", NetworkBridge.PERMISSION.ALL]
+	])
+	
 	exitTimer = Timer.new()
 	add_child(exitTimer)
 	exitTimer.wait_time = 5

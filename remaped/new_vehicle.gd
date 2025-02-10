@@ -15,6 +15,11 @@ var velocity = Vector3.ZERO
 var velocity_target = Vector3.ZERO
 
 func _ready():
+	NetworkBridge.register_rpcs(self, [
+		["_stop_sound", NetworkBridge.PERMISSION.ALL],
+		["_set_master", NetworkBridge.PERMISSION.ALL]
+	])
+	
 	set_collision_layer_bit(8, 1)
 	
 	rset_config("in_use", MultiplayerAPI.RPC_MODE_REMOTE)

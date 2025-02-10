@@ -19,6 +19,10 @@ func _ready():
 	c_shape = $CollisionShape
 	particle.emitting = true
 	
+	NetworkBridge.register_rpcs(self, [
+		["delete", NetworkBridge.PERMISSION.SERVER]
+	])
+	
 func _physics_process(delta):
 	if NetworkBridge.n_is_network_master(self):
 		if particle.emitting == false:

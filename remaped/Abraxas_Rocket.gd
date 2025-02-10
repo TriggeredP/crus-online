@@ -28,7 +28,11 @@ func get_near_player(object) -> Dictionary:
 	}
 
 func _ready():
-	pass
+	NetworkBridge.register_rpcs(self, [
+		["create_missile", NetworkBridge.PERMISSION.SERVER],
+		["died", NetworkBridge.PERMISSION.SERVER],
+		["network_damage", NetworkBridge.PERMISSION.ALL]
+	])
 
 func _physics_process(delta):
 	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
@@ -95,7 +99,7 @@ master func network_damage(id, dmg, nrml, pos, shoot_pos):
 			died(null)
 			NetworkBridge.n_rpc(self, "died")
 	else:
-		NetworkBridge.n_rpc(self, "damage", [dmg, nrml, pos, shoot_pos])
+		NetworkBridge.n_rpc(self, "network_damage", [dmg, nrml, pos, shoot_pos])
 
 func get_type():
 	return type;

@@ -3,6 +3,10 @@ extends KinematicBody
 onready var NetworkBridge = Global.get_node("Multiplayer/NetworkBridge")
 
 func _ready():
+	NetworkBridge.register_rpcs(self, [
+		["remove", NetworkBridge.PERMISSION.SERVER]
+	])
+	
 	rset_config("global_transform", MultiplayerAPI.RPC_MODE_PUPPET)
 	
 	set_collision_mask_bit(0, 1)

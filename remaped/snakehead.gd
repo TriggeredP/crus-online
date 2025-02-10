@@ -20,6 +20,10 @@ export  var line = "Triagon 01 is gone. (Golem Exosystem Received)"
 export  var line2 = "I bestow upon you power."
 
 func _ready():
+	NetworkBridge.register_rpcs(self, [
+		["network_damage", NetworkBridge.PERMISSION.ALL]
+	])
+	
 	if Global.DEAD_CIVS.find(line) != - 1:
 		get_parent().hide()
 		queue_free()

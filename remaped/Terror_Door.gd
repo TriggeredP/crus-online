@@ -18,6 +18,12 @@ var type = 0
 var audio_player
 
 func _ready():
+	NetworkBridge.register_rpcs(self, [
+		["remove_on_ready", NetworkBridge.PERMISSION.SERVER],
+		["remove", NetworkBridge.PERMISSION.SERVER],
+		["spawn_gib", NetworkBridge.PERMISSION.SERVER]
+	])
+	
 	set_collision_layer_bit(8, 1)
 	audio_player = AudioStreamPlayer3D.new()
 	get_parent().call_deferred("add_child", audio_player)

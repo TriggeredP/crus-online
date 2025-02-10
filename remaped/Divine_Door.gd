@@ -22,6 +22,12 @@ var isDestroyed = false
 func _ready():
 	rset_config("global_transform",MultiplayerAPI.RPC_MODE_PUPPET)
 	
+	NetworkBridge.register_rpcs(self, [
+		["_get_transform", NetworkBridge.PERMISSION.ALL],
+		["player_use", NetworkBridge.PERMISSION.ALL],
+		["door_use", NetworkBridge.PERMISSION.ALL]
+	])
+	
 	set_process(false)
 	set_collision_layer_bit(8, 1)
 	for child in get_children():

@@ -87,6 +87,15 @@ puppet func _delete(id):
 ################################################################################
 
 func _ready():
+	NetworkBridge.register_rpcs(self, [
+		["_spawn_shrapnel", NetworkBridge.PERMISSION.SERVER],
+		["_create_object", NetworkBridge.PERMISSION.SERVER],
+		["_set_transform", NetworkBridge.PERMISSION.SERVER],
+		["_delete", NetworkBridge.PERMISSION.SERVER],
+		["play_sound", NetworkBridge.PERMISSION.SERVER],
+		["stop_sound", NetworkBridge.PERMISSION.SERVER]
+	])
+	
 	gun = get_node_or_null("Area")
 	set_collision_layer_bit(6, 1)
 	set_collision_layer_bit(0, 0)

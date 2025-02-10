@@ -7,6 +7,11 @@ var foodType = 0
 onready var collision = get_node("../Area/CollisionShape")
 
 func _ready():
+	NetworkBridge.register_rpcs(self, [
+		["set_food", NetworkBridge.PERMISSION.SERVER],
+		["get_food", NetworkBridge.PERMISSION.ALL]
+	])
+	
 	collision.disabled = true
 	
 	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):

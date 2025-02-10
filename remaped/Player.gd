@@ -309,7 +309,7 @@ func update_implants():
 var fakeFire = null
 
 func _ready():
-	NetworkBridge.register_rpcs(self,[
+	NetworkBridge.register_rpcs(self, [
 		["send_death_nofify", NetworkBridge.PERMISSION.ALL],
 		["_spawn_gib", NetworkBridge.PERMISSION.ALL],
 		["_play_sound", NetworkBridge.PERMISSION.ALL],

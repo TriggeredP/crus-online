@@ -1,6 +1,6 @@
 extends Node
 
-var version = "Beta 090225/2140"
+var version = "Beta 100225/2151"
 
 enum errorType {UNKNOW, TIME_OUT, WRONG_PASSWORD, WRONG_VERSION, PASSWORD_REQUIRE, SERVER_CLOSED, UPNP_ERROR}
 

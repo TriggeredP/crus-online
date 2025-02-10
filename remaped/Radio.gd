@@ -6,6 +6,12 @@ var static_noise = 0
 var current_track = 0
 
 func _ready():
+	NetworkBridge.register_rpcs(self, [
+		["change_track", NetworkBridge.PERMISSION.SERVER],
+		["get_track", NetworkBridge.PERMISSION.ALL],
+		["player_use", NetworkBridge.PERMISSION.ALL]
+	])
+	
 	if NetworkBridge.n_is_network_master(self):
 		current_track = randi() % Global.LEVEL_SONGS.size()
 		$Radio.stream = Global.LEVEL_SONGS[current_track]

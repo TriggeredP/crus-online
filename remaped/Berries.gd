@@ -11,6 +11,12 @@ export  var healing_amount = 25
 export  var kinematic = false
 
 func _ready():
+	NetworkBridge.register_rpcs(self, [
+		["check_food", NetworkBridge.PERMISSION.ALL],
+		["delete", NetworkBridge.PERMISSION.ALL],
+		["kinematic_delete", NetworkBridge.PERMISSION.ALL]
+	])
+	
 	if not NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		NetworkBridge.n_rpc(self, "check_food")
 

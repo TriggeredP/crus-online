@@ -4,7 +4,7 @@ onready var Multiplayer = Global.get_node("Multiplayer")
 onready var NetworkBridge = Global.get_node("Multiplayer/NetworkBridge")
 
 func _ready():
-	NetworkBridge.register_rpcs(self,[
+	NetworkBridge.register_rpcs(self, [
 		["test_rpc", NetworkBridge.PERMISSION.SERVER]
 	])
 

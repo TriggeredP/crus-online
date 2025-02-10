@@ -1,7 +1,5 @@
 extends Control
 
-onready var NetworkBridge = Global.get_node("Multiplayer/NetworkBridge")
-
 var t = 0
 var health = 100
 var shooter_pos = Vector2.ZERO

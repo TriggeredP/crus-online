@@ -17,6 +17,14 @@ puppet func _create_object(id, recivedPath, recivedObject, recivedName, recivedT
 	newObject.global_transform = recivedTransform
 
 func _ready():
+	NetworkBridge.register_rpcs(self, [
+		["_create_object", NetworkBridge.PERMISSION.SERVER],
+		["stop_sound", NetworkBridge.PERMISSION.SERVER],
+		["notify", NetworkBridge.PERMISSION.SERVER],
+		["activation", NetworkBridge.PERMISSION.ALL],
+		["network_damage", NetworkBridge.PERMISSION.ALL]
+	])
+	
 	rset_config("item_count", MultiplayerAPI.RPC_MODE_PUPPET)
 	rset_config("broken", MultiplayerAPI.RPC_MODE_PUPPET)
 
@@ -70,7 +78,7 @@ master func network_damage(id, a, n, p, sp):
 			NetworkBridge.n_rpc(self, "stop_sound")
 		activation(null, true)
 	else:
-		NetworkBridge.n_rpc(self, "damage", [a, n, p, sp])
+		NetworkBridge.n_rpc(self, "network_damage", [a, n, p, sp])
 
 puppet func stop_sound(id):
 	$AudioStreamPlayer3D.playing = false

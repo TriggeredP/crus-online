@@ -8,6 +8,10 @@ export  var level_name = "Darkworld"
 onready var Multiplayer = Global.get_node("Multiplayer")
 
 func _ready():
+	NetworkBridge.register_rpcs(self, [
+		["unlock_level", NetworkBridge.PERMISSION.SERVER]
+	])
+	
 	var new_mat = $level_painting / Cube.mesh.surface_get_material(1).duplicate()
 	new_mat.albedo_texture = Global.LEVEL_IMAGES[level_index]
 	$level_painting / Cube.set_surface_material(1, new_mat)

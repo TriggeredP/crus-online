@@ -38,10 +38,10 @@ func _ready():
 	
 	NetworkBridge.register_rpcs(self, [
 		["check_removed", NetworkBridge.PERMISSION.ALL],
-		["destroy", NetworkBridge.PERMISSION.ALL],
-		["damage", NetworkBridge.PERMISSION.ALL],
+		["network_destroy", NetworkBridge.PERMISSION.ALL],
+		["network_damage", NetworkBridge.PERMISSION.ALL],
 		["remove_on_ready", NetworkBridge.PERMISSION.SERVER],
-		["remove", NetworkBridge.PERMISSION.SERVER],
+		["remove", NetworkBridge.PERMISSION.SERVER]
 	])
 	
 	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
@@ -51,12 +51,15 @@ master func check_removed(id):
 	if isDestroyed:
 		NetworkBridge.n_rpc_id(self, id, "remove_on_ready")
 
-master func destroy(id, collision_n, collision_p):
+func destroy(collision_n, collision_p):
+	network_destroy(null, collision_n, collision_p)
+
+master func network_destroy(id, collision_n, collision_p):
 	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		damage(200, collision_n, collision_p, Vector3.ZERO)
 	else:
 		remove(null, collision_n, collision_p)
-		NetworkBridge.n_rpc(self, "destroy", [collision_n, collision_p])
+		NetworkBridge.n_rpc(self, "network_destroy", [collision_n, collision_p])
 
 func damage(dmg, nrml, pos, shoot_pos):
 	network_damage(null, dmg, nrml, pos, shoot_pos)
@@ -73,7 +76,7 @@ master func network_damage(id, damage, collision_n, collision_p, shooter_pos):
 		if door_health <= 0:
 			remove(null, collision_n, collision_p)
 			destroy_check_timer.start()
-		NetworkBridge.n_rpc(self, "damage", [damage, collision_n, collision_p, shooter_pos])
+		NetworkBridge.n_rpc(self, "network_damage", [damage, collision_n, collision_p, shooter_pos])
 
 func get_type():
 	return type;

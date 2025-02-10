@@ -8,7 +8,10 @@ export  var health = 10
 var destroyed = false
 
 func _ready():
-	pass
+	NetworkBridge.register_rpcs(self, [
+		["died", NetworkBridge.PERMISSION.SERVER],
+		["network_damage", NetworkBridge.PERMISSION.ALL]
+	])
 
 puppet func died(id):
 	get_parent().get_node("Sphere").hide()
@@ -27,7 +30,7 @@ master func network_damage(id, dmg, nrml, pos, shoot_pos):
 			died(null)
 			NetworkBridge.n_rpc(self, "died")
 	else:
-		NetworkBridge.n_rpc(self, "damage", [dmg, nrml, pos, shoot_pos])
+		NetworkBridge.n_rpc(self, "network_damage", [dmg, nrml, pos, shoot_pos])
 
 func get_type():
 	return type

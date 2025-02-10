@@ -20,6 +20,11 @@ var audio_player
 var isDestroyed = false
 
 func _ready():
+	NetworkBridge.register_rpcs(self, [
+		["player_use", NetworkBridge.PERMISSION.ALL],
+		["door_use", NetworkBridge.PERMISSION.ALL]
+	])
+	
 	rset_config("global_transform",MultiplayerAPI.RPC_MODE_PUPPET)
 	
 	set_process(false)

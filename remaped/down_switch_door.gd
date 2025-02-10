@@ -18,6 +18,10 @@ var audio_player:AudioStreamPlayer3D
 func _ready():
 	rset_config("global_transform", MultiplayerAPI.RPC_MODE_PUPPET)
 	
+	NetworkBridge.register_rpcs(self, [
+		["switch_use", NetworkBridge.PERMISSION.ALL]
+	])
+	
 	audio_player = AudioStreamPlayer3D.new()
 	audio_player.stream = sfx
 	add_child(audio_player)

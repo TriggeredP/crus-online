@@ -29,6 +29,12 @@ func get_near_player(object) -> Dictionary:
 	}
 
 func _ready():
+	NetworkBridge.register_rpcs(self, [
+		["particle_visible", NetworkBridge.PERMISSION.SERVER],
+		["died", NetworkBridge.PERMISSION.SERVER],
+		["network_damage", NetworkBridge.PERMISSION.ALL]
+	])
+	
 	look_towards = Global.player.global_transform.origin
 	laser = $Laser
 	particle = $Particles
@@ -102,7 +108,7 @@ master func network_damage(id, dmg, nrml, pos, shoot_pos):
 			died(null)
 			NetworkBridge.n_rpc(self, "died")
 	else:
-		NetworkBridge.n_rpc(self, "damage", [dmg, nrml, pos, shoot_pos])
+		NetworkBridge.n_rpc(self, "network_damage", [dmg, nrml, pos, shoot_pos])
 
 func get_type():
 	return type;
