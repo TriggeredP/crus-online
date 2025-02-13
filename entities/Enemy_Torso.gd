@@ -1,5 +1,7 @@
 extends KinematicBody
 
+onready var NetworkBridge = Global.get_node("Multiplayer/NetworkBridge")
+
 var soul
 export  var alive_head = false
 export  var head = false
@@ -23,13 +25,13 @@ onready var head_gib = preload("res://Entities/Physics_Objects/Head_Gib.tscn")
 # Multiplayer stuff
 ################################################################################
 
-puppet func _spawn_gib_client(parentPath, collision_n, collision_p, gibName):
+puppet func _spawn_gib_client(id, parentPath, collision_n, collision_p, gibName):
 	var new_gib = head_gib.instance()
 	new_gib.set_name(gibName)
 
 	get_node(parentPath).add_child(new_gib)
 
-puppet func _client_damage():
+puppet func _client_damage(id):
 	for child in get_children():
 		child.hide()
 	hide()
@@ -41,6 +43,13 @@ puppet func _client_damage():
 ################################################################################
 
 func _ready():
+	NetworkBridge.register_rpcs(self,[
+		["tranquilize", NetworkBridge.PERMISSION.ALL],
+		["network_damage", NetworkBridge.PERMISSION.ALL],
+		["_spawn_gib_client", NetworkBridge.PERMISSION.SERVER],
+		["_client_damage", NetworkBridge.PERMISSION.SERVER]
+	])
+	
 	set_physics_process(false)
 	set_process(false)
 	head_health = 50
@@ -58,7 +67,7 @@ func _ready():
 		damage_multiplier = 1
 
 func cancer():
-	if get_tree().network_peer != null and is_network_master():
+	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		if soul.cancer_immunity:
 			return 
 		if soul.armor > 0:
@@ -74,7 +83,7 @@ func cancer():
 		soul.hide()
 
 func _physics_process(delta):
-	if get_tree().network_peer != null and is_network_master():
+	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		if bored:
 			head_health -= 1
 			damage(0, Vector3.ZERO, global_transform.origin, global_transform.origin)
@@ -85,30 +94,33 @@ func _physics_process(delta):
 			new_blood_particle.emitting = true
 
 func set_water(a):
-	if get_tree().network_peer != null and is_network_master():
+	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		if head:
 			if soul.body.has_method("set_water") and not soul.body.dead:
 				soul.body.set_water(a)
 
 func add_velocity(normal, amount):
-	if get_tree().network_peer != null and is_network_master():
+	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		soul.add_velocity(normal, amount)
 
-master func tranquilize(dart):
-	if get_tree().network_peer != null and is_network_master():
+master func tranquilize(id, dart):
+	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		soul.set_tranquilized(dart)
 	else:
-		rpc_id(0,"tranquilize",dart)
+		NetworkBridge.n_rpc_id(self, 0, "tranquilize", [dart])
 
 func tranq_timeout(dart):
-	if get_tree().network_peer != null and is_network_master():
+	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		soul.tranq_timeout(dart)
 
 func grapple(pos:Position3D):
 	soul.grapple(pos)
 
-master func damage(damage, collision_n, collision_p, shooter_pos):
-	if get_tree().network_peer != null:
+func damage(damage, collision_n, collision_p, shooter_pos):
+	network_damage(null, damage, collision_n, collision_p, shooter_pos)
+
+master func network_damage(id, damage, collision_n, collision_p, shooter_pos):
+	if NetworkBridge.check_connection():
 		if head and damage < 0.5 and not bored:
 			return 
 		soul.damage(damage * damage_multiplier, collision_n, collision_p, shooter_pos)
@@ -118,7 +130,7 @@ master func damage(damage, collision_n, collision_p, shooter_pos):
 			type = 1
 		if head and not bored and damage > 0.5:
 			head_health = - 1
-		if bored and head_health > - 1 and is_network_master():
+		if bored and head_health > - 1 and NetworkBridge.n_is_network_master(self):
 			head_health -= 1
 		if head_health < 0 and headoff == false:
 			if bored:
@@ -127,7 +139,7 @@ master func damage(damage, collision_n, collision_p, shooter_pos):
 			bored = false
 			deadhead.already_dead()
 			soul.die(damage, collision_n, collision_p)
-			if not gibflag and gibbable and is_network_master():
+			if not gibflag and gibbable and NetworkBridge.n_is_network_master(self):
 				var new_head_gib = head_gib.instance()
 				new_head_gib.set_name(new_head_gib.name + "#" + str(new_head_gib.get_instance_id()))
 				
@@ -135,7 +147,7 @@ master func damage(damage, collision_n, collision_p, shooter_pos):
 				new_head_gib.global_transform.origin = global_transform.origin
 				new_head_gib.damage(damage, collision_n, collision_p, shooter_pos)
 				
-				rpc("_spawn_gib_client", soul.get_path(), collision_n, collision_p, new_head_gib.name)
+				NetworkBridge.n_rpc(self, "_spawn_gib_client", [soul.get_path(), collision_n, collision_p, new_head_gib.name])
 			for child in get_children():
 				child.hide()
 			hide()
@@ -143,10 +155,10 @@ master func damage(damage, collision_n, collision_p, shooter_pos):
 				head_mesh.hide()
 			$CollisionShape.disabled = true
 			gibflag = true
-			if is_network_master():
-				rpc("_client_damage")
-		if not is_network_master():
-			rpc_id(0, "damage", damage, collision_n, collision_p, shooter_pos)
+			if NetworkBridge.n_is_network_master(self):
+				NetworkBridge.n_rpc(self, "_client_damage")
+		if not NetworkBridge.n_is_network_master(self):
+			NetworkBridge.n_rpc_id(self, 0, "damage", [damage, collision_n, collision_p, shooter_pos])
 
 func player_use():
 	if get_collision_layer_bit(8):
@@ -164,14 +176,14 @@ func remove_weapon():
 	soul.remove_weapon()
 
 func piercing_damage(damage, collision_n, collision_p, shooter_pos):
-	if get_tree().network_peer != null:
+	if NetworkBridge.check_connection():
 		soul.piercing_damage(damage * damage_multiplier, collision_n, collision_p)
 		if head:
 			head_health = - 1
 		if head_health < 0 and headoff == false:
 			deadhead.already_dead()
 			soul.die(damage, collision_n, collision_p)
-			if not gibflag and is_network_master():
+			if not gibflag and NetworkBridge.n_is_network_master(self):
 				var new_head_gib = head_gib.instance()
 				new_head_gib.set_name(new_head_gib.name + "#" + str(new_head_gib.get_instance_id()))
 				soul.add_child(new_head_gib)
@@ -179,7 +191,7 @@ func piercing_damage(damage, collision_n, collision_p, shooter_pos):
 				new_head_gib.global_transform.origin = global_transform.origin
 				new_head_gib.damage(damage, collision_n, collision_p, shooter_pos)
 				
-				rpc("_spawn_gib_client", soul.get_path(), collision_n, collision_p, new_head_gib.name)
+				NetworkBridge.n_rpc(self, "_spawn_gib_client", [soul.get_path(), collision_n, collision_p, new_head_gib.name])
 			for child in get_children():
 				child.hide()
 			hide()
@@ -187,8 +199,8 @@ func piercing_damage(damage, collision_n, collision_p, shooter_pos):
 				head_mesh.hide()
 			$CollisionShape.disabled = true
 			gibflag = true
-			if is_network_master():
-				rpc("_client_damage")
+			if NetworkBridge.n_is_network_master(self):
+				NetworkBridge.n_rpc(self, "_client_damage")
 
 func already_dead():
 	headoff = true

@@ -1,5 +1,7 @@
 extends KinematicBody
 
+onready var NetworkBridge = Global.get_node("Multiplayer/NetworkBridge")
+
 var GRAVITY = 22
 export  var move_speed:float = 2
 export  var attack_distance = 1
@@ -40,11 +42,11 @@ func get_near_player() -> Dictionary:
 		"distance" : oldDistance
 	}
 
-puppet func set_animation(anim:String, speed:float)->void :
+puppet func set_animation(id, anim:String, speed:float)->void :
 	anim_player.play(anim)
 	anim_player.playback_speed = speed
 	
-puppet func play_chatter():
+puppet func play_chatter(id):
 	chatter_sound.play()
 
 var lerp_transform : Transform
@@ -59,6 +61,12 @@ func host_tick():
 ################################################################################
 
 func _ready():
+	NetworkBridge.register_rpcs(self,[
+		["add_velocity", NetworkBridge.PERMISSION.ALL],
+		["set_animation", NetworkBridge.PERMISSION.SERVER],
+		["play_chatter", NetworkBridge.PERMISSION.SERVER]
+	])
+	
 	lerp_transform = global_transform
 	
 #	Multiplayer.connect("host_tick", self, "host_tick")
@@ -70,7 +78,7 @@ func _ready():
 	time += round(rand_range(0, 50))
 	anim_player = get_parent().get_node_or_null("Nemesis/AnimationPlayer")
 	anim_player.play("Idle")
-	rpc("set_animation", "Idle", 1)
+	NetworkBridge.n_rpc(self, "set_animation", ["Idle", 1])
 	mesh = get_parent().get_node_or_null("Nemesis/Armature/Skeleton")
 	chatter_sound = get_node_or_null("SFX/Chatter")
 	chatter_on = is_instance_valid(chatter_sound)
@@ -80,8 +88,8 @@ func _ready():
 	get_parent().new_alert_sphere.get_node("CollisionShape").disabled = true
 
 func _physics_process(delta):
-	if get_tree().network_peer != null:
-		if get_tree().network_peer != null and is_network_master():
+	if NetworkBridge.check_connection():
+		if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 			host_tick()
 			
 			if get_near_player().distance > Global.draw_distance + 10:
@@ -96,7 +104,7 @@ func _physics_process(delta):
 					dead = false
 					immortal_death_time = 200
 					anim_player.play("Undie")
-					rpc("set_animation", "Undie", 1)
+					NetworkBridge.n_rpc(self, "set_animation", ["Undie", 1])
 					yield (get_tree(), "idle_frame")
 			if get_near_player().distance > 20:
 				velocity.x = 0
@@ -106,7 +114,7 @@ func _physics_process(delta):
 					
 					if not chatter_sound.playing:
 						chatter_sound.play()
-						rpc("play_chatter")
+						NetworkBridge.n_rpc(self, "play_chatter")
 			time += 1
 			if get_near_player().distance < 3 and not dead and _floor and get_near_player().distance > 1 and jumper:
 				velocity *= 2
@@ -121,7 +129,7 @@ func _physics_process(delta):
 				if get_near_player().distance < attack_distance:
 					weapon.AI_shoot()
 					anim_player.play("Attack", - 1, 1)
-					rpc("set_animation", "Attack", 1)
+					NetworkBridge.n_rpc(self, "set_animation", ["Attack", 1])
 			else :
 				if fmod(time, 20) == 0 and not dead and not anim_player.current_animation == "Undie":
 					velocity = - move_speed * (global_transform.origin - get_near_player().player.global_transform.origin).normalized()
@@ -130,13 +138,13 @@ func _physics_process(delta):
 				if Vector3(velocity.x, 0, velocity.z).length() > 0.4 and not dead and not anim_player.current_animation == "Undie":
 					if not flee:
 						anim_player.play("Walk", - 1, anim_speed)
-						rpc("set_animation", "Walk", anim_speed)
+						NetworkBridge.n_rpc(self, "set_animation", ["Walk", anim_speed])
 					else :
 						anim_player.play("Run", - 1, 2)
-						rpc("set_animation", "Walk", 2)
+						NetworkBridge.n_rpc(self, "set_animation", ["Walk", 2])
 				elif not dead and not anim_player.current_animation == "Undie":
 					anim_player.play("Idle")
-					rpc("set_animation", "Idle", 1)
+					NetworkBridge.n_rpc(self, "set_animation", ["Idle", 1])
 			if water:
 				GRAVITY = 2
 			else :
@@ -162,11 +170,11 @@ func _physics_process(delta):
 		else:
 			global_transform = global_transform.interpolate_with(lerp_transform, delta * 10.0)
 
-master func add_velocity(increase_velocity):
-	if get_tree().network_peer != null and is_network_master():
+master func add_velocity(id, increase_velocity):
+	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		velocity -= increase_velocity
 	else:
-		rpc_id(0,"add_velocity", increase_velocity)
+		NetworkBridge.n_rpc_id(self, 0, "add_velocity", [increase_velocity])
 
 func set_water(a):
 	water = a
@@ -176,7 +184,7 @@ func set_flee():
 	pass
 	
 func set_dead():
-	if get_tree().network_peer != null and is_network_master():
+	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		if not dead:
 			dead = true
 			if not immortal:
@@ -184,4 +192,4 @@ func set_dead():
 					child.get_child(0).disabled = true
 			var randomDeath = randi() % DEATH_ANIMS.size()
 			anim_player.play(DEATH_ANIMS[randomDeath])
-			rpc("set_animation", DEATH_ANIMS[randomDeath], 1)
+			NetworkBridge.n_rpc(self, "set_animation", [DEATH_ANIMS[randomDeath], 1])

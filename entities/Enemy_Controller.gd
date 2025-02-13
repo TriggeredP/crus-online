@@ -34,7 +34,7 @@ func _ready():
 	enemies = get_tree().get_nodes_in_group("enemies")
 	player = Global.player
 	delta = get_physics_process_delta_time()
-	if get_tree().network_peer != null and is_network_master():
+	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		thread.start(self, "_AI")
 
 func AI():

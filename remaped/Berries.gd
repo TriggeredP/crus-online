@@ -23,9 +23,9 @@ func _ready():
 master func check_food(id):
 	if $CollisionShape.disabled:
 		if kinematic:
-			rpc_id(get_tree().get_rpc_sender_id(),"kinematic_delete")
+			NetworkBridge.n_rpc_id(self, id, "kinematic_delete")
 		else:
-			rpc_id(get_tree().get_rpc_sender_id(),"delete")
+			NetworkBridge.n_rpc_id(self, id, "delete")
 
 remote func delete(id):
 	$CollisionShape.disabled = true

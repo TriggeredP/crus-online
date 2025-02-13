@@ -111,7 +111,7 @@ func _ready()->void :
 	lerp_transform = global_transform
 	
 	# TODO: Не забыть переработать весь этот пиздец
-	# Не, это реально не смешно. Мне самому страшно от того что я когда-то написал
+	# TODO: Не, это реально не смешно. Мне самому страшно от того что я когда-то написал
 	
 	NetworkBridge.register_rpcs(self, [
 		["_get_transform", NetworkBridge.PERMISSION.ALL],

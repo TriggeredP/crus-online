@@ -1,5 +1,7 @@
 extends KinematicBody
 
+onready var NetworkBridge = Global.get_node("Multiplayer/NetworkBridge")
+
 var rotation_helper:Spatial
 var player_ray:RayCast
 var held = false
@@ -103,17 +105,17 @@ func get_near_player(object) -> Dictionary:
 remotesync func set_in_sight(value):
 	Global.player.UI.set_in_sight(value)
 
-puppet func set_psychosis(value):
+puppet func set_psychosis(id, value):
 	Global.player.set_psychosis(value)
 
-puppet func set_animation(anim:String, speed:float)->void :
+puppet func set_animation(id, anim:String, speed:float)->void :
 	anim_player.play(anim)
 	anim_player.playback_speed = speed
 
 var lerp_transform : Transform
 var last_transform : Transform
 
-puppet func set_puppet_transform(recived_position, recived_rotation):
+puppet func set_puppet_transform(id, recived_position, recived_rotation):
 	lerp_transform.origin = recived_position
 
 func host_tick():
@@ -125,6 +127,18 @@ func host_tick():
 ################################################################################
 
 func _ready()->void :
+	NetworkBridge.register_rpcs(self,[
+		["add_velocity", NetworkBridge.PERMISSION.ALL],
+		["alert", NetworkBridge.PERMISSION.ALL],
+		["set_flee", NetworkBridge.PERMISSION.ALL],
+		["set_dead", NetworkBridge.PERMISSION.ALL],
+		["set_tranquilized", NetworkBridge.PERMISSION.ALL],
+		["set_psychosis", NetworkBridge.PERMISSION.SERVER],
+		["set_animation", NetworkBridge.PERMISSION.SERVER],
+		["set_puppet_transform", NetworkBridge.PERMISSION.SERVER],
+		["hide_muzzleflash", NetworkBridge.PERMISSION.SERVER]
+	])
+	
 	lerp_transform = global_transform
 	
 #	Multiplayer.connect("host_tick", self, "host_tick")
@@ -200,13 +214,13 @@ func _ready()->void :
 	nearby = soul.new_alert_sphere.get_overlapping_bodies()
 	move()
 
-puppet func hide_muzzleflash(hideFlash):
+puppet func hide_muzzleflash(id, hideFlash):
 	if hideFlash:
 		muzzleflash.hide()
 
 func _physics_process(delta)->void :
-	if get_tree().network_peer != null:
-		if get_tree().network_peer != null and is_network_master():
+	if NetworkBridge.check_connection():
+		if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 			host_tick()
 			
 			var nearest_player = get_near_player(self)
@@ -233,7 +247,7 @@ func _physics_process(delta)->void :
 			time += 1
 			if muzzleflash:
 				muzzleflash.hide()
-				rpc("hide_muzzleflash", true)
+				NetworkBridge.n_rpc(self, "hide_muzzleflash", [true])
 			if player_distance > ai_distance:
 				return 
 			if player_distance > 50 and Global.every_2:
@@ -299,7 +313,7 @@ func _physics_process(delta)->void :
 			global_transform = global_transform.interpolate_with(lerp_transform, delta * 10.0)
 
 func move()->void :
-	if get_tree().network_peer != null and is_network_master():
+	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		if crusher:
 			for i in get_slide_count():
 				var collision = get_slide_collision(i)
@@ -309,17 +323,17 @@ func move()->void :
 		velocity = move_and_slide(velocity, Vector3.UP, false, 4, 0.785398)
 
 func wait_for_player(delta)->void :
-	if get_tree().network_peer != null and is_network_master():
+	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		if not patrol:
 			if move_speed == 0:
 				anim_player.play("Idle", - 1, 1)
-				rpc("set_animation", "Idle", 1)
+				NetworkBridge.n_rpc(self, "set_animation", ["Idle", 1])
 				
 			if is_on_floor():
 				velocity.y = 0
 			if path.size() == 0:
 				anim_player.play("Idle", - 1, 1)
-				rpc("set_animation", "Idle", 1)
+				NetworkBridge.n_rpc(self, "set_animation", ["Idle", 1])
 				if fmod(time, alertness) == 0:
 					alerted = false
 					if rand_patroller and randi() % 5 == 1:
@@ -363,7 +377,7 @@ func anim()->void :
 	pass
 
 func track_player(delta)->void :
-	if get_tree().network_peer != null and is_network_master():
+	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		var player_offset = Vector3(0, 1.5, 0)
 		if civ_killer:
 			player_offset = Vector3(0, - 1.5, 0)
@@ -378,12 +392,12 @@ func track_player(delta)->void :
 			if (collider == player or collider.has_meta("puppetId")) and line_of_sight > 0 and not height_difference and line_of_sight_y < 0.8 and not stealthed:
 				if not civ_killer:
 					if collider.has_meta("puppetId"):
-						rpc_id(collider.get_meta("puppetId"),"set_in_sight", true)
+						NetworkBridge.n_rpc_id(self, collider.get_meta("puppetId"), "set_in_sight", [true])
 					else:
 						Global.player.UI.set_in_sight(true)
 				if soul.psychosis_inducer:
 					if collider.has_meta("puppetId"):
-						rpc_id(collider.get_meta("puppetId"),"set_psychosis", true)
+						NetworkBridge.n_rpc_id(self, collider.get_meta("puppetId"), "set_psychosis", [true])
 					else:
 						Global.player.set_psychosis(true)
 				spot_time -= delta
@@ -408,7 +422,7 @@ func track_player(delta)->void :
 			alerted_counter = 0
 
 func player_spotted()->void :
-	if get_tree().network_peer != null and is_network_master():
+	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		glob.action_lerp_value += 1
 		if fmod(time, pathing_frequency) == 0:
 			var new_path = NavigationServer.map_get_path(navigation, global_transform.origin, player.global_transform.origin, true)
@@ -417,21 +431,21 @@ func player_spotted()->void :
 		elif fmod(time, pathing_frequency) and path.size() == 0:
 			path = NavigationServer.map_get_path(navigation, global_transform.origin, global_transform.origin + Vector3(rand_range( - 3, 3), 0, rand_range( - 3, 3)), true)
 
-master func add_velocity(incvelocity:Vector3)->void :
-	if get_tree().network_peer != null and is_network_master():
+master func add_velocity(id, incvelocity:Vector3)->void :
+	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		velocity -= incvelocity
 		if not dead and not tranq:
 			yield (get_tree(), "idle_frame")
-			alert(player.global_transform.origin)
+			alert(null, player.global_transform.origin)
 			if not player_spotted:
 				player_spotted = true
 				look_at(player.global_transform.origin, Vector3.UP)
 				rotation.x = 0
 	else:
-		rpc("add_velocity", incvelocity)
+		NetworkBridge.n_rpc(self, "add_velocity", [incvelocity])
 
-master func alert(pos:Vector3)->void :
-	if get_tree().network_peer != null and is_network_master():
+master func alert(id, pos:Vector3)->void :
+	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		if player_spotted or alerted or dead or tranq:
 			return 
 		
@@ -445,10 +459,10 @@ master func alert(pos:Vector3)->void :
 		if not dead and not tranq:
 			painsound.play()
 	else:
-		rpc("alert", pos)
+		NetworkBridge.n_rpc(self, "alert", [pos])
 
 func active(delta:float)->void :
-	if get_tree().network_peer != null and is_network_master():
+	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		if burst_counter >= burst_size:
 			burst_reloading = true
 		if burst_counter <= 0:
@@ -471,13 +485,13 @@ func active(delta:float)->void :
 			velocity.z = 0
 		if not has_anim_attack:
 			anim_player.play("Idle")
-			rpc("set_animation", "Idle", 1)
+			NetworkBridge.n_rpc(self, "set_animation", ["Idle", 1])
 
 func find_path(delta)->void :
-	if get_tree().network_peer != null and is_network_master():
+	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		if move_speed == 0:
 			anim_player.play("Idle")
-			rpc("set_animation", "Idle", 1)
+			NetworkBridge.n_rpc(self, "set_animation", ["Idle", 1])
 			return 
 		if civ_killer:
 			weapon.AI_shoot()
@@ -487,9 +501,9 @@ func find_path(delta)->void :
 					if not player_spotted:
 						anim_speed = 1
 					anim_player.play("Run", - 1, anim_speed)
-					rpc("set_animation", "Run", anim_speed)
+					NetworkBridge.n_rpc(self, "set_animation", ["Run", anim_speed])
 				else :
-					rpc("set_animation", "Idle", 1)
+					NetworkBridge.n_rpc(self, "set_animation", ["Idle", 1])
 				if is_instance_valid(movement_sound):
 					if fmod(time, 5) == 0:
 						movement_sound.pitch_scale = clamp(sin(time * 0.3) + 0.7, 0.5, 2)
@@ -544,38 +558,38 @@ func get_torso_rotation()->Transform:
 func get_body_transform()->Basis:
 	return transform.basis
 
-master func set_flee()->void :
-	if get_tree().network_peer != null and is_network_master():
+master func set_flee(id)->void :
+	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		flee = true
 	else:
-		rpc("set_flee")
+		NetworkBridge.n_rpc(self, "set_flee")
 
-master func set_dead()->void :
-	if get_tree().network_peer != null and is_network_master():
+master func set_dead(id)->void :
+	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		if not dead:
 			dead = true
 			weapon.hide()
 			if not tranq:
 				var anim = DEATH_ANIMS[randi() % DEATH_ANIMS.size()]
 				if anim_player.has_animation(anim):
-					set_animation(anim, 1)
-					rpc("set_animation", anim, 1)
+					set_animation(null, anim, 1)
+					NetworkBridge.n_rpc(self, "set_animation", [anim, 1])
 	else:
-		rpc("set_dead")
+		NetworkBridge.n_rpc(self, "set_dead")
 
-master func set_tranquilized():
-	if get_tree().network_peer != null and is_network_master():
+master func set_tranquilized(id):
+	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		if not tranq:
 			tranq = true
 			if anim_player.has_animation(DEATH_ANIMS[0]):
-				set_animation(DEATH_ANIMS[0], 1)
-				rpc("set_animation", DEATH_ANIMS[0], 1)
+				set_animation(null, DEATH_ANIMS[0], 1)
+				NetworkBridge.n_rpc(self, "set_animation", [DEATH_ANIMS[0], 1])
 			tranqtimer.start()
 	else:
-		rpc("set_tranquilized")
+		NetworkBridge.n_rpc(self, "set_tranquilized")
 
 func tranq_timeout():
-	if get_tree().network_peer != null and is_network_master():
+	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		if dead:
 			return 
 		if anim_player.has_animation(DEATH_ANIMS[0]):

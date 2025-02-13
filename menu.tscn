@@ -38,6 +38,8 @@ onready var main_tab = get_parent()
 
 onready var Multiplayer = Global.get_node(\"Multiplayer\")
 
+onready var SteamLobby = Global.get_node(\"Multiplayer/SteamInit/SteamLobby\")
+
 func _ready():
 	main_tab.current_tab = 0
 
@@ -123,6 +125,8 @@ onready var status = $VBoxContainer/Status/StatusLabel
 var lobbies = []
 var selected = 0
 
+var join_request_id = 0
+
 func _ready():
 	SteamLobby.connect(\"lobby_list\", self, \"_on_match_list\")
 	
@@ -130,6 +134,8 @@ func _ready():
 	SteamLobby.connect(\"player_left_lobby\", self, \"player_list_update\")
 	
 	SteamLobby.connect(\"lobby_joined\", self, \"player_list_update\")
+	
+	SteamLobby.connect(\"lobby_join_requested\", self, \"lobby_join_requested\")
 	
 	Multiplayer.connect(\"status_update\", self, \"update_status\")
 	
@@ -150,10 +156,25 @@ func create_lobby():
 	$VBoxContainer/PlayersList/PlayersListLabel.show()
 	LobbyList.hide()
 
+func lobby_join_requested(id):
+	NetworkBridge.set_mode(NetworkBridge.MULTIPLAYER_TYPE.STEAM)
+	main_tab.current_tab = 2
+	
+	join_request_id = int(id)
+	print(\"[CRUS ONLINE / LOBBY]: Lobby join request id: \", str(join_request_id))
+	
+	var password_require = SteamInit.Steam.getLobbyData(join_request_id, \"password\")
+	print(\"[CRUS ONLINE / LOBBY]: Password require: \", password_require)
+	if password_require == \"true\":
+		join_request_id = id
+		$\"%PasswordInput\".steam_check_password()
+	else:
+		connect_lobby()
+
 func join_lobby():
 	var password_require = SteamInit.Steam.getLobbyData(lobbies[selected], \"password\")
 	print(\"[CRUS ONLINE / LOBBY]: Password require: \", password_require)
-	if password_require:
+	if password_require == \"true\":
 		$\"%PasswordInput\".steam_check_password()
 	else:
 		connect_lobby()
@@ -162,7 +183,12 @@ func show_player_list():
 	$VBoxContainer/PlayersList/PlayersListLabel.show()
 
 func connect_lobby():
-	SteamLobby.join_lobby(lobbies[selected])
+	if join_request_id != 0:
+		SteamLobby.join_lobby(join_request_id)
+		join_request_id = 0
+	else:
+		SteamLobby.join_lobby(lobbies[selected])
+	
 	$VBoxContainer/Buttons/Create.hide()
 	$VBoxContainer/Buttons/Join.hide()
 	$VBoxContainer/Buttons/Refresh.hide()

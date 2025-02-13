@@ -1,5 +1,7 @@
 extends Spatial
 
+onready var NetworkBridge = Global.get_node("Multiplayer/NetworkBridge")
+
 var activeWeapon = null
 onready var weaponModels = get_node("Weapons").get_children()
 
@@ -25,6 +27,12 @@ mastersync func _enable_timer():
 	$Timer.start()
 
 func _ready():
+	NetworkBridge.register_rpcs(self,[
+		["_set_weapon", NetworkBridge.PERMISSION.ALL],
+		["_disable", NetworkBridge.PERMISSION.ALL],
+		["_enable_timer", NetworkBridge.PERMISSION.ALL]
+	])
+	
 	$Timer.wait_time = respawnTime
 	$Timer.connect("timeout", self, "_selectWeapon")
 
@@ -38,11 +46,11 @@ func collected():
 			if Global.player.weapon.ammo[activeWeapon] < maxAmmo[activeWeapon]:
 				Global.player.weapon.ammo[activeWeapon] = maxAmmo[activeWeapon]
 			Global.player.weapon.set_weapon(activeWeapon)
-			rpc("_set_weapon",null)
-			rpc("_disable",true)
-			rpc("_enable_timer")
+			NetworkBridge.n_rpc(self, "_set_weapon", [null])
+			NetworkBridge.n_rpc(self, "_disable", [true])
+			NetworkBridge.n_rpc(self, "_enable_timer")
 
 func _selectWeapon():
 	respawnWeaponIds.shuffle()
-	rpc("_set_weapon",respawnWeaponIds[0])
-	rpc("_disable",false)
+	NetworkBridge.n_rpc(self, "_set_weapon", [respawnWeaponIds[0]])
+	NetworkBridge.n_rpc(self, "_disable", [false])

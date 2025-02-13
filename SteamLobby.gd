@@ -39,8 +39,9 @@ func lobby_init():
 	SteamInit.Steam.connect("lobby_data_update", self, "_on_lobby_data_update")
 	SteamInit.Steam.connect("lobby_invite", self, "_on_lobby_invite")
 	SteamInit.Steam.connect("join_requested", self, "_on_lobby_join_requested")
+	
 	# Check for command line arguments
-	_check_command_line()
+	check_command_line()
 	
 	$"../SteamNetwork".init_network()
 
@@ -112,10 +113,14 @@ func _on_lobby_created(connect, lobby_id):
 		
 		SteamInit.Steam.setLobbyJoinable(lobby_id, true)
 		
-		SteamInit.Steam.setLobbyData(lobby_id, "crus_online", true)
 		SteamInit.Steam.setLobbyData(lobby_id, "version", Multiplayer.version)
-		SteamInit.Steam.setLobbyData(lobby_id, "password", Multiplayer.config.hostPassword != "")
-		SteamInit.Steam.setLobbyData(lobby_id, "name", "CruS Online lobby")
+		
+		if  Multiplayer.config.hostPassword == "":
+			SteamInit.Steam.setLobbyData(lobby_id, "password", "false")
+		else:
+			SteamInit.Steam.setLobbyData(lobby_id, "password", "true")
+		
+		SteamInit.Steam.setLobbyData(lobby_id, "name", SteamInit.steam_username + "'s lobby")
 
 		var relay = SteamInit.Steam.allowP2PPacketRelay(true)
 		print("Relay configuration response: %s" % relay)
@@ -209,8 +214,10 @@ func _on_lobby_chat_update(lobby_id, changed_user_steam_id, user_made_change_ste
 func _on_match_list(lobbies, count):
 	emit_signal("lobby_list", lobbies)
 
-func _check_command_line():
+func check_command_line():
 	var args = OS.get_cmdline_args()
+	
+	print("[CRUS ONLINE / STEAM LOBBY]: Check command line")
 
 	# There are arguments to process
 	if args.size() > 0:
@@ -221,8 +228,9 @@ func _check_command_line():
 
 			# An invite argument was passed
 			if _lobby_invite_arg:
+				print("[CRUS ONLINE / STEAM LOBBY]: Lobby join requested")
 				emit_signal("lobby_join_requested", int(arg))
-#				join_lobby(int(arg))
+				#join_lobby(int(arg))
 
 			# A Steam connection argument exists
 			if arg == "+connect_lobby":

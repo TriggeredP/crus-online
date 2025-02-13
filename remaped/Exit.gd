@@ -72,7 +72,7 @@ master func player_entered(id, host = false):
 			if host:
 				send_player_count(null, len(exitPlayers), len(Multiplayer.players))
 			else:
-				rpc_id(get_tree().get_rpc_sender_id(), "send_player_count", len(exitPlayers), len(Multiplayer.players))
+				NetworkBridge.n_rpc_id(self, id, "send_player_count", [len(exitPlayers), len(Multiplayer.players)])
 
 puppet func send_player_count(id, exitCount, hostCount):
 	Global.UI.notify(str(exitCount) + "/" + str(hostCount) + " need to exit", Color(1, 0, 0))

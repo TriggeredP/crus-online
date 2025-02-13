@@ -48,7 +48,7 @@ func _ready():
 
 master func check_removed(id):
 	if isDestroyed:
-		rpc_id(get_tree().get_rpc_sender_id(),"remove_on_ready")
+		NetworkBridge.n_rpc_id(self, id, "remove_on_ready")
 
 func piercing_damage(damage, collision_n, collision_p, shooter_pos):
 	network_piercing_damage(null, damage, collision_n, collision_p, shooter_pos)
