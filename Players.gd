@@ -3,7 +3,7 @@ extends Node
 onready var parent = get_parent()
 
 func load_players():
-	print("[CRUS ONLINE / LOCAL]: Load players")
+	print("[CRUS ONLINE / PLAYERS]: Load players")
 	
 	reload_players()
 	
@@ -27,9 +27,19 @@ func load_players():
 			player.transform_lerp.origin = Vector3(-1000,-1000,-1000)
 
 func reload_players():
+	print("[CRUS ONLINE / PLAYERS]: Reload players")
 	for player in get_children():
 		player.player_restart()
 
 func remove_players():
+	print("[CRUS ONLINE / PLAYERS]: Remove players")
 	for player in get_children():
 		player.queue_free()
+
+func sync_players():
+	print("[CRUS ONLINE / PLAYERS]: Sync players")
+	print(get_children())
+	
+	for player in get_children():
+		if parent.players[player.name] == null:
+			player.queue_free()

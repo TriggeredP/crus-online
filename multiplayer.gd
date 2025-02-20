@@ -1,6 +1,6 @@
 extends Node
 
-var version = "Beta 130225/2328"
+var version = "Beta 210225/0048"
 
 enum errorType {UNKNOW, TIME_OUT, WRONG_PASSWORD, WRONG_VERSION, PASSWORD_REQUIRE, SERVER_CLOSED, UPNP_ERROR, PLAYER_CONNECTED}
 
@@ -85,7 +85,6 @@ func _ready():
 		["load_check", SteamNetwork.PERMISSION.ALL],
 		["_player_died", SteamNetwork.PERMISSION.ALL],
 		["_player_respawn", SteamNetwork.PERMISSION.ALL],
-		["connected", SteamNetwork.PERMISSION.SERVER],
 		["client_peer_connect", SteamNetwork.PERMISSION.SERVER]
 	])
 	
@@ -97,12 +96,23 @@ func _ready():
 	get_tree().connect("network_peer_disconnected", self, "disconnected")
 	
 	SteamNetwork.connect("all_peers_connected", self, "steam_peers_connect")
+	SteamLobby.connect("player_left_lobby", self, "peer_update")
 	
 	Global.connect("scene_loaded", self, "_scene_loaded")
 
 var tick = 0
 
 var packages_count = 0
+
+func peer_update(steam_id):
+	if players[steam_id] != null:
+		if Global.player.health != null:
+			Global.UI.notify(players[steam_id].nickname + " disconnected", Color(1, 0, 0))
+		
+		players.erase(steam_id)
+	
+	Players.sync_players()
+	NetworkBridge.n_rpc(self, "sync_players", [players])
 
 func _input(event):
 	if event is InputEventKey and not event.echo and event.pressed:
@@ -232,7 +242,7 @@ puppet func client_peer_connect(id):
 	playerInfo.nickname = SteamInit.steam_username
 	NetworkBridge.n_rpc(self, "connect_init", [password, version, playerInfo])
 
-func disconnected(id):
+puppet func disconnected(id):
 	if NetworkBridge.is_lan():
 		var playerPuppet = get_node_or_null("Players/" + str(id))
 		
@@ -313,14 +323,20 @@ func host_add_player(id, info):
 		
 		emit_signal("players_update", players)
 
-master func host_remove_player(id):
+func host_remove_player(id):
 	if players[id] != null:
 		players.erase(id)
+		
+		Players.sync_players()
+		
 		NetworkBridge.n_rpc(self, "sync_players", [players])
 
 puppet func sync_players(id, info):
 	players = info
 	emit_signal("players_update", players)
+	
+	Players.sync_players()
+	
 	print("[CRUS ONLINE / CLIENT]: Player info synced")
 
 ################################################################################
@@ -508,7 +524,7 @@ var died_players = []
 
 func player_died():
 	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
-		_player_died(true)
+		_player_died(null, true)
 	else:
 		NetworkBridge.n_rpc(self, "_player_died")
 
@@ -543,11 +559,11 @@ func restart_map():
 puppet func hide_death_screen(id):
 	DeathScreen.hide()
 	if playerPuppet != null:
-		playerPuppet.respawn_puppet()
+		playerPuppet.respawn_puppet(null)
 
 func player_respawn():
 	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
-		_player_respawn(true)
+		_player_respawn(null, true)
 	else:
 		NetworkBridge.n_rpc(self, "_player_respawn")
 

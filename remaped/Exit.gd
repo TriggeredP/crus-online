@@ -28,32 +28,24 @@ func _ready():
 func _on_Body_exited(body):
 	if body.name == "Player":
 		if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
-			player_exited(true)
+			player_exited(NetworkBridge.get_host_id())
 		else:
 			NetworkBridge.n_rpc(self, "player_exited")
 
 func _on_Body_entered(body):
 	if body.name == "Player":
 		if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
-			player_entered(true)
+			player_entered(NetworkBridge.get_host_id())
 		else:
 			NetworkBridge.n_rpc(self, "player_entered")
 
-master func player_exited(id, host = false):
-	if host:
-		if exitPlayers.has(1):
-			exitPlayers.erase(1)
-	else:
-		if exitPlayers.has(get_tree().get_rpc_sender_id()):
-			exitPlayers.erase(get_tree().get_rpc_sender_id())
+master func player_exited(id):
+	if exitPlayers.has(id):
+		exitPlayers.erase(id)
 
-master func player_entered(id, host = false):
-	if host:
-		if not exitPlayers.has(1):
-			exitPlayers.append(1)
-	else:
-		if not exitPlayers.has(get_tree().get_rpc_sender_id()):
-			exitPlayers.append(get_tree().get_rpc_sender_id())
+master func player_entered(id):
+	if not exitPlayers.has(id):
+		exitPlayers.append(id)
 	
 	var all_player_entered = true
 
@@ -69,7 +61,7 @@ master func player_entered(id, host = false):
 				NetworkBridge.n_rpc(self, "send_exit_message")
 				exitTimer.start()
 		else:
-			if host:
+			if NetworkBridge.n_is_network_master(self):
 				send_player_count(null, len(exitPlayers), len(Multiplayer.players))
 			else:
 				NetworkBridge.n_rpc_id(self, id, "send_player_count", [len(exitPlayers), len(Multiplayer.players)])

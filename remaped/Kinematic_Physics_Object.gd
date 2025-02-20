@@ -83,7 +83,7 @@ remote func _grill(id, recivedPos):
 	add_child(new_healing)
 	new_healing.global_transform.origin = recivedPos
 
-remote func _create_blood_decal(id, collider,recivedTransform,recivedBasis):
+remote func _create_blood_decal(id, collider, recivedTransform, recivedBasis):
 	var new_blood_decal = blood_decal.instance()
 	get_node(collider).add_child(new_blood_decal)
 	new_blood_decal.global_transform.origin = recivedTransform
@@ -105,14 +105,7 @@ func host_tick():
 		Multiplayer.packages_count += 1
 		last_transform = global_transform
 
-################################################################################
-
-func _ready()->void :
-	lerp_transform = global_transform
-	
-	# TODO: Не забыть переработать весь этот пиздец
-	# TODO: Не, это реально не смешно. Мне самому страшно от того что я когда-то написал
-	
+func register_all_rpcs():
 	NetworkBridge.register_rpcs(self, [
 		["_get_transform", NetworkBridge.PERMISSION.ALL],
 		["set_network_transform", NetworkBridge.PERMISSION.ALL],
@@ -125,21 +118,6 @@ func _ready()->void :
 		["_remove", NetworkBridge.PERMISSION.ALL],
 		["_set_hold_collision", NetworkBridge.PERMISSION.ALL]
 	])
-	
-#	Multiplayer.connect("host_tick", self, "host_tick")
-	rset_config("lerp_transform", MultiplayerAPI.RPC_MODE_PUPPET)
-	rset_config("global_transform", MultiplayerAPI.RPC_MODE_PUPPET)
-
-	rset_config("holdId",MultiplayerAPI.RPC_MODE_REMOTE)
-	rset_config("disabled",MultiplayerAPI.RPC_MODE_REMOTE)
-	rset_config("usable",MultiplayerAPI.RPC_MODE_REMOTE)
-	rset_config("grill_health",MultiplayerAPI.RPC_MODE_REMOTE)
-	rset_config("damager",MultiplayerAPI.RPC_MODE_REMOTE)
-	rset_config("held",MultiplayerAPI.RPC_MODE_REMOTE)
-	rset_config("grill",MultiplayerAPI.RPC_MODE_REMOTE)
-	rset_config("velocity",MultiplayerAPI.RPC_MODE_REMOTE)
-	rset_config("stay_active",MultiplayerAPI.RPC_MODE_REMOTE)
-	rset_config("finished",MultiplayerAPI.RPC_MODE_REMOTE)
 	
 	NetworkBridge.register_rset(self, "lerp_transform", NetworkBridge.PERMISSION.SERVER)
 	NetworkBridge.register_rset(self, "global_transform", NetworkBridge.PERMISSION.SERVER)
@@ -154,6 +132,30 @@ func _ready()->void :
 	NetworkBridge.register_rset(self, "velocity", NetworkBridge.PERMISSION.SERVER)
 	NetworkBridge.register_rset(self, "stay_active", NetworkBridge.PERMISSION.SERVER)
 	NetworkBridge.register_rset(self, "finished", NetworkBridge.PERMISSION.SERVER)
+	
+	rset_config("lerp_transform", MultiplayerAPI.RPC_MODE_PUPPET)
+	rset_config("global_transform", MultiplayerAPI.RPC_MODE_PUPPET)
+
+	rset_config("holdId",MultiplayerAPI.RPC_MODE_REMOTE)
+	rset_config("disabled",MultiplayerAPI.RPC_MODE_REMOTE)
+	rset_config("usable",MultiplayerAPI.RPC_MODE_REMOTE)
+	rset_config("grill_health",MultiplayerAPI.RPC_MODE_REMOTE)
+	rset_config("damager",MultiplayerAPI.RPC_MODE_REMOTE)
+	rset_config("held",MultiplayerAPI.RPC_MODE_REMOTE)
+	rset_config("grill",MultiplayerAPI.RPC_MODE_REMOTE)
+	rset_config("velocity",MultiplayerAPI.RPC_MODE_REMOTE)
+	rset_config("stay_active",MultiplayerAPI.RPC_MODE_REMOTE)
+	rset_config("finished",MultiplayerAPI.RPC_MODE_REMOTE)
+
+################################################################################
+
+func _ready()->void :
+	lerp_transform = global_transform
+	
+	# TODO: Не забыть переработать весь этот пиздец
+	# TODO: Не, это реально не смешно. Мне самому страшно от того что я когда-то написал
+	
+	register_all_rpcs()
 
 	glob = Global
 	if particle:
@@ -325,7 +327,7 @@ func _physics_process(delta):
 					collision.collider.add_child(new_blood_decal)
 					new_blood_decal.global_transform.origin = collision.position
 					new_blood_decal.transform.basis = align_up(new_blood_decal.transform.basis, collision.normal)
-					NetworkBridge.n_rpc(self, "_create_blood_decal", [collision.collider.get_path(),new_blood_decal.global_transform.origin,new_blood_decal.transform.basis])
+					NetworkBridge.n_rpc(self, "_create_blood_decal", [collision.collider.get_path(), new_blood_decal.global_transform.origin, new_blood_decal.transform.basis])
 				if Vector2(velocity.x, velocity.z).length() > 5 and (gun_rotation or glob.implants.arm_implant.throw_bonus > 0):
 					if collision.collider.has_method("damage"):
 						if collision.collider.client.name != str(playerIgnoreId):

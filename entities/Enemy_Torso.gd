@@ -158,7 +158,7 @@ master func network_damage(id, damage, collision_n, collision_p, shooter_pos):
 			if NetworkBridge.n_is_network_master(self):
 				NetworkBridge.n_rpc(self, "_client_damage")
 		if not NetworkBridge.n_is_network_master(self):
-			NetworkBridge.n_rpc_id(self, 0, "damage", [damage, collision_n, collision_p, shooter_pos])
+			NetworkBridge.n_rpc_id(self, 0, "network_damage", [damage, collision_n, collision_p, shooter_pos])
 
 func player_use():
 	if get_collision_layer_bit(8):

@@ -113,12 +113,13 @@ func _on_lobby_created(connect, lobby_id):
 		
 		SteamInit.Steam.setLobbyJoinable(lobby_id, true)
 		
+		SteamInit.Steam.setLobbyData(lobby_id, "crus_online", true)
 		SteamInit.Steam.setLobbyData(lobby_id, "version", Multiplayer.version)
 		
 		if  Multiplayer.config.hostPassword == "":
-			SteamInit.Steam.setLobbyData(lobby_id, "password", "false")
+			SteamInit.Steam.setLobbyData(lobby_id, "password", "False")
 		else:
-			SteamInit.Steam.setLobbyData(lobby_id, "password", "true")
+			SteamInit.Steam.setLobbyData(lobby_id, "password", "True")
 		
 		SteamInit.Steam.setLobbyData(lobby_id, "name", SteamInit.steam_username + "'s lobby")
 

@@ -251,6 +251,9 @@ func _ready():
 	
 	Multiplayer.connect("scene_loaded", self, "spawn_check_npc")
 	
+	NetworkBridge.register_rset(self, "health", NetworkBridge.PERMISSION.SERVER)
+	NetworkBridge.register_rset(self, "armor", NetworkBridge.PERMISSION.SERVER)
+	
 	rset_config("health", MultiplayerAPI.RPC_MODE_PUPPET)
 	rset_config("armor", MultiplayerAPI.RPC_MODE_PUPPET)
 	
@@ -416,7 +419,7 @@ master func network_piercing_damage(id, damage, collision_n, collision_p):
 		armor -= damage
 		
 		if NetworkBridge.n_is_network_master(self):
-			rset("armor", armor)
+			NetworkBridge.n_rset(self, "armor", armor)
 		
 		if health <= flee_health and damage > 0.5 and NetworkBridge.n_is_network_master(self):
 			body.set_flee()
@@ -489,7 +492,7 @@ master func network_damage(id, damage, collision_n, collision_p, shooter_pos):
 		health -= damage
 		
 		if NetworkBridge.n_is_network_master(self):
-			rset("health", health)
+			NetworkBridge.n_rset(self, "health", health)
 		
 		if health <= flee_health and damage > 0.5:
 			body.set_flee()

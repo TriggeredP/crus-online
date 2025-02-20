@@ -41,6 +41,7 @@ func _ready():
 	
 	laser.rset_config("global_transform", MultiplayerAPI.RPC_MODE_PUPPET)
 	particle.rset_config("global_transform", MultiplayerAPI.RPC_MODE_PUPPET)
+	
 	NetworkBridge.register_rset(laser, "global_transform", NetworkBridge.PERMISSION.SERVER)
 	NetworkBridge.register_rset(particle, "global_transform", NetworkBridge.PERMISSION.SERVER)
 	

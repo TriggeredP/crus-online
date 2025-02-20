@@ -102,7 +102,7 @@ func get_near_player(object) -> Dictionary:
 		"distance" : oldDistance
 	}
 
-remotesync func set_in_sight(value):
+remotesync func set_in_sight(id, value):
 	Global.player.UI.set_in_sight(value)
 
 puppet func set_psychosis(id, value):
@@ -120,7 +120,7 @@ puppet func set_puppet_transform(id, recived_position, recived_rotation):
 
 func host_tick():
 	if (global_transform.origin - last_transform.origin).length() > 0.01:
-		rset_unreliable("lerp_transform", global_transform)
+		NetworkBridge.n_rset_unreliable(self, "lerp_transform", global_transform)
 		Multiplayer.packages_count += 1
 		last_transform = global_transform
 
@@ -129,10 +129,11 @@ func host_tick():
 func _ready()->void :
 	NetworkBridge.register_rpcs(self,[
 		["add_velocity", NetworkBridge.PERMISSION.ALL],
-		["alert", NetworkBridge.PERMISSION.ALL],
-		["set_flee", NetworkBridge.PERMISSION.ALL],
-		["set_dead", NetworkBridge.PERMISSION.ALL],
-		["set_tranquilized", NetworkBridge.PERMISSION.ALL],
+		["network_alert", NetworkBridge.PERMISSION.ALL],
+		["network_set_flee", NetworkBridge.PERMISSION.ALL],
+		["network_set_dead", NetworkBridge.PERMISSION.ALL],
+		["network_set_tranquilized", NetworkBridge.PERMISSION.ALL],
+		["set_in_sight", NetworkBridge.PERMISSION.ALL],
 		["set_psychosis", NetworkBridge.PERMISSION.SERVER],
 		["set_animation", NetworkBridge.PERMISSION.SERVER],
 		["set_puppet_transform", NetworkBridge.PERMISSION.SERVER],
@@ -142,6 +143,7 @@ func _ready()->void :
 	lerp_transform = global_transform
 	
 #	Multiplayer.connect("host_tick", self, "host_tick")
+	NetworkBridge.register_rset(self, "lerp_transform", NetworkBridge.PERMISSION.SERVER)
 	rset_config("lerp_transform", MultiplayerAPI.RPC_MODE_PUPPET)
 	
 	glob = Global
@@ -436,7 +438,7 @@ master func add_velocity(id, incvelocity:Vector3)->void :
 		velocity -= incvelocity
 		if not dead and not tranq:
 			yield (get_tree(), "idle_frame")
-			alert(null, player.global_transform.origin)
+			alert(player.global_transform.origin)
 			if not player_spotted:
 				player_spotted = true
 				look_at(player.global_transform.origin, Vector3.UP)
@@ -444,7 +446,10 @@ master func add_velocity(id, incvelocity:Vector3)->void :
 	else:
 		NetworkBridge.n_rpc(self, "add_velocity", [incvelocity])
 
-master func alert(id, pos:Vector3)->void :
+func alert(pos:Vector3):
+	network_alert(null, pos)
+
+master func network_alert(id, pos:Vector3)->void :
 	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		if player_spotted or alerted or dead or tranq:
 			return 
@@ -459,7 +464,7 @@ master func alert(id, pos:Vector3)->void :
 		if not dead and not tranq:
 			painsound.play()
 	else:
-		NetworkBridge.n_rpc(self, "alert", [pos])
+		NetworkBridge.n_rpc(self, "network_alert", [pos])
 
 func active(delta:float)->void :
 	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
@@ -558,13 +563,19 @@ func get_torso_rotation()->Transform:
 func get_body_transform()->Basis:
 	return transform.basis
 
-master func set_flee(id)->void :
+func set_flee():
+	network_set_flee(null)
+
+master func network_set_flee(id)->void :
 	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		flee = true
 	else:
-		NetworkBridge.n_rpc(self, "set_flee")
+		NetworkBridge.n_rpc(self, "network_set_flee")
 
-master func set_dead(id)->void :
+func set_dead():
+	network_set_dead(null)
+
+master func network_set_dead(id)->void :
 	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		if not dead:
 			dead = true
@@ -575,9 +586,12 @@ master func set_dead(id)->void :
 					set_animation(null, anim, 1)
 					NetworkBridge.n_rpc(self, "set_animation", [anim, 1])
 	else:
-		NetworkBridge.n_rpc(self, "set_dead")
+		NetworkBridge.n_rpc(self, "network_set_dead")
 
-master func set_tranquilized(id):
+func set_tranquilized():
+	network_set_tranquilized(null)
+
+master func network_set_tranquilized(id):
 	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		if not tranq:
 			tranq = true
@@ -586,7 +600,7 @@ master func set_tranquilized(id):
 				NetworkBridge.n_rpc(self, "set_animation", [DEATH_ANIMS[0], 1])
 			tranqtimer.start()
 	else:
-		NetworkBridge.n_rpc(self, "set_tranquilized")
+		NetworkBridge.n_rpc(self, "network_set_tranquilized")
 
 func tranq_timeout():
 	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):

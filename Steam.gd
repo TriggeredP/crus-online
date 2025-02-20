@@ -23,15 +23,15 @@ func _ready() -> void:
 	if args.size() > 0:
 		for arg in args:
 			if arg == "+crus_online_debug_1":
-				print("[ CRUS ONLINE / DEBUG ] ipc name: crus_online_debug_1")
+				print("[CRUS ONLINE / DEBUG] ipc name: crus_online_debug_1")
 				OS.set_environment("steam_master_ipc_name_override", "crus_online_debug_1")
 			elif arg == "+crus_online_debug_2":
-				print("[ CRUS ONLINE / DEBUG ] ipc name: crus_online_debug_2")
+				print("[CRUS ONLINE / DEBUG] ipc name: crus_online_debug_2")
 				OS.set_environment("steam_master_ipc_name_override", "crus_online_debug_2")
 
 	var initialize_response = Steam.steamInit()
 	
-	print("[ CRUS ONLINE / STEAM ]\n")
+	print("[CRUS ONLINE / STEAM]\n")
 	
 	print("Did Steam initialize?: %s" % initialize_response)
 	

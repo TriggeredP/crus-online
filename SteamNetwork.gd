@@ -382,7 +382,7 @@ func _confirm_peer(steam_id):
 	_server_send_peer_state()
 	
 	if peers_connected():
-		print("[ CRUS ONLINE / STEAM ]: All peers connected")
+		print("[CRUS ONLINE / STEAM]: All peers connected")
 		emit_signal("all_peers_connected")
 	
 func _server_send_peer_state():

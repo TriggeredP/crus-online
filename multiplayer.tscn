@@ -436,6 +436,7 @@ align = 2
 [connection signal="button_pressed" from="Menu/CloseChat" to="Menu/ChatBox" method="close_chat"]
 [connection signal="button_pressed" from="Menu/OpenStats" to="Menu/Stats" method="open_stats"]
 [connection signal="button_pressed" from="Menu/CloseStats" to="Menu/Stats" method="close_stats"]
+[connection signal="button_pressed" from="Menu/Exit" to="Menu" method="leave_game"]
 [connection signal="text_entered" from="Menu/ChatBox/VBoxContainer/LineEdit" to="Menu/ChatBox" method="_text_entered"]
 [connection signal="timeout" from="RestartTimer" to="." method="restart_map"]
 [connection signal="timeout" from="PingTimer" to="." method="ping_check"]

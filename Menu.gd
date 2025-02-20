@@ -44,5 +44,16 @@ func leave_server(type):
 	for child in parent.Players.get_children():
 		child.queue_free()
 	
-	parent.goto_menu_client()
+	parent.goto_menu_client(null)
 	parent.leave_server()
+
+func leave_game(type):
+	hide_menu()
+	set_process_input(false)
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+
+	for child in parent.Players.get_children():
+		child.queue_free()
+	
+	parent.leave_server()
+	get_tree().quit()

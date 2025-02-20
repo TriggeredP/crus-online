@@ -49,6 +49,7 @@ func lan_selected():
 
 func steam_selected():
 	if Multiplayer.SteamInit.is_online:
+		$\"../Steam/VBoxContainer/PlayersList/LobbyList\".show()
 		NetworkBridge.set_mode(NetworkBridge.MULTIPLAYER_TYPE.STEAM)
 		$\"../Steam\".get_lobbies()
 		main_tab.current_tab = 2
@@ -119,6 +120,7 @@ onready var SteamNetwork = Global.get_node(\"Multiplayer/SteamInit/SteamNetwork\
 onready var playersList = $VBoxContainer/PlayersList/PlayersListLabel
 
 onready var LobbyList = $VBoxContainer/PlayersList/LobbyList
+onready var LobbyInfo = $VBoxContainer/LobbyInfo
 
 onready var status = $VBoxContainer/Status/StatusLabel
 
@@ -155,6 +157,7 @@ func create_lobby():
 	
 	$VBoxContainer/PlayersList/PlayersListLabel.show()
 	LobbyList.hide()
+	LobbyInfo.hide()
 
 func lobby_join_requested(id):
 	NetworkBridge.set_mode(NetworkBridge.MULTIPLAYER_TYPE.STEAM)
@@ -174,7 +177,7 @@ func lobby_join_requested(id):
 func join_lobby():
 	var password_require = SteamInit.Steam.getLobbyData(lobbies[selected], \"password\")
 	print(\"[CRUS ONLINE / LOBBY]: Password require: \", password_require)
-	if password_require == \"true\":
+	if password_require == \"True\":
 		$\"%PasswordInput\".steam_check_password()
 	else:
 		connect_lobby()
@@ -198,6 +201,7 @@ func connect_lobby():
 	
 	#$VBoxContainer/PlayersList/PlayersListLabel.show()
 	LobbyList.hide()
+	LobbyInfo.hide()
 
 func leave_lobby():
 	SteamLobby.leave_lobby()
@@ -209,25 +213,38 @@ func leave_lobby():
 	
 	$VBoxContainer/PlayersList/PlayersListLabel.hide()
 	LobbyList.show()
+	LobbyInfo.show()
 
 func lobby_selected(id):
 	print(id)
 	selected = id
+	
+	var lobby_max_players = SteamInit.Steam.getLobbyMemberLimit(lobbies[selected])
+	var lobby_num_members = SteamInit.Steam.getNumLobbyMembers(lobbies[selected])
+	var password_require = SteamInit.Steam.getLobbyData(lobbies[selected], \"password\")
+	
+	LobbyInfo.text = \"Players: \" + str(lobby_num_members) + \" / \" + str(lobby_max_players) + \"   Password: \" + str(password_require)
 
 func get_lobbies():
 	SteamLobby.request_lobby_list()
 
 func _on_match_list(recived_lobbies):
+	print(\"[CRUS ONLINE / STEAM] Recived a lobbies list\")
 	LobbyList.clear()
-	lobbies = recived_lobbies
+	var raw_lobbies = []
 	
 	for this_lobby in recived_lobbies:
 		if SteamInit.Steam.getLobbyData(this_lobby, \"crus_online\"):
+			raw_lobbies.append(this_lobby)
+			
 			var lobby_name = SteamInit.Steam.getLobbyData(this_lobby, \"name\")
 			var lobby_max_players = SteamInit.Steam.getLobbyMemberLimit(this_lobby)
 			var lobby_num_members = SteamInit.Steam.getNumLobbyMembers(this_lobby)
+			var password_require = SteamInit.Steam.getLobbyData(lobbies[selected], \"password\")
 			
-			LobbyList.add_item(\"%s / %s/%s\" % [lobby_name, str(lobby_num_members), str(16)])
+			LobbyList.add_item(lobby_name)
+	
+	lobbies = raw_lobbies
 
 func player_list_update(placeholder):
 	print(\"[CRUS ONLINE / STEAM] player list update\")
@@ -880,7 +897,6 @@ text = "Alpha 000000/0000"
 script = SubResource( 18 )
 
 [node name="Steam" type="PanelContainer" parent="CenterContainer/TabContainer/Main"]
-visible = false
 anchor_right = 1.0
 anchor_bottom = 1.0
 script = SubResource( 37 )
@@ -958,7 +974,7 @@ align = 2
 [node name="PlayersList" type="PanelContainer" parent="CenterContainer/TabContainer/Main/Steam/VBoxContainer"]
 margin_top = 93.0
 margin_right = 641.0
-margin_bottom = 435.0
+margin_bottom = 404.0
 size_flags_vertical = 3
 custom_styles/panel = SubResource( 32 )
 
@@ -978,7 +994,7 @@ bbcode_enabled = true
 margin_left = 10.0
 margin_top = 10.0
 margin_right = 631.0
-margin_bottom = 332.0
+margin_bottom = 301.0
 rect_pivot_offset = Vector2( -843, 287 )
 size_flags_horizontal = 3
 custom_colors/guide_color = Color( 0, 0, 0, 0 )
@@ -987,6 +1003,12 @@ custom_styles/bg_focus = SubResource( 34 )
 custom_styles/selected = SubResource( 35 )
 custom_styles/bg = SubResource( 33 )
 allow_reselect = true
+
+[node name="LobbyInfo" type="Label" parent="CenterContainer/TabContainer/Main/Steam/VBoxContainer"]
+margin_top = 409.0
+margin_right = 641.0
+margin_bottom = 435.0
+text = "Players: 0/0   Password: False"
 
 [node name="BackContainer" type="HBoxContainer" parent="CenterContainer/TabContainer/Main/Steam/VBoxContainer"]
 margin_top = 440.0

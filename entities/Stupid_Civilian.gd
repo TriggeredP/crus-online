@@ -98,9 +98,9 @@ func host_tick():
 func _ready():
 	NetworkBridge.register_rpcs(self,[
 		["add_velocity", NetworkBridge.PERMISSION.ALL],
-		["set_flee", NetworkBridge.PERMISSION.ALL],
-		["set_dead", NetworkBridge.PERMISSION.ALL],
-		["set_tranquilized", NetworkBridge.PERMISSION.ALL],
+		["network_set_flee", NetworkBridge.PERMISSION.ALL],
+		["network_set_dead", NetworkBridge.PERMISSION.ALL],
+		["network_set_tranquilized", NetworkBridge.PERMISSION.ALL],
 		["play_anim", NetworkBridge.PERMISSION.SERVER],
 		["stop_anim", NetworkBridge.PERMISSION.ALL],
 		["set_puppet_transform", NetworkBridge.PERMISSION.ALL]
@@ -271,7 +271,7 @@ master func add_velocity(id, increase_velocity):
 func alert(peepee):
 	if LINES.size() != 0:
 		return 
-	set_flee(null)
+	set_flee()
 	NetworkBridge.n_rpc(self, "set_flee")
 
 func set_water(a):
@@ -281,7 +281,10 @@ func set_water(a):
 	velocity.z = 0
 	velocity.y *= 0.1
 
-master func set_flee(id):
+func set_flee():
+	network_set_flee(null)
+
+master func network_set_flee(id):
 	if not flee:
 		flee = true
 		set_collision_layer_bit(8, 0)
@@ -291,7 +294,10 @@ master func set_flee(id):
 		mesh.look_at(global_transform.origin + Vector3(velocity.x, 0, velocity.z) + Vector3(0.0001, 0, 0), Vector3.UP)
 		mesh.rotation.x = 0
 
-master func set_dead(id):
+func set_dead():
+	network_set_dead(null)
+
+master func network_set_dead(id):
 	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		if not dead:
 			set_collision_layer_bit(8, 0)
@@ -301,9 +307,12 @@ master func set_dead(id):
 				anim_player.play(DEATH_ANIMS[rand])
 				NetworkBridge.n_rpc(self, "play_anim", [DEATH_ANIMS[rand]])
 	else:
-		NetworkBridge.n_rpc_id(self, 0, "set_dead")
+		NetworkBridge.n_rpc_id(self, 0, "network_set_dead")
 
-master func set_tranquilized(id):
+func set_tranquilized():
+	network_set_tranquilized(null)
+
+master func network_set_tranquilized(id):
 	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		if not tranq:
 			set_collision_layer_bit(8, 0)
@@ -312,7 +321,7 @@ master func set_tranquilized(id):
 			NetworkBridge.n_rpc(self, "play_anim", [DEATH_ANIMS[0]])
 			tranqtimer.start()
 	else:
-		NetworkBridge.n_rpc_id(self, 0, "set_tranquilized")
+		NetworkBridge.n_rpc_id(self, 0, "network_set_tranquilized")
 
 func tranq_timeout():
 	if dead:
@@ -329,7 +338,7 @@ func tranq_timeout():
 func player_use():
 	if not dead and not flee and not tranq:
 		if glob.implants.torso_implant.terror:
-			set_flee(null)
+			set_flee()
 			NetworkBridge.n_rpc(self, "set_flee")
 			return 
 		if LINES.size() == 0:

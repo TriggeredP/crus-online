@@ -1,5 +1,7 @@
 extends Node
 
+onready var NetworkBridge = Global.get_node("Multiplayer/NetworkBridge")
+
 var thread
 var enemies
 var player

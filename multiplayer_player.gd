@@ -45,7 +45,9 @@ func _ready():
 		["set_kick", NetworkBridge.PERMISSION.ALL],
 		["set_crouch", NetworkBridge.PERMISSION.ALL],
 		["set_gravity", NetworkBridge.PERMISSION.ALL],
-		["shoot_commit", NetworkBridge.PERMISSION.ALL]
+		["shoot_commit", NetworkBridge.PERMISSION.ALL],
+		["_respawn_player", NetworkBridge.PERMISSION.ALL],
+		["hideHelpLabel", NetworkBridge.PERMISSION.ALL]
 	])
 	
 	weaponsMesh = $Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons.get_children()

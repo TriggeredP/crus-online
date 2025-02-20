@@ -54,7 +54,7 @@ var last_transform : Transform
 
 func host_tick():
 	if (global_transform.origin - last_transform.origin).length() > 0.01:
-		rset_unreliable("lerp_transform", global_transform)
+		NetworkBridge.n_rset_unreliable(self, "lerp_transform", global_transform)
 		Multiplayer.packages_count += 1
 		last_transform = global_transform
 
@@ -70,6 +70,7 @@ func _ready():
 	lerp_transform = global_transform
 	
 #	Multiplayer.connect("host_tick", self, "host_tick")
+	NetworkBridge.register_rset(self, "lerp_transform", NetworkBridge.PERMISSION.SERVER)
 	rset_config("lerp_transform", MultiplayerAPI.RPC_MODE_PUPPET)
 	
 	if immortal:
