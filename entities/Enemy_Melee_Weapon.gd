@@ -31,7 +31,8 @@ func AI_shoot()->void :
 				if is_instance_valid($Attack_Sound) and not $Attack_Sound.playing:
 					$Attack_Sound.play()
 					NetworkBridge.n_rpc(self, "play_sound")
-				get_parent().get_parent().anim_player.play("Attack", - 1, 2)
-				NetworkBridge.n_rpc(get_parent().get_parent(), "set_animation", "Attack", 2)
+				if get_parent().get_parent().anim_player.current_animation != "Attack":
+					get_parent().get_parent().anim_player.play("Attack", - 1, 2)
+					NetworkBridge.n_rpc(get_parent().get_parent(), "set_animation", "Attack", 2)
 				yield (get_tree().create_timer(0.5), "timeout")
 				raycast.enabled = true

@@ -6,11 +6,23 @@
 [sub_resource type="GDScript" id=3]
 script/source = "extends Spatial
 
-remote func _set_transform(recivedTransform):
+onready var NetworkBridge = Global.get_node(\"Multiplayer/NetworkBridge\")
+
+func _ready():
+	NetworkBridge.register_rpcs(self,[
+		[\"_set_transform\", NetworkBridge.PERMISSION.SERVER],
+		[\"_delete\", NetworkBridge.PERMISSION.SERVER]
+	])
+
+puppet func _set_transform(id, recivedTransform):
 	global_transform = recivedTransform
 
-remote func _delete():
-	queue_free()
+puppet func _delete(id):
+	hide()
+	global_translation = Vector3(-1000, -1000, -1000)
+	
+	set_process(false)
+	set_physics_process(false)
 "
 
 [sub_resource type="QuadMesh" id=2]

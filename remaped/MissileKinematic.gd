@@ -21,7 +21,11 @@ puppet func _set_transform(id, recivedTransform):
 	global_transform = recivedTransform
 
 puppet func _delete(id):
-	queue_free()
+	hide()
+	global_translation = Vector3(-1000, -1000, -1000)
+	
+	set_process(false)
+	set_physics_process(false)
 
 puppet func _create_object(id, recivedPath, recivedObject, recivedName, recivedTransform, recivedShrapnel = null):
 	var newObject = load(recivedObject).instance()
@@ -48,7 +52,9 @@ func align_up(node_basis, normal)->Basis:
 
 func _ready():
 	set_collision_mask_bit(1, 1)
-	
+	update_rpcs()
+
+func update_rpcs():
 	NetworkBridge.register_rpcs(self, [
 		["_set_transform", NetworkBridge.PERMISSION.SERVER],
 		["_delete", NetworkBridge.PERMISSION.SERVER],
@@ -62,6 +68,7 @@ func _physics_process(delta):
 	
 	if NetworkBridge.check_connection():
 		if NetworkBridge.n_is_network_master(self):
+			
 			NetworkBridge.n_rpc(self, "_set_transform", [global_transform])
 			
 			time += 1
@@ -99,12 +106,12 @@ func _physics_process(delta):
 						new_shrapnel.set_velocity(rand_range(10, 30), (new_shrapnel.global_transform.origin - (new_shrapnel.global_transform.origin - shrapnel_rotation)).normalized(), global_transform.origin)
 						NetworkBridge.n_rpc(self, "_create_object", [get_parent().get_path(), "res://Entities/Bullets/Explosive_Grenade_Impact.tscn", new_shrapnel.name, new_shrapnel.global_transform, true])
 					NetworkBridge.n_rpc(self, "_delete")
-					queue_free()
+					_delete(null)
 				else :
 					collisions += 1
 					if collisions > 10:
 						NetworkBridge.n_rpc(self, "_delete")
-						queue_free()
+						_delete(null)
 					if collision.collider.has_method("piercing_damage"):
 						collision.collider.piercing_damage(150, (global_transform.origin - collision.position).normalized(), global_transform.origin, global_transform.origin)
 					if collision.collider.has_method("damage"):
@@ -112,7 +119,7 @@ func _physics_process(delta):
 					else :
 						decal(null, collision.collider, collision.position, collision.normal)
 						NetworkBridge.n_rpc(self, "_delete")
-						queue_free()
+						_delete(null)
 	
 func set_velocity(new_velocity, direction):
 	transform.basis = direction

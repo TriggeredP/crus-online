@@ -4,6 +4,7 @@ onready var NetworkBridge = Global.get_node("Multiplayer/NetworkBridge")
 
 func _ready():
 	rset_config("global_transform", MultiplayerAPI.RPC_MODE_PUPPET)
+	NetworkBridge.register_rset(self, "global_transform", NetworkBridge.PERMISSION.SERVER)
 	
 	set_collision_mask_bit(0, 1)
 	set_collision_mask_bit(1, 1)

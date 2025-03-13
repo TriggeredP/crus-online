@@ -1,4 +1,4 @@
-[gd_scene load_steps=184 format=2]
+[gd_scene load_steps=204 format=2]
 
 [ext_resource path="res://Textures/skybox3.png" type="Texture" id=1]
 [ext_resource path="res://Maps/textures/base/Stone_wall_2.png" type="Texture" id=2]
@@ -24,6 +24,24 @@
 [ext_resource path="res://Entities/Enemies/E_Fleshrat.tscn" type="PackedScene" id=22]
 [ext_resource path="res://Scripts/Destructible.gd" type="Script" id=23]
 [ext_resource path="res://Maps/textures/base/glass1.tres" type="Material" id=24]
+[ext_resource path="res://Entities/Creatures/snirby2.tscn" type="PackedScene" id=25]
+[ext_resource path="res://Entities/Physics_Objects/can1.tscn" type="PackedScene" id=26]
+[ext_resource path="res://Entities/Physics_Objects/chips1.tscn" type="PackedScene" id=27]
+[ext_resource path="res://Entities/Vehicles/New_Car.tscn" type="PackedScene" id=28]
+[ext_resource path="res://Entities/Props/Computer.tscn" type="PackedScene" id=29]
+[ext_resource path="res://Entities/Props/Toilet.tscn" type="PackedScene" id=30]
+[ext_resource path="res://Entities/Props/Weaponslot.tscn" type="PackedScene" id=31]
+[ext_resource path="res://Entities/Vehicles/New_Forklift.tscn" type="PackedScene" id=32]
+[ext_resource path="res://Entities/Props/Slotmachine1.tscn" type="PackedScene" id=33]
+[ext_resource path="res://Entities/Props/Slotmachine2.tscn" type="PackedScene" id=34]
+[ext_resource path="res://Entities/Props/Swamp_Bush_Healing.tscn" type="PackedScene" id=35]
+[ext_resource path="res://Entities/Props/Swamp_Bush_Toxic.tscn" type="PackedScene" id=36]
+[ext_resource path="res://Entities/Props/Tree.tscn" type="PackedScene" id=37]
+[ext_resource path="res://Entities/Props/Swamp_Bush.tscn" type="PackedScene" id=38]
+[ext_resource path="res://Entities/Props/Grass.tscn" type="PackedScene" id=39]
+[ext_resource path="res://Entities/Props/copcar.tscn" type="PackedScene" id=40]
+[ext_resource path="res://Entities/Props/Monitor.tscn" type="PackedScene" id=41]
+[ext_resource path="res://MOD_CONTENT/CruS Online/maps_stuff/respawn_point.tscn" type="PackedScene" id=42]
 
 [sub_resource type="NavigationMesh" id=1]
 
@@ -694,6 +712,135 @@ tracks/0/keys = {
 "values": [ Vector3( 0, 0, 0 ), Vector3( 0, 0, 90 ), Vector3( 0, 0, 180 ), Vector3( 0, 0, 270 ), Vector3( 0, 0, 360 ) ]
 }
 
+[sub_resource type="Animation" id=402]
+resource_name = "ArmatureAction"
+length = 7.125
+tracks/0/type = "transform"
+tracks/0/path = NodePath("Snirby/Skeleton:bone_1")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = PoolRealArray( 0, 1, 0, 0, 0, -7.45058e-09, 0, 0, 1, 1, 1, 1, 5.73333, 1, 0, 0, 0, -7.45058e-09, 0, 0, 1, 1, 1, 1, 5.8, 1, 0, 0, 0, -7.40271e-09, 0, 0, 1, 1.00647, 1.00647, 1.00647, 5.86666, 1, 0, 0, 0, -5.21448e-09, 0, 0, 1, 1.42883, 1.42883, 1.42883, 6, 1, 0, 0, 0, -1.04999e-08, 0, 0, 1, 2.83834, 2.83834, 2.83834, 6.06666, 1, 0, 0, 0, -5.08599e-09, 0, 0, 1, 2.92985, 2.92985, 2.92985, 6.13333, 1, 0, 0, 0, -6.25989e-09, 0, 0, 1, 2.38042, 2.38042, 2.38042, 6.2, 1, 0, 0, 0, -4.6419e-09, 0, 0, 1, 1.60507, 1.60507, 1.60507, 6.26666, 1, 0, 0, 0, -7.05812e-09, 0, 0, 1, 1.0556, 1.0556, 1.0556, 6.33333, 1, 0, 0, 0, -1.29909e-08, 0, 0, 1, 1.14705, 1.14705, 1.14705, 6.46666, 1, 0, 0, 0, -5.82864e-09, 0, 0, 1, 2.55654, 2.55654, 2.55654, 6.53333, 1, 0, 0, 0, -5.00215e-09, 0, 0, 1, 2.97895, 2.97895, 2.97895, 6.6, 1, 0, 0, 0, -5.086e-09, 0, 0, 1, 2.92984, 2.92984, 2.92984, 6.66666, 1, 0, 0, 0, -5.41662e-09, 0, 0, 1, 2.75101, 2.75101, 2.75101, 7, 1, 0, 0, 0, -6.03558e-09, 0, 0, 1, 1.23444, 1.23444, 1.23444, 7.06666, 1, 0, 0, 0, -7.05815e-09, 0, 0, 1, 1.0556, 1.0556, 1.0556, 7.125, 1, 0, 0, 0, -7.45058e-09, 0, 0, 1, 1, 1, 1 )
+tracks/1/type = "transform"
+tracks/1/path = NodePath("Snirby/Skeleton:bone_10")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = PoolRealArray( 0, 1, 0, 0, 0, 0, 0, -2.22045e-16, 1, 1, 1, 1, 2.86667, 1, 0, 0, 0, 0, 0, -2.22045e-16, 1, 1, 1, 1, 2.93333, 1, 0, 0, 0, -0.00492722, 0.0209159, 0.0593558, 0.998006, 1, 1, 1, 3, 1, 0, 0, 0, -0.024245, 0.102919, 0.292067, 0.950535, 1, 1, 1, 3.06667, 1, 0, 0, 0, -0.042023, 0.178386, 0.50623, 0.8427, 1, 1, 1, 3.13333, 1, 0, 0, 0, -0.0536613, 0.22779, 0.646431, 0.726195, 1, 1, 1, 3.2, 1, 0, 0, 0, -0.0377871, 0.160405, 0.455203, 0.875005, 1, 1, 1, 3.26667, 1, 0, 0, 0, -0.0195132, 0.0828328, 0.235066, 0.968247, 1, 1, 1, 3.33333, 1, 0, 0, 0, -1.34111e-07, 5.92577e-07, 1.68164e-06, 1, 1, 1, 1, 7.125, 1, 0, 0, 0, 0, 0, -2.22045e-16, 1, 1, 1, 1 )
+tracks/2/type = "transform"
+tracks/2/path = NodePath("Snirby/Skeleton:bone_7")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = PoolRealArray( 0, 1, 0, 0, 0, 0, 1.33227e-15, 0, 1, 1, 1, 1, 2.86667, 1, 0, 0, 0, 0, 1.33227e-15, 0, 1, 1, 1, 1, 2.93333, 1, 0, 0, 0, 0.0278199, 0.000574007, -0.00175477, 0.999611, 1, 1, 1, 3, 1, 0, 0, 0, 0.138669, 0.00286115, -0.00874666, 0.990296, 1, 1, 1, 3.06667, 1, 0, 0, 0, 0.247794, 0.00511273, -0.0156299, 0.968673, 1, 1, 1, 3.13333, 1, 0, 0, 0, 0.327691, 0.00676124, -0.0206694, 0.944535, 1, 1, 1, 3.2, 1, 0, 0, 0, 0.22075, 0.00455473, -0.013924, 0.97522, 1, 1, 1, 3.26667, 1, 0, 0, 0, 0.111066, 0.00229162, -0.00700557, 0.993786, 1, 1, 1, 3.33333, 1, 0, 0, 0, 7.37608e-07, 1.62538e-08, -4.96885e-08, 1, 1, 1, 1, 3.66667, 1, 0, 0, 0, -0.050828, 0.0412834, 0.153075, 0.986043, 1, 1, 1, 4, 1, 0, 0, 0, -0.100237, 0.0814143, 0.301877, 0.94456, 1, 1, 1, 4.06667, 1, 0, 0, 0, -0.109826, 0.0892028, 0.330756, 0.93305, 1, 1, 1, 4.13333, 1, 0, 0, 0, -0.112205, 0.0911347, 0.33792, 0.930008, 1, 1, 1, 4.53333, 1, 0, 0, 0, -0.112205, 0.0911347, 0.33792, 0.930008, 1, 1, 1, 4.6, 1, 0, 0, 0, -0.10935, 0.088816, 0.329322, 0.933649, 1, 1, 1, 4.86666, 1, 0, 0, 0, -0.0623693, 0.0506574, 0.187833, 0.978909, 1, 1, 1, 5.13333, 1, 0, 0, 0, -0.0137836, 0.0111952, 0.0415108, 0.99898, 1, 1, 1, 5.2, 1, 0, 0, 0, -0.00153241, 0.00124463, 0.00461498, 0.999987, 1, 1, 1, 5.26666, 1, 0, 0, 0, 0, -1.77636e-15, 0, 1, 1, 1, 1, 7.125, 1, 0, 0, 0, 0, 1.33227e-15, 0, 1, 1, 1, 1 )
+tracks/3/type = "transform"
+tracks/3/path = NodePath("Snirby/Skeleton:bone_6")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = PoolRealArray( 0, 1, 0, 0, 0, 9.31323e-10, 7.45058e-09, -6.93889e-18, 1, 1, 1, 1, 7.125, 1, 0, 0, 0, 9.31323e-10, 7.45058e-09, -6.93889e-18, 1, 1, 1, 1 )
+tracks/4/type = "transform"
+tracks/4/path = NodePath("Snirby/Skeleton:bone_11")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/keys = PoolRealArray( 0, 1, 0, 0, 0, -1.86264e-09, 7.10543e-15, 1.32349e-23, 1, 1, 1, 1, 2.86667, 1, 0, 0, 0, -1.86264e-09, 7.10543e-15, 0, 1, 1, 1, 1, 2.93333, 1, 0, 0, 0, -0.0242224, 0.0112137, -0.0257652, 0.999312, 1, 1, 1, 3, 1, 0, 0, 0, -0.120447, 0.055761, -0.128119, 0.982837, 1, 1, 1, 3.06667, 1, 0, 0, 0, -0.214023, 0.099082, -0.227655, 0.944749, 1, 1, 1, 3.13333, 1, 0, 0, 0, -0.281226, 0.130194, -0.299139, 0.902484, 1, 1, 1, 3.2, 1, 0, 0, 0, -0.190992, 0.08842, -0.203158, 0.956259, 1, 1, 1, 3.26667, 1, 0, 0, 0, -0.0965583, 0.0447017, -0.102709, 0.989004, 1, 1, 1, 3.33333, 1, 0, 0, 0, -6.91041e-07, 3.17563e-07, -7.29648e-07, 1, 1, 1, 1, 7.125, 1, 0, 0, 0, -1.86264e-09, 7.10543e-15, 1.32349e-23, 1, 1, 1, 1 )
+tracks/5/type = "transform"
+tracks/5/path = NodePath("Snirby/Skeleton:bone_9")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/keys = PoolRealArray( 0, 1, 0, 0, 0, -7.45058e-09, -1.11022e-16, 1.49012e-08, 1, 1, 1, 1, 2.86667, 1, 0, 0, 0, -7.45058e-09, -1.11022e-16, 1.49012e-08, 1, 1, 1, 1, 2.93333, 1, 0, 0, 0, 0.0427114, 0.0386346, -0.0101524, 0.998289, 1, 1, 1, 3, 1, 0, 0, 0, 0.210646, 0.19054, -0.0500701, 0.957505, 1, 1, 1, 3.06667, 1, 0, 0, 0, 0.367093, 0.332055, -0.0872574, 0.864505, 1, 1, 1, 3.13333, 1, 0, 0, 0, 0.471722, 0.426697, -0.112127, 0.763436, 1, 1, 1, 3.2, 1, 0, 0, 0, 0.329542, 0.298088, -0.0783314, 0.892418, 1, 1, 1, 3.26667, 1, 0, 0, 0, 0.16939, 0.153222, -0.0402637, 0.972733, 1, 1, 1, 3.33333, 1, 0, 0, 0, 1.11759e-06, 1.06543e-06, -2.53321e-07, 1, 1, 1, 1, 7.125, 1, 0, 0, 0, -7.45058e-09, -1.11022e-16, 1.49012e-08, 1, 1, 1, 1 )
+tracks/6/type = "transform"
+tracks/6/path = NodePath("Snirby/Skeleton:bone_8")
+tracks/6/interp = 1
+tracks/6/loop_wrap = true
+tracks/6/imported = false
+tracks/6/enabled = true
+tracks/6/keys = PoolRealArray( 0, 1, 0, 0, 0, -1.07102e-08, 7.45058e-09, 1.86265e-09, 1, 1, 1, 1, 7.125, 1, 0, 0, 0, -1.07102e-08, 7.45058e-09, 1.86265e-09, 1, 1, 1, 1 )
+tracks/7/type = "transform"
+tracks/7/path = NodePath("Snirby/Skeleton:bone_13")
+tracks/7/interp = 1
+tracks/7/loop_wrap = true
+tracks/7/imported = false
+tracks/7/enabled = true
+tracks/7/keys = PoolRealArray( 0, 1, 0, 0, 0, -4.47035e-08, 1.42109e-14, -7.10543e-15, 1, 1, 1, 1, 1.66667, 1, 0, 0, 0, -4.47035e-08, -2.94136e-07, -3.29275e-08, 1, 1, 1, 1, 2, 1, 0, 0, 0, -0.00927273, -0.163741, -0.0183302, 0.98629, 1, 1, 1, 2.33333, 1, 0, 0, 0, -0.0182912, -0.322991, -0.0361576, 0.945534, 1, 1, 1, 2.66667, 1, 0, 0, 0, -0.026808, -0.473385, -0.0529937, 0.878852, 1, 1, 1, 2.86667, 1, 0, 0, 0, -0.0315795, -0.55764, -0.0624258, 0.827129, 1, 1, 1, 2.93333, 1, 0, 0, 0, -0.0315795, -0.557641, -0.0624258, 0.827129, 1, 1, 1, 3, 1, 0, 0, 0, -0.0268081, -0.473385, -0.0529937, 0.878851, 1, 1, 1, 3.06667, 1, 0, 0, 0, -0.0217715, -0.384449, -0.0430377, 0.921885, 1, 1, 1, 3.13333, 1, 0, 0, 0, -0.0165198, -0.291713, -0.0326562, 0.955806, 1, 1, 1, 3.2, 1, 0, 0, 0, -0.0111048, -0.196093, -0.0219518, 0.980277, 1, 1, 1, 3.26667, 1, 0, 0, 0, -0.00558003, -0.0985337, -0.0110305, 0.995057, 1, 1, 1, 3.33333, 1, 0, 0, 0, -8.9407e-08, -6.98573e-07, -7.82027e-08, 1, 1, 1, 1, 4.06667, 1, 0, 0, 0, 0.16926, 0.0544023, 0.000427293, 0.984069, 1, 1, 1, 4.13333, 1, 0, 0, 0, 0.173064, 0.0556252, 0.000436895, 0.983338, 1, 1, 1, 4.53333, 1, 0, 0, 0, 0.173064, 0.0556252, 0.000436895, 0.983338, 1, 1, 1, 4.6, 1, 0, 0, 0, 0.168499, 0.0541579, 0.000425372, 0.984213, 1, 1, 1, 5.2, 1, 0, 0, 0, 0.00232099, 0.000746018, 5.85941e-06, 0.999997, 1, 1, 1, 5.26666, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 6.26666, 1, 0, 0, 0, -4.03897e-28, -2.84217e-14, -1.42109e-14, 1, 1, 1, 1, 6.33333, 1, 0, 0, 0, 0.0540874, 0.118461, 0.00724055, 0.991458, 1, 1, 1, 6.4, 1, 0, 0, 0, 0.138332, 0.302972, 0.0185182, 0.942724, 1, 1, 1, 6.46666, 1, 0, 0, 0, 0.21654, 0.474261, 0.0289877, 0.852846, 1, 1, 1, 6.53333, 1, 0, 0, 0, 0.285296, 0.624851, 0.038192, 0.725747, 1, 1, 1, 6.6, 1, 0, 0, 0, 0.26917, 0.589531, 0.0360332, 0.760724, 1, 1, 1, 6.73333, 1, 0, 0, 0, 0.20856, 0.456784, 0.0279195, 0.864333, 1, 1, 1, 6.86666, 1, 0, 0, 0, 0.141256, 0.309377, 0.0189096, 0.9402, 1, 1, 1, 7, 1, 0, 0, 0, 0.0694184, 0.152039, 0.00929289, 0.98589, 1, 1, 1, 7.125, 1, 0, 0, 0, -4.47035e-08, 1.42109e-14, -7.10543e-15, 1, 1, 1, 1 )
+tracks/8/type = "transform"
+tracks/8/path = NodePath("Snirby/Skeleton:bone_12")
+tracks/8/interp = 1
+tracks/8/loop_wrap = true
+tracks/8/imported = false
+tracks/8/enabled = true
+tracks/8/keys = PoolRealArray( 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 7.125, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1 )
+tracks/9/type = "transform"
+tracks/9/path = NodePath("Snirby/Skeleton:bone")
+tracks/9/interp = 1
+tracks/9/loop_wrap = true
+tracks/9/imported = false
+tracks/9/enabled = true
+tracks/9/keys = PoolRealArray( 0, 1, 0, 0, 0, 7.45058e-09, 0, 0, 1, 1, 1, 1, 0.0666667, 1, 0, -1.49012e-08, 0, 1.11812e-10, -0.00346294, 0.000514246, 0.999994, 1, 1, 1, 1.4, 1, 0, -1.49012e-08, 0, 4.74215e-10, -0.187021, 0.0277725, 0.981963, 1, 1, 1, 1.66667, 1, 0, 0, 0, 4.30185e-09, -0.223154, 0.0331383, 0.97422, 1, 1, 1, 4.06667, 1, 4.65661e-10, 0, 0, 4.06286e-09, -0.223154, 0.0331383, 0.97422, 1, 1, 1, 4.13333, 1, 0, 0, 0, -0.013183, -0.223718, 0.0322707, 0.97403, 1, 1, 1, 4.53333, 1, 0, 0, 0, -0.118373, -0.226815, 0.0251399, 0.96639, 1, 1, 1, 4.6, 1, 0, -1.49012e-08, -7.45058e-09, -0.127968, -0.226973, 0.0244709, 0.965147, 1, 1, 1, 5.2, 1, 0, 0, 0, -0.00175832, -0.223231, 0.0330229, 0.974204, 1, 1, 1, 5.26666, 1, 0, 1.49012e-08, 7.45058e-09, 6.18281e-09, -0.20117, 0.0298737, 0.979101, 1, 1, 1, 5.73333, 1, 0, 0, 0, 4.04648e-09, -0.0225082, 0.00334246, 0.999741, 1, 1, 1, 5.8, 1, 0, 0, 0, 7.45058e-09, 0, 0, 1, 1, 1, 1, 7.125, 1, 0, 0, 0, 7.45058e-09, 0, 0, 1, 1, 1, 1 )
+tracks/10/type = "transform"
+tracks/10/path = NodePath("Snirby/Skeleton:bone_15")
+tracks/10/interp = 1
+tracks/10/loop_wrap = true
+tracks/10/imported = false
+tracks/10/enabled = true
+tracks/10/keys = PoolRealArray( 0, 1, 0, 0, 0, 9.31323e-10, 2.06795e-25, -1.86265e-09, 1, 1, 1, 1, 7.125, 1, 0, 0, 0, 9.31323e-10, 2.06795e-25, -1.86265e-09, 1, 1, 1, 1 )
+tracks/11/type = "transform"
+tracks/11/path = NodePath("Snirby/Skeleton:bone_3")
+tracks/11/interp = 1
+tracks/11/loop_wrap = true
+tracks/11/imported = false
+tracks/11/enabled = true
+tracks/11/keys = PoolRealArray( 0, 1, 0, 0, 0, -7.45058e-08, -3.9968e-15, -8.88179e-16, 1, 1, 1, 1, 7.125, 1, 0, 0, 0, -7.45058e-08, -3.9968e-15, -8.88179e-16, 1, 1, 1, 1 )
+tracks/12/type = "transform"
+tracks/12/path = NodePath("Snirby/Skeleton:bone_2")
+tracks/12/interp = 1
+tracks/12/loop_wrap = true
+tracks/12/imported = false
+tracks/12/enabled = true
+tracks/12/keys = PoolRealArray( 0, 1, 0, 0, 0, 7.45058e-09, -2.97074e-08, 2.37659e-09, 1, 1, 1, 1, 7.125, 1, 0, 0, 0, 7.45058e-09, -2.97074e-08, 2.37659e-09, 1, 1, 1, 1 )
+tracks/13/type = "transform"
+tracks/13/path = NodePath("Snirby/Skeleton:bone_14")
+tracks/13/interp = 1
+tracks/13/loop_wrap = true
+tracks/13/imported = false
+tracks/13/enabled = true
+tracks/13/keys = PoolRealArray( 0, 1, 0, 0, 0, 4.09782e-08, 1.49012e-08, 1.86264e-09, 1, 1, 1, 1, 7.125, 1, 0, 0, 0, 4.09782e-08, 1.49012e-08, 1.86264e-09, 1, 1, 1, 1 )
+tracks/14/type = "transform"
+tracks/14/path = NodePath("Snirby/Skeleton:bone_5")
+tracks/14/interp = 1
+tracks/14/loop_wrap = true
+tracks/14/imported = false
+tracks/14/enabled = true
+tracks/14/keys = PoolRealArray( 0, 1, 0, 0, 0, 0, -1.79366e-43, 3.55271e-15, 1, 1, 1, 1, 7.125, 1, 0, 0, 0, 0, -1.79366e-43, 3.55271e-15, 1, 1, 1, 1 )
+tracks/15/type = "transform"
+tracks/15/path = NodePath("Snirby/Skeleton:bone_4")
+tracks/15/interp = 1
+tracks/15/loop_wrap = true
+tracks/15/imported = false
+tracks/15/enabled = true
+tracks/15/keys = PoolRealArray( 0, 1, 0, 0, 0, 3.97773e-15, 0, 0, 1, 1, 1, 1, 7.125, 1, 0, 0, 0, 3.97773e-15, 0, 0, 1, 1, 1, 1 )
+
+[sub_resource type="GDScript" id=403]
+resource_name = "Talker"
+script/source = "extends Area
+
+export  var lines = [\"Fuck you\"]
+var currentLine = 0
+
+func player_use():
+	Global.player.UI.message(lines[currentLine], true)
+	if currentLine + 1 < len(lines):
+		currentLine += 1
+"
+
 [node name="Level" type="Spatial"]
 
 [node name="Navigation" type="Navigation" parent="."]
@@ -706,19 +853,30 @@ navmesh = SubResource( 1 )
 environment = SubResource( 3 )
 script = ExtResource( 16 )
 
-[node name="entity_1_Player" parent="." instance=ExtResource( 12 )]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -16.5, 1.5, 16.5 )
-
-[node name="entity_2_Destructible" type="KinematicBody" parent="entity_1_Player"]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 9.76458, 0.467663, 9.02934 )
+[node name="entity_2_Destructible" type="KinematicBody" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -6.69989, 1.96766, 27.8751 )
 script = ExtResource( 23 )
 
-[node name="entity_2_mesh_instance" type="MeshInstance" parent="entity_1_Player/entity_2_Destructible"]
+[node name="entity_2_mesh_instance" type="MeshInstance" parent="entity_2_Destructible"]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.054584, -0.0231366, -0.0111589 )
 mesh = SubResource( 400 )
 
-[node name="entity_2_brush_0_collision_shape" type="CollisionShape" parent="entity_1_Player/entity_2_Destructible"]
+[node name="entity_2_brush_0_collision_shape" type="CollisionShape" parent="entity_2_Destructible"]
 shape = SubResource( 401 )
+
+[node name="entity_2_Destructible2" type="KinematicBody" parent="."]
+transform = Transform( -4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, -2.36865, 1.96766, 27.8751 )
+script = ExtResource( 23 )
+
+[node name="entity_2_mesh_instance" type="MeshInstance" parent="entity_2_Destructible2"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.054584, -0.0231366, -0.0111589 )
+mesh = SubResource( 400 )
+
+[node name="entity_2_brush_0_collision_shape" type="CollisionShape" parent="entity_2_Destructible2"]
+shape = SubResource( 401 )
+
+[node name="entity_1_Player" parent="." instance=ExtResource( 12 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -16.5, 1.5, 16.5 )
 
 [node name="Spawners" type="Spatial" parent="."]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -15.9901, 0.889758, -15.371 )
@@ -1518,4 +1676,197 @@ transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 25.4676, 1.39468, -23.2971 )
 [node name="Dog" parent="." instance=ExtResource( 21 )]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 22.0553, 2.05054, -24.0082 )
 
+[node name="Toilet" parent="." instance=ExtResource( 30 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -5.30761, 1.67465, 27.756 )
+
+[node name="Toilet2" parent="." instance=ExtResource( 30 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -4.45699, 1.67465, 27.756 )
+
+[node name="Toilet3" parent="." instance=ExtResource( 30 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -3.64917, 1.67465, 27.756 )
+
+[node name="Car" parent="." instance=ExtResource( 28 )]
+transform = Transform( -0.246407, 0, 0.969166, 0, 1, 0, -0.969166, 0, -0.246407, -23.5207, 1.87868, 25.373 )
+
+[node name="Car2" parent="." instance=ExtResource( 32 )]
+transform = Transform( -0.914084, 0, -0.405525, 0, 1, 0, 0.405525, 0, -0.914084, -26.9482, 1.9652, 9.80139 )
+
+[node name="Computer" parent="." instance=ExtResource( 29 )]
+transform = Transform( -0.93004, 0, 0.367459, 0, 1, 0, -0.367459, 0, -0.93004, -9.93833, 1.35548, 28.3374 )
+
+[node name="Slotmachine" parent="." instance=ExtResource( 33 )]
+transform = Transform( -0.702675, 0, 0.711511, 0, 1, 0, -0.711511, 0, -0.702675, -12.6322, 1.04465, 28.9347 )
+
+[node name="Slotmachine2" parent="." instance=ExtResource( 34 )]
+transform = Transform( -0.974229, 0, -0.225563, 0, 1, 0, 0.225563, 0, -0.974229, -14.2258, 1.04356, 29.2247 )
+
+[node name="Slotmachine3" parent="." instance=ExtResource( 31 )]
+transform = Transform( -0.704151, 0, 0.71005, 0, 1, 0, -0.71005, 0, -0.704151, -16.0173, 1.0469, 29.2017 )
+
+[node name="Tree" parent="." instance=ExtResource( 37 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 25.4663, 1.04173, 25.9052 )
+
+[node name="Tree2" parent="." instance=ExtResource( 37 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 24.6811, 1.04366, 7.55906 )
+
+[node name="Tree3" parent="." instance=ExtResource( 37 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 16.4397, 1.0432, 15.6869 )
+
+[node name="Tree4" parent="." instance=ExtResource( 37 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 13.7089, 1.04843, 7.35723 )
+
+[node name="Tree5" parent="." instance=ExtResource( 37 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 5.76858, 1.04797, 23.9802 )
+
+[node name="Tree6" parent="." instance=ExtResource( 37 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 5.83856, 1.0432, 11.013 )
+
+[node name="Swamp_Bush" parent="." instance=ExtResource( 38 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 5.56438, 1.04872, 13.5909 )
+
+[node name="Swamp_Bush2" parent="." instance=ExtResource( 38 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 15.0429, 1.04818, 10.1648 )
+
+[node name="Swamp_Bush3" parent="." instance=ExtResource( 38 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 7.2347, 1.04034, 20.5907 )
+
+[node name="Swamp_Bush4" parent="." instance=ExtResource( 38 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 19.505, 1.04869, 23.3394 )
+
+[node name="Swamp_Bush_Healing" parent="." instance=ExtResource( 35 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 3.29386, 1.04282, 11.0209 )
+
+[node name="Swamp_Bush_Healing2" parent="." instance=ExtResource( 35 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 3.00847, 1.04291, 21.5934 )
+
+[node name="Swamp_Bush_Healing3" parent="." instance=ExtResource( 35 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 12.6647, 1.04367, 25.0913 )
+
+[node name="Swamp_Bush_Healing4" parent="." instance=ExtResource( 35 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 20.9144, 1.04479, 14.399 )
+
+[node name="Swamp_Bush_Healing5" parent="." instance=ExtResource( 35 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 11.4455, 1.04353, 5.13808 )
+
+[node name="Swamp_Bush_Toxic" parent="." instance=ExtResource( 36 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 5.77545, 1.04, 8.06676 )
+
+[node name="Swamp_Bush_Toxic2" parent="." instance=ExtResource( 36 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 2.49823, 1.04234, 16.8335 )
+
+[node name="Swamp_Bush_Toxic3" parent="." instance=ExtResource( 36 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 9.13056, 1.04323, 24.9978 )
+
+[node name="Swamp_Bush_Toxic4" parent="." instance=ExtResource( 36 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 24.8652, 1.04614, 22.8111 )
+
+[node name="Monitor" parent="." instance=ExtResource( 41 )]
+transform = Transform( -0.998654, 0, -0.0518653, 0, 1, 0, 0.0518653, 0, -0.998654, -11.7079, 1.32607, 27.5504 )
+
+[node name="Monitor2" parent="." instance=ExtResource( 41 )]
+transform = Transform( -0.484046, 0, -0.875042, 0, 1, 0, 0.875042, 0, -0.484046, -9.95787, 1.32607, 27.0465 )
+
+[node name="Monitor3" parent="." instance=ExtResource( 41 )]
+transform = Transform( 0.996106, 0, -0.0881641, 0, 1, 0, 0.0881641, 0, 0.996106, -10.9487, 1.32607, 26.8589 )
+
+[node name="Spatial" parent="." instance=ExtResource( 39 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 8.68441, 1.04025, 8.43143 )
+
+[node name="Spatial2" parent="." instance=ExtResource( 39 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 4.60727, 1.04275, 19.3551 )
+
+[node name="Spatial3" parent="." instance=ExtResource( 39 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 11.5114, 1.04, 22.6536 )
+
+[node name="Spatial4" parent="." instance=ExtResource( 39 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 18.6103, 1.04957, 19.4891 )
+
+[node name="Spatial5" parent="." instance=ExtResource( 39 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 10.3669, 1.04533, 15.882 )
+
+[node name="Spatial6" parent="." instance=ExtResource( 39 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 22.227, 1.04042, 6.27817 )
+
+[node name="Spatial7" parent="." instance=ExtResource( 39 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 16.3756, 1.04416, 12.5614 )
+
+[node name="Spatial8" parent="." instance=ExtResource( 39 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 24.2826, 1.04769, 17.0481 )
+
+[node name="Spatial9" parent="." instance=ExtResource( 39 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 22.3826, 1.04603, 23.8807 )
+
+[node name="Spatial10" parent="." instance=ExtResource( 39 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 19.1621, 1.04085, 10.0836 )
+
+[node name="Spatial11" parent="." instance=ExtResource( 39 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 17.1662, 1.04012, 4.53206 )
+
+[node name="Spatial12" parent="." instance=ExtResource( 39 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 9.78443, 1.04304, 2.90843 )
+
+[node name="Spatial13" parent="." instance=ExtResource( 39 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 3.01344, 1.04136, 5.76231 )
+
+[node name="Spatial14" parent="." instance=ExtResource( 39 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 2.13759, 1.04084, 12.3886 )
+
+[node name="StaticBody" parent="." instance=ExtResource( 40 )]
+transform = Transform( 0.592323, 0, -0.805701, 0, 1, 0, 0.805701, 0, 0.592323, 4.3528, 1.55549, -25.3768 )
+
+[node name="chips" parent="." instance=ExtResource( 27 )]
+transform = Transform( 0.704956, 0, -0.709251, 0, 1, 0, 0.709251, 0, 0.704956, -27.4035, 1.04114, 18.8393 )
+
+[node name="chips2" parent="." instance=ExtResource( 27 )]
+transform = Transform( 0.478477, 0, 0.8781, 0, 1, 0, -0.8781, 0, 0.478477, -26.7361, 1.04, 19.4363 )
+
+[node name="chips3" parent="." instance=ExtResource( 27 )]
+transform = Transform( 0.103227, 0, 0.994658, 0, 1, 0, -0.994658, 0, 0.103227, -25.4743, 1.04101, 18.8387 )
+
+[node name="chips4" parent="." instance=ExtResource( 27 )]
+transform = Transform( 0.548293, 0, -0.836286, 0, 1, 0, 0.836286, 0, 0.548293, -26.6363, 1.04, 17.9902 )
+
+[node name="chips5" parent="." instance=ExtResource( 27 )]
+transform = Transform( 0.670608, 0, -0.741812, 0, 1, 0, 0.741812, 0, 0.670608, -26.3219, 1.04378, 18.644 )
+
+[node name="can" parent="." instance=ExtResource( 26 )]
+transform = Transform( 0.116497, 0, 0.993191, 0, 1, 0, -0.993191, 0, 0.116497, -25.8624, 1.04, 19.5866 )
+
+[node name="chips6" parent="." instance=ExtResource( 27 )]
+transform = Transform( 0.203112, 0, -0.979155, 0, 1, 0, 0.979155, 0, 0.203112, -27.9529, 1.04378, -28.6374 )
+
+[node name="can5" parent="." instance=ExtResource( 26 )]
+transform = Transform( -5.09226e-09, -0.116497, 0.993191, 1, -4.37114e-08, 4.44089e-16, 4.34138e-08, 0.993191, 0.116497, -28.3924, 1.08096, -28.0671 )
+
+[node name="can2" parent="." instance=ExtResource( 26 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -25.7253, 1.04219, 18.0011 )
+
+[node name="can3" parent="." instance=ExtResource( 26 )]
+transform = Transform( 0.599024, 0, 0.800731, 0, 1, 0, -0.800731, 0, 0.599024, -27.8394, 1.04, 18.0089 )
+
+[node name="can4" parent="." instance=ExtResource( 26 )]
+transform = Transform( 0.72112, 0, -0.692811, 0, 1, 0, 0.692811, 0, 0.72112, -27.6893, 1.0408, 19.5749 )
+
+[node name="snirby" parent="." instance=ExtResource( 25 )]
+transform = Transform( 0.72879, 0, 0.684739, 0, 1, 0, -0.684738, 0, 0.728791, -29.0264, 1.49435, -29.1666 )
+
+[node name="AnimationPlayer" parent="snirby" index="1"]
+anims/ArmatureAction = SubResource( 402 )
+
+[node name="Talker" parent="snirby" index="3"]
+transform = Transform( 1, -8.73115e-11, 0, -8.73115e-11, 1, 7.27596e-11, -5.96046e-08, 7.27596e-11, 1, 0, 0, 0 )
+script = SubResource( 403 )
+lines = [ "If I were you, I'd always check behind my back", "Who knows what might be watching you", "So... hum... I want to be honest", "This place is terrible", "Like... absolute dogshit", "A huge stone box with a pile of useless junk", "Who would even need to keep all this stuff?", "Huh..." ]
+
+[node name="RespawnPoint" parent="." instance=ExtResource( 42 )]
+transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 24.7814, 1.79875, 15.4719 )
+
+[node name="RespawnPoint2" parent="." instance=ExtResource( 42 )]
+transform = Transform( -1, 0, 1.50996e-07, 0, 1, 0, -1.50996e-07, 0, -1, 16.3309, 1.79875, -8.3406 )
+
+[node name="RespawnPoint3" parent="." instance=ExtResource( 42 )]
+transform = Transform( 1.94707e-07, 0, 1, 0, 1, 0, -1, 0, 1.94707e-07, -25.1699, 1.79875, -15.7481 )
+
 [connection signal="body_entered" from="Message_Area" to="Message_Area" method="_on_Message_Area_body_entered"]
+
+[editable path="snirby"]

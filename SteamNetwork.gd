@@ -136,6 +136,10 @@ func peers_connected() -> bool:
 			return false
 	return true
 
+func check_permission_hash(node: Node, method: String = ""):
+	var perm_hash = _get_permission_hash(node.get_path(), method)
+	return _permissions.has(perm_hash)
+
 func _get_permission_hash(node_path: NodePath, value: String = ""):
 	if value.empty():
 		return str(node_path).md5_text()
@@ -478,16 +482,19 @@ func _execute_rset(sender, path_cache_index: int, value):
 	if node_path == null:
 		push_error("NodePath index %s does not exist on this client! Cannot complete RemoteSet" % path_cache_index)
 		return
-	if not _sender_has_permission(sender.steam_id, node_path):
-		push_error("Sender does not have permission to execute remote set %s on node %s" % [value, node_path])
-		return
+	
 	var node = get_node_or_null(node_path)
 	if node == null:
 		push_error("Node %s does not exist on this client! Cannot complete RemoteSet" % node_path)
 		return
+		
 	var property:String = node_path.get_subname(0)
 	if property == null or property.empty():
 		push_error("Node %s could not resolve to a property. Cannot complete RemoteSet" % node_path)
+		return
+		
+	if not _sender_has_permission(sender.steam_id, node_path):
+		push_error("Sender does not have permission to execute remote set %s on node %s" % [value, node_path])
 		return
 	
 	node.set(property, value)
@@ -527,17 +534,18 @@ func _execute_rpc(sender, path_cache_index: int, method: String, args: Array):
 		push_error("NodePath index %s does not exist on this client! Cannot call RPC" % path_cache_index)
 		return
 	
-	if not _sender_has_permission(sender.steam_id, node_path, method):
-		prints(sender, node_path, method, args)
-		push_error("Sender does not have permission to execute method %s on node %s" % [method, node_path])
-		return
-	
 	var node = get_node_or_null(node_path)
 	if node == null:
 		push_error("Node %s does not exist on this client! Cannot call RPC" % node_path)
 		return
+		
 	if not node.has_method(method):
 		push_error("Node %s does not have a method %s" % [node.name, method])
+		return
+	
+	if not _sender_has_permission(sender.steam_id, node_path, method):
+		prints(sender, node_path, method, args)
+		push_error("Sender does not have permission to execute method %s on node %s" % [method, node_path])
 		return
 	
 	

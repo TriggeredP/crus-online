@@ -220,7 +220,8 @@ func _enter_tree():
 	GLOBAL.objectives = 0
 
 var death_timer
-	
+var tranquilize_timer
+
 func cancer():
 	UI.notify("Your body feels weird.", Color(rand_range(0, 1), rand_range(0, 1), rand_range(0, 1)))
 	cancer_count += 1
@@ -322,6 +323,12 @@ func _ready():
 	fakeFire.transform.origin += Vector3.UP
 	
 	set_collision_mask_bit(10, 1)
+	
+	tranquilize_timer = Timer.new()
+	add_child(tranquilize_timer)
+	tranquilize_timer.wait_time = 15
+	tranquilize_timer.one_shot = true
+	tranquilize_timer.connect("timeout", self, "remove_tranquilize")
 	
 	death_timer = Timer.new()
 	add_child(death_timer)
@@ -473,6 +480,9 @@ func grapple(pos3d:Position3D):
 	var point = pos3d.global_transform.origin
 	var distance = global_transform.origin.distance_to(point)
 	var orb_res = 4
+	
+	playerPuppet.set_grapple(pos3d.global_transform.origin)
+	
 	if grapple_orbs.size() < int(distance) * orb_res:
 		for i in range(orb_res):
 			var new_grapple_orb = grapple_orb.instance()
@@ -492,7 +502,19 @@ func grapple(pos3d:Position3D):
 		player_velocity -= (global_transform.origin - point).normalized() * gravity * get_process_delta_time() * 0.7 * 2.3
 	elif distance > 20:
 		player_velocity -= (global_transform.origin - point).normalized() * gravity * get_process_delta_time() * 2 * 2.3
-	
+
+var tranquilize_flag = false
+var tranquilize_mul = 0.0
+
+func set_tranquilize():
+	tranquilize_timer.start()
+	tranquilize_flag = true
+	UI.sleep = true
+
+func remove_tranquilize():
+	tranquilize_flag = false
+	UI.sleep = false
+
 func set_move_speed():
 	move_speed = base_move_speed + speed_bonus + drug_speed
 	if float(lean) != 0:
@@ -503,7 +525,10 @@ func set_move_speed():
 		move_speed -= weapon.weight[weapon.weapon1]
 	else :
 		pass
-		
+	
+	if tranquilize_flag:
+		move_speed -= tranquilize_mul
+	
 	if weapon.weapon2 != null:
 		move_speed -= weapon.weight[weapon.weapon2]
 	else :
@@ -514,8 +539,16 @@ func set_move_speed():
 		run_acceleration = 10
 		
 	move_speed = clamp(move_speed, 2, 100)
-	
+
 func _physics_process(delta):
+	if tranquilize_flag:
+		tranquilize_mul = lerp(tranquilize_mul, 10.0, delta * 0.2)
+	else:
+		tranquilize_mul = lerp(tranquilize_mul, 0.0, delta * 2.0)
+	
+	if tranquilize_mul > 0.0:
+		set_move_speed()
+	
 	drugged = (drug_slowfall > 0 or drug_speed > 0)
 	if drugged:
 		shader_screen.material.set_shader_param("drugs", true)
@@ -657,7 +690,7 @@ func _physics_process(delta):
 			rotation_helper.transform.origin.y = 0
 			set_move_speed()
 		playerPuppet.set_crouch(null, crouch_flag)
-	if toxic and not crouch_flag:
+	if toxic and not crouch_flag and not tranquilize_flag:
 		move_speed = 7 + sin(time_2)
 	if Input.is_action_pressed("Lean_Left"):
 		lean = - 1

@@ -89,8 +89,14 @@ remote func _create_blood_decal(id, collider, recivedTransform, recivedBasis):
 	new_blood_decal.global_transform.origin = recivedTransform
 	new_blood_decal.transform.basis = recivedBasis
 
-remote func _remove(id):
-	queue_free()
+puppet func _delete(id):
+	hide()
+	global_translation = Vector3(-1000, -1000, -1000)
+	
+	gas = false
+	
+	set_process(false)
+	set_physics_process(false)
 
 func syncUpdate():
 	if gun != null:
@@ -99,11 +105,26 @@ func syncUpdate():
 var lerp_transform : Transform
 var last_transform : Transform
 
+puppet func client_set_lerp_transform(id, recived_transform):
+	lerp_transform = recived_transform
+
+master func set_lerp_transform(id, recived_transform):
+	lerp_transform = recived_transform
+	NetworkBridge.n_rpc_unreliable(self, "client_set_lerp_transform", [recived_transform])
+
+var tick = 0
+
 func host_tick():
-	if (global_transform.origin - last_transform.origin).length() > 0.01:
-		NetworkBridge.n_rset_unreliable(self, "lerp_transform", global_transform)
-		Multiplayer.packages_count += 1
+	tick += 1
+	if (global_transform.origin - last_transform.origin).length() > 0.01 and tick % 2 == 0:
 		last_transform = global_transform
+		
+		if NetworkBridge.n_is_network_master(self):
+			NetworkBridge.n_rpc_unreliable(self, "client_set_lerp_transform", [global_transform])
+		else:
+			NetworkBridge.n_rpc_unreliable(self, "set_lerp_transform", [global_transform])
+		
+		tick = 0
 
 func register_all_rpcs():
 	NetworkBridge.register_rpcs(self, [
@@ -115,37 +136,35 @@ func register_all_rpcs():
 		["_spawn_fake_gas", NetworkBridge.PERMISSION.ALL],
 		["_grill", NetworkBridge.PERMISSION.ALL],
 		["_create_blood_decal", NetworkBridge.PERMISSION.ALL],
-		["_remove", NetworkBridge.PERMISSION.ALL],
-		["_set_hold_collision", NetworkBridge.PERMISSION.ALL]
+		["_delete", NetworkBridge.PERMISSION.SERVER],
+		["_set_hold_collision", NetworkBridge.PERMISSION.ALL],
+		["set_lerp_transform", NetworkBridge.PERMISSION.ALL],
+		["client_set_lerp_transform", NetworkBridge.PERMISSION.SERVER],
+		["set_hold_object", NetworkBridge.PERMISSION.ALL],
+		["set_drop_object", NetworkBridge.PERMISSION.ALL],
+		["network_set_grill", NetworkBridge.PERMISSION.ALL],
+		["network_damage", NetworkBridge.PERMISSION.ALL]
 	])
 	
-	NetworkBridge.register_rset(self, "lerp_transform", NetworkBridge.PERMISSION.SERVER)
 	NetworkBridge.register_rset(self, "global_transform", NetworkBridge.PERMISSION.SERVER)
+	NetworkBridge.register_rset(self, "lerp_transform", NetworkBridge.PERMISSION.SERVER)
 	
 	NetworkBridge.register_rset(self, "holdId", NetworkBridge.PERMISSION.SERVER)
 	NetworkBridge.register_rset(self, "disabled", NetworkBridge.PERMISSION.SERVER)
 	NetworkBridge.register_rset(self, "usable", NetworkBridge.PERMISSION.SERVER)
 	NetworkBridge.register_rset(self, "grill_health", NetworkBridge.PERMISSION.SERVER)
-	NetworkBridge.register_rset(self, "damager", NetworkBridge.PERMISSION.SERVER)
-	NetworkBridge.register_rset(self, "held", NetworkBridge.PERMISSION.SERVER)
-	NetworkBridge.register_rset(self, "grill", NetworkBridge.PERMISSION.SERVER)
-	NetworkBridge.register_rset(self, "velocity", NetworkBridge.PERMISSION.SERVER)
 	NetworkBridge.register_rset(self, "stay_active", NetworkBridge.PERMISSION.SERVER)
 	NetworkBridge.register_rset(self, "finished", NetworkBridge.PERMISSION.SERVER)
-	
-	rset_config("lerp_transform", MultiplayerAPI.RPC_MODE_PUPPET)
-	rset_config("global_transform", MultiplayerAPI.RPC_MODE_PUPPET)
 
-	rset_config("holdId",MultiplayerAPI.RPC_MODE_REMOTE)
-	rset_config("disabled",MultiplayerAPI.RPC_MODE_REMOTE)
-	rset_config("usable",MultiplayerAPI.RPC_MODE_REMOTE)
-	rset_config("grill_health",MultiplayerAPI.RPC_MODE_REMOTE)
-	rset_config("damager",MultiplayerAPI.RPC_MODE_REMOTE)
-	rset_config("held",MultiplayerAPI.RPC_MODE_REMOTE)
-	rset_config("grill",MultiplayerAPI.RPC_MODE_REMOTE)
-	rset_config("velocity",MultiplayerAPI.RPC_MODE_REMOTE)
-	rset_config("stay_active",MultiplayerAPI.RPC_MODE_REMOTE)
-	rset_config("finished",MultiplayerAPI.RPC_MODE_REMOTE)
+	rset_config("global_transform", NetworkBridge.PERMISSION.SERVER)
+	rset_config("lerp_transform", NetworkBridge.PERMISSION.SERVER)
+
+	rset_config("holdId", MultiplayerAPI.RPC_MODE_PUPPET)
+	rset_config("disabled", MultiplayerAPI.RPC_MODE_PUPPET)
+	rset_config("usable", MultiplayerAPI.RPC_MODE_PUPPET)
+	rset_config("grill_health", MultiplayerAPI.RPC_MODE_PUPPET)
+	rset_config("stay_active",MultiplayerAPI.RPC_MODE_PUPPET)
+	rset_config("finished",MultiplayerAPI.RPC_MODE_PUPPET)
 
 ################################################################################
 
@@ -236,19 +255,22 @@ remote func _set_hold_collision(id, recived_holding):
 		held = false
 
 func _physics_process(delta):
+	if OS.get_ticks_msec() % 15 == 0:
+		if not NetworkBridge.check_rpc(self, "add_velocity"):
+			register_all_rpcs()
+	
 	if NetworkBridge.check_connection():
 		if disabled:
 			$CollisionShape.disabled = true
 			set_physics_process(false)
 			return 
-
+		
 		t += 1
 		
-#		if held and get_tree().get_network_unique_id() == holdId:
-#			lerp_transform.origin = Global.player.weapon.hold_pos.global_transform.origin
-
-		if NetworkBridge.n_is_network_master(self):
+		if holdId == NetworkBridge.get_id() or not held and NetworkBridge.n_is_network_master(self):
 			host_tick()
+		
+		if NetworkBridge.n_is_network_master(self):
 			
 			if fmod(t, 300) == 0 and (velocity.x < 0.01 and velocity.y < 0.01):
 				change_transform = false
@@ -345,8 +367,8 @@ func _physics_process(delta):
 					get_parent().add_child(new_gas_cloud)
 					new_gas_cloud.global_transform.origin = global_transform.origin
 					NetworkBridge.n_rpc(self, "_spawn_fake_gas", [new_gas_cloud.global_transform.origin])
-					NetworkBridge.n_rpc(self, "_remove")
-					queue_free()
+					NetworkBridge.n_rpc(self, "_delete")
+					_delete(null)
 				velocity = velocity.bounce(collision.normal) * 0.6
 				angular_velocity = Vector2(velocity.x, velocity.z).length()
 
@@ -378,7 +400,27 @@ func align_up(node_basis, normal)->Basis:
 func set_grill(value):
 	if grillable:
 		grill = value
-		NetworkBridge.n_rset(self, "grill",value)
+		NetworkBridge.n_rpc(self, "network_set_grill", [value])
+
+remote func network_set_grill(id, recived_value):
+	grill = recived_value
+
+remote func set_hold_object(id, recived_damager):
+	held = true
+	stay_active = true
+	finished = false
+	
+	if recived_damager:
+		damager = true
+	
+	holdId = id
+
+remote func set_drop_object(id):
+	held = false
+	stay_active = false
+	
+	damager = false
+	holdId = 0
 
 func player_use():
 	if not usable or held:
@@ -388,41 +430,43 @@ func player_use():
 
 	if glob.implants.arm_implant.throw_bonus > 0:
 		damager = true
-		NetworkBridge.n_rset(self, "damager",true)
-	
-	NetworkBridge.n_rset(self, "held",true)
 	
 	stay_active = true
-	NetworkBridge.n_rset(self, "stay_active",true)
 	finished = false
-	NetworkBridge.n_rset(self, "finished",false)
+	
+	NetworkBridge.n_rpc(self, "set_hold_object", [damager])
+	
 	glob.player.weapon.hold(self)
 
 func damage(damage, collision_n, collision_p, shooter_pos):
-	if gas:
-		var new_gas_cloud = gas_cloud.instance()
-		get_parent().add_child(new_gas_cloud)
-		new_gas_cloud.global_transform.origin = global_transform.origin
-		if NetworkBridge.check_connection():
+	network_damage(null, damage, collision_n, collision_p, shooter_pos)
+
+func network_damage(id, damage, collision_n, collision_p, shooter_pos):
+	if NetworkBridge.check_connection():
+		if NetworkBridge.n_is_network_master(self):
+			if gas:
+				var new_gas_cloud = gas_cloud.instance()
+				get_parent().add_child(new_gas_cloud)
+				new_gas_cloud.global_transform.origin = global_transform.origin
 				NetworkBridge.n_rpc(self, "_spawn_fake_gas", [new_gas_cloud.global_transform.origin])
-				NetworkBridge.n_rpc(self, "_remove")
-		queue_free()
-	if damage < 3:
-		return 
-	
-	if get_tree().network_peer == null or NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
-		velocity -= collision_n * damage / mass
-	else:
-		NetworkBridge.n_rset(self, "velocity", velocity - collision_n * damage / mass)
-	if not no_rot:
-		look_at((global_transform.origin - collision_n * damage + Vector3(1e-05, 0, 0)), Vector3.UP)
-		rot_changed = Vector3(0, rand_range( - PI, PI), rand_range( - PI, PI))
-		rot_towards_y = rotation.y
-	if gun_rotation:
-		angular_velocity = velocity.length()
+				NetworkBridge.n_rpc(self, "_delete")
+				_delete(null)
+			if damage < 3:
+				return 
+			
+			if NetworkBridge.n_is_network_master(self):
+				velocity -= collision_n * damage / mass
+			if not no_rot:
+				look_at((global_transform.origin - collision_n * damage + Vector3(1e-05, 0, 0)), Vector3.UP)
+				rot_changed = Vector3(0, rand_range( - PI, PI), rand_range( - PI, PI))
+				rot_towards_y = rotation.y
+			if gun_rotation:
+				angular_velocity = velocity.length()
+		else:
+			NetworkBridge.n_rpc(self, "network_damage", [damage, collision_n, collision_p, shooter_pos])
 	
 func set_water(a):
-	if get_tree().network_peer == null or NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
+	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		water = a
 		velocity *= 0.5
 		velocity.y = 0

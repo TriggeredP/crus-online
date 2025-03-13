@@ -11,17 +11,13 @@ var particle
 
 var gas_timer = 0
 
-puppet func delete(id):
+func _delete():
 	queue_free()
 
 func _ready():
 	particle = $Particle
 	c_shape = $CollisionShape
 	particle.emitting = true
-	
-	NetworkBridge.register_rpcs(self, [
-		["delete", NetworkBridge.PERMISSION.SERVER]
-	])
 	
 func _physics_process(delta):
 	if NetworkBridge.n_is_network_master(self):
@@ -32,8 +28,7 @@ func _physics_process(delta):
 			else :
 				gas_timer += delta
 				if gas_timer >= 3:
-					NetworkBridge.n_rpc(self, "delete")
-					queue_free()
+					_delete()
 		if gas and not sleep:
 			for overlap_body in get_overlapping_bodies():
 				if overlap_body.has_method("player_damage"):

@@ -1,5 +1,7 @@
 extends Control
 
+onready var NetworkBridge = $"../NetworkBridge"
+
 onready var parent = get_parent()
 
 func _ready():
@@ -41,11 +43,14 @@ func leave_server(type):
 	set_process_input(false)
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
-	for child in parent.Players.get_children():
-		child.queue_free()
-	
-	parent.goto_menu_client(null)
-	parent.leave_server()
+	if NetworkBridge.n_is_network_master(self):
+		parent.goto_menu_host()
+	else:
+		for child in parent.Players.get_children():
+			child.queue_free()
+		
+		parent.goto_menu_client(null)
+		parent.leave_server()
 
 func leave_game(type):
 	hide_menu()

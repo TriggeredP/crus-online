@@ -201,12 +201,15 @@ master func check_npc(id):
 	else:
 		NetworkBridge.n_rpc_id(self, id, "respawn")
 
-puppet func set_stealth(id):
+func set_stealth():
+	network_set_stealth(null)
+
+puppet func network_set_stealth(id):
 	if not stealth:
 		return 
 	skeleton.get_node("Armature/Skeleton/Cube").material_override = stealthmat
 	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
-		NetworkBridge.n_rpc(self, "set_stealth")
+		NetworkBridge.n_rpc(self, "network_set_stealth")
 
 ################################################################################
 
@@ -225,16 +228,16 @@ func _ready():
 	NetworkBridge.register_rpcs(self,[
 		["_create_drop_weapon", NetworkBridge.PERMISSION.ALL],
 		["check_npc", NetworkBridge.PERMISSION.ALL],
-		["set_tranquilized", NetworkBridge.PERMISSION.ALL],
-		["add_velocity", NetworkBridge.PERMISSION.ALL],
+		["network_set_tranquilized", NetworkBridge.PERMISSION.ALL],
+		["network_add_velocity", NetworkBridge.PERMISSION.ALL],
 		["network_piercing_damage", NetworkBridge.PERMISSION.ALL],
 		["network_damage", NetworkBridge.PERMISSION.ALL],
-		["remove_weapon", NetworkBridge.PERMISSION.ALL],
+		["network_remove_weapon", NetworkBridge.PERMISSION.ALL],
 		["_die_client", NetworkBridge.PERMISSION.SERVER],
 		["_hide_npc_client", NetworkBridge.PERMISSION.SERVER],
 		["respawn", NetworkBridge.PERMISSION.SERVER],
 		["cleanup", NetworkBridge.PERMISSION.SERVER],
-		["set_stealth", NetworkBridge.PERMISSION.SERVER],
+		["network_set_stealth", NetworkBridge.PERMISSION.SERVER],
 		["_spawn_gib_client", NetworkBridge.PERMISSION.SERVER],
 		["_spawn_drop_client", NetworkBridge.PERMISSION.SERVER]
 	])
@@ -377,11 +380,14 @@ func _physics_process(delta):
 			pain_sfx[0].pitch_scale = 0.5 + ((dist_clamped - 0.1) / (20 - 0.1))
 		t += 1
 
-master func set_tranquilized(id, dart):
+func set_tranquilized(dart = null):
+	network_set_tranquilized(null, dart)
+
+master func network_set_tranquilized(id, dart):
 	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		tranqtimer.start()
 	else:
-		NetworkBridge.n_rpc_id(self, 0, "set_tranquilized", [null])
+		NetworkBridge.n_rpc_id(self, 0, "network_set_tranquilized", [dart])
 
 func tranq_timeout(dart):
 	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
@@ -398,13 +404,16 @@ func tranq_timeout(dart):
 
 func interpolate(a, b, t):
 	return (a * (1.0 - t)) + (b * t)
-	
-master func add_velocity(id, amount, normal):
+
+func add_velocity(amount, normal):
+	network_add_velocity(null, amount, normal)
+
+master func network_add_velocity(id, amount, normal):
 	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		if not armored:
 			body.add_velocity(normal * amount)
 	else:
-		NetworkBridge.n_rpc_id(self, 0, "add_velocity", [amount, normal])
+		NetworkBridge.n_rpc_id(self, 0, "network_add_velocity", [amount, normal])
 
 func piercing_damage(damage, collision_n, collision_p):
 	network_piercing_damage(null, damage, collision_n, collision_p)
@@ -583,7 +592,10 @@ func spawn_drop(drop, damage, collision_n, collision_p):
 	
 	NetworkBridge.n_rpc(self, "_spawn_drop_client", [get_parent().get_path(), drop, new_drop.name])
 
-master func remove_weapon(id):
+func remove_weapon():
+	network_remove_weapon(null)
+
+master func network_remove_weapon(id):
 	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		if not civilian and "current_weapon" in weapon and not armored and health < 10000:
 			if weapon.disabled:
@@ -597,18 +609,16 @@ master func remove_weapon(id):
 			var new_weapon_drop = weapon_drop.instance()
 			new_weapon_drop.set_name(new_weapon_drop.name + "#" + str(new_weapon_drop.get_instance_id()))
 			get_parent().add_child(new_weapon_drop)
-			new_weapon_drop.playerIgnoreId = get_tree().get_network_unique_id()
+			new_weapon_drop.playerIgnoreId = NetworkBridge.get_id()
 			new_weapon_drop.global_transform.origin = body.global_transform.origin + Vector3(0, 2, 0)
 			new_weapon_drop.velocity = - (new_weapon_drop.global_transform.origin - glob.player.global_transform.origin).normalized() * 10
 			new_weapon_drop.gun.MESH[new_weapon_drop.gun.current_weapon].hide()
 			new_weapon_drop.gun.current_weapon = weapon.current_weapon
 			new_weapon_drop.gun.ammo = weapon.MAX_MAG_AMMO[weapon.current_weapon]
 			new_weapon_drop.gun.MESH[weapon.current_weapon].show()
-
 			NetworkBridge.n_rpc(self, "_create_drop_weapon", [get_parent().get_path(), new_weapon_drop.global_transform.origin, new_weapon_drop.velocity, new_weapon_drop.gun.current_weapon, new_weapon_drop.gun.ammo, new_weapon_drop.name])
-
 	else:
-		NetworkBridge.n_rpc_id(self, 0, "remove_weapon")
+		NetworkBridge.n_rpc_id(self, 0, "network_remove_weapon")
 	
 func die(damage, collision_n, collision_p):
 	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
@@ -636,7 +646,7 @@ func die(damage, collision_n, collision_p):
 						var new_weapon_drop = weapon_drop.instance()
 						new_weapon_drop.set_name(new_weapon_drop.name + "#" + str(new_weapon_drop.get_instance_id()))
 						get_parent().add_child(new_weapon_drop)
-						new_weapon_drop.playerIgnoreId = get_tree().get_network_unique_id()
+						new_weapon_drop.playerIgnoreId = NetworkBridge.get_id()
 						new_weapon_drop.global_transform.origin = body.global_transform.origin + Vector3(0, 1, 0)
 						new_weapon_drop.gun.MESH[new_weapon_drop.gun.current_weapon].hide()
 						new_weapon_drop.gun.current_weapon = weapon.current_weapon

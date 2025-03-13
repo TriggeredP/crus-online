@@ -19,6 +19,7 @@ func _ready():
 		["network_use", NetworkBridge.PERMISSION.ALL]
 	])
 	
+	NetworkBridge.register_rset(self, "global_transform", NetworkBridge.PERMISSION.SERVER)
 	rset_config("global_transform",MultiplayerAPI.RPC_MODE_PUPPET)
 	
 	for child in get_children():

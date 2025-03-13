@@ -1,5 +1,7 @@
 extends KinematicBody
 
+# TODO: Оптимизировать анимации -> Слишком большое количество RPC (15/сек на NPC)
+
 onready var NetworkBridge = Global.get_node("Multiplayer/NetworkBridge")
 
 var GRAVITY = 22
@@ -85,19 +87,23 @@ var last_transform : Transform
 puppet func set_puppet_transform(id, recived_position, recived_rotation):
 	lerp_transform.origin = recived_position
 	lerp_mesh_rotation = recived_rotation
+	
+var tick = 0
 
 func host_tick():
 	if (global_transform.origin - last_transform.origin).length() > 0.01 or (mesh.rotation - last_mesh_rotation).length() > 0.01:
-		NetworkBridge.n_rpc_unreliable(self, "set_puppet_transform", [global_transform.origin, mesh.rotation])
-		Multiplayer.packages_count += 1
-		last_transform = global_transform
-		last_mesh_rotation = mesh.rotation
+		tick += 1
+		if not soul.gibs_spawned and tick % 2 == 0:
+			NetworkBridge.n_rpc_unreliable(self, "set_puppet_transform", [global_transform.origin, mesh.rotation])
+			last_transform = global_transform
+			last_mesh_rotation = mesh.rotation
+			tick = 0
 
 ################################################################################
 
 func _ready():
 	NetworkBridge.register_rpcs(self,[
-		["add_velocity", NetworkBridge.PERMISSION.ALL],
+		["network_add_velocity", NetworkBridge.PERMISSION.ALL],
 		["network_set_flee", NetworkBridge.PERMISSION.ALL],
 		["network_set_dead", NetworkBridge.PERMISSION.ALL],
 		["network_set_tranquilized", NetworkBridge.PERMISSION.ALL],
@@ -127,7 +133,12 @@ func _ready():
 	if glob.CURRENT_LEVEL != 7 or objective:
 		optimization_multiplier = 1
 	time += round(rand_range(0, 50))
+	
 	anim_player = get_parent().get_node_or_null("Nemesis/AnimationPlayer")
+	
+	anim_player.get_animation("Idle").loop = true
+	anim_player.get_animation("Run").loop = true
+	
 	mesh = get_parent().get_node_or_null("Nemesis/Armature/Skeleton")
 	
 	lerp_mesh_rotation = mesh.rotation
@@ -177,8 +188,9 @@ func _physics_process(delta):
 			time += 1
 			
 			if player_distance > 40 and not dead and not tranq and not objective:
-				anim_player.play("Idle")
-				NetworkBridge.n_rpc(self, "play_anim", ["Idle"])
+				if anim_player.current_animation != "Idle":
+					anim_player.play("Idle")
+					NetworkBridge.n_rpc(self, "play_anim", ["Idle"])
 				return 
 			
 			if fps < 30:
@@ -199,8 +211,9 @@ func _physics_process(delta):
 
 				velocity.x = 0
 				velocity.z = 0
-				anim_player.play("Idle")
-				NetworkBridge.n_rpc(self, "play_anim", ["Idle"])
+				if anim_player.current_animation != "Idle":
+					anim_player.play("Idle")
+					NetworkBridge.n_rpc(self, "play_anim", ["Idle"])
 				return 
 
 			if fmod(time, 200) == 0 and not flee and not tranq:
@@ -217,14 +230,17 @@ func _physics_process(delta):
 						pass
 			if Vector3(velocity.x, 0, velocity.z).length() > 0.5 and not dead and not tranq:
 				if not flee:
-					anim_player.play("Walk")
-					NetworkBridge.n_rpc(self, "play_anim", ["Walk"])
+					if anim_player.current_animation != "Walk":
+						anim_player.play("Walk")
+						NetworkBridge.n_rpc(self, "play_anim", ["Walk"])
 				else :
-					anim_player.play("Run", - 1, 2)
-					NetworkBridge.n_rpc(self, "play_anim", ["Run", -1, 2])
+					if anim_player.current_animation != "Run":
+						anim_player.play("Run", - 1, 2)
+						NetworkBridge.n_rpc(self, "play_anim", ["Run", -1, 2])
 			elif not dead and not tranq:
-				anim_player.play("Idle")
-				NetworkBridge.n_rpc(self, "play_anim", ["Idle"])
+				if anim_player.current_animation != "Idle":
+					anim_player.play("Idle")
+					NetworkBridge.n_rpc(self, "play_anim", ["Idle"])
 			if water:
 				if not dead:
 					GRAVITY = - 4
@@ -259,20 +275,23 @@ func _physics_process(delta):
 			global_transform = global_transform.interpolate_with(lerp_transform, delta * 10.0)
 			mesh.rotation = lerp(mesh.rotation, lerp_mesh_rotation, delta * 10.0)
 
-master func add_velocity(id, increase_velocity):
+func add_velocity(increase_velocity):
+	network_add_velocity(null, increase_velocity)
+
+master func network_add_velocity(id, increase_velocity):
 	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		if not glob.CURRENT_LEVEL == 2000:
 			velocity -= increase_velocity
 		else :
 			velocity -= increase_velocity * optimization_multiplier
 	else:
-		NetworkBridge.n_rpc_id(self, 0, "add_velocity", [increase_velocity])
+		NetworkBridge.n_rpc_id(self, 0, "network_add_velocity", [increase_velocity])
 
 func alert(peepee):
 	if LINES.size() != 0:
 		return 
 	set_flee()
-	NetworkBridge.n_rpc(self, "set_flee")
+	NetworkBridge.n_rpc(self, "network_set_flee")
 
 func set_water(a):
 	water = a
@@ -304,21 +323,23 @@ master func network_set_dead(id):
 			dead = true
 			if not tranq:
 				var rand = randi() % DEATH_ANIMS.size()
-				anim_player.play(DEATH_ANIMS[rand])
-				NetworkBridge.n_rpc(self, "play_anim", [DEATH_ANIMS[rand]])
+				if anim_player.current_animation != DEATH_ANIMS[rand]:
+					anim_player.play(DEATH_ANIMS[rand])
+					NetworkBridge.n_rpc(self, "play_anim", [DEATH_ANIMS[rand]])
 	else:
 		NetworkBridge.n_rpc_id(self, 0, "network_set_dead")
 
-func set_tranquilized():
-	network_set_tranquilized(null)
+func tranquilize(id = null):
+	network_set_tranquilized(id)
 
 master func network_set_tranquilized(id):
 	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		if not tranq:
 			set_collision_layer_bit(8, 0)
 			tranq = true
-			anim_player.play(DEATH_ANIMS[0])
-			NetworkBridge.n_rpc(self, "play_anim", [DEATH_ANIMS[0]])
+			if anim_player.current_animation != DEATH_ANIMS[0]:
+				anim_player.play(DEATH_ANIMS[0])
+				NetworkBridge.n_rpc(self, "play_anim", [DEATH_ANIMS[0]])
 			tranqtimer.start()
 	else:
 		NetworkBridge.n_rpc_id(self, 0, "network_set_tranquilized")
@@ -329,8 +350,9 @@ func tranq_timeout():
 	while (anim_player.is_playing() and anim_player.current_animation == DEATH_ANIMS[0]):
 		yield (get_tree(), "idle_frame")
 	if not dead:
-		anim_player.play("Idle", - 1)
-		NetworkBridge.n_rpc(self, "play_anim", ["Idle", -1])
+		if anim_player.current_animation != "Idle":
+			anim_player.play("Idle", - 1)
+			NetworkBridge.n_rpc(self, "play_anim", ["Idle", -1])
 		tranq = false
 		flee = false
 		set_collision_layer_bit(8, 1)
@@ -339,7 +361,7 @@ func player_use():
 	if not dead and not flee and not tranq:
 		if glob.implants.torso_implant.terror:
 			set_flee()
-			NetworkBridge.n_rpc(self, "set_flee")
+			NetworkBridge.n_rpc(self, "network_set_flee")
 			return 
 		if LINES.size() == 0:
 			glob.player.UI.message(glob.DIALOGUE.DIALOGUE[glob.CURRENT_LEVEL][random_line], true)

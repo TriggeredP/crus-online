@@ -68,8 +68,17 @@ onready var eyevbox = $Eyevbox
 onready var health_texture = $UI_HBOX / TextureRect
 var notify:Label
 
+var sleep_label = null
+var sleep = false
 
 func _ready():
+	sleep_label = Label.new()
+	sleep_label.text = "SLEEP CRISIS"
+	sleep_label.add_font_override("font", $UI_HBOX/Toxic/Toxic.get_font("font"))
+	sleep_label.add_color_override("font_color", Color(0, 0.671875, 1))
+	sleep_label.set_name("Sleep")
+	Toxic_UI.add_child_below_node($UI_HBOX/Toxic/Toxic, sleep_label)
+	
 	time_now = OS.get_system_time_msecs()
 	reload_font = $Notification_Box / Notification_Label.get_font("font")
 	Global.UI = self
@@ -134,6 +143,7 @@ func comms_timeout():
 	if stop:
 		return 
 	comms_color = Color(1, 1, 1, 0)
+
 func set_sniped(value):
 	if value:
 		if not $Eyevbox.visible:
@@ -142,15 +152,13 @@ func set_sniped(value):
 			$Sniper_Audio.stream = load(sniper_audio[rand_index])
 			$Sniper_Audio.play()
 			$Eyevbox.show()
+
 func set_in_sight(value):
 	if value:
 		if not $Eyevbox.visible:
 			snipe_timer = 10
-			
-			
-			
-			
 			$Eyevbox.show()
+
 func notify(message:String, color:Color):
 	var new_notification:Label = notify.duplicate()
 	$Notification_Box.add_child(new_notification)
@@ -168,27 +176,15 @@ func notify(message:String, color:Color):
 	notify_timer.one_shot = true
 	notify_timer.connect("timeout", self, "notify_timeout", [new_notification])
 	notify_timer.start()
-	
-
-
-
-
-
-
-
-
-
 
 func notify_timeout(new_notification):
 	for i in new_notification.text:
 		new_notification.visible_characters -= 1
 		yield (get_tree(), "idle_frame")
 	new_notification.queue_free()
+
 func _draw():
-	
-	
 	draw_reload(reload_pos, reload_color)
-	
 	
 	if health <= 0 and fmod(t, 3) == 0:
 		draw_cube()
@@ -210,6 +206,7 @@ func set_shooter_pos(shotpos):
 func set_health(new_health):
 	$UI_HBOX / TextureRect / Health.text = str(ceil(new_health))
 	health = float(ceil(new_health))
+
 func set_ammo(ammo, mag_ammo, max_mag_ammo, max_ammo):
 	$Ammovbox / HBoxContainer / Ammo.text = str(ammo)
 	
@@ -220,7 +217,17 @@ func set_ammo(ammo, mag_ammo, max_mag_ammo, max_ammo):
 	max_mag_ammo_c = max_mag_ammo
 	
 	$Ammovbox / HBoxContainer / Mag_Ammo.text = str(mag_ammo)
+
 func _physics_process(delta):
+	process_time += 1
+	
+	if process_time % 2 == 0 and (toxic or sleep):
+		Toxic_UI.show()
+		$UI_HBOX/Toxic/Toxic.visible = toxic
+		sleep_label.visible = sleep
+	elif Toxic_UI.visible:
+		Toxic_UI.hide()
+	
 	$Ammovbox / HBoxContainer / Ammo_Image.rect_rotation += ammo_rotation
 	ammo_rotation = lerp(ammo_rotation, 0, 0.1)
 	comms.modulate = lerp(comms.modulate, comms_color, 0.1)
@@ -266,13 +273,7 @@ func _physics_process(delta):
 		play_time.hide()
 	if Global.player.died:
 		death_timer_label.text = str(stepify(death_timer.time_left, 0.01))
-func _process(delta):
-	process_time += 1
-	
-	if fmod(process_time, 2) == 0 and toxic:
-		Toxic_UI.visible = not Toxic_UI.visible
-	elif Toxic_UI.visible == true:
-		Toxic_UI.hide()
+
 func shot_line(v):
 	var screen_center = Vector2(Global.resolution[0] / 2, Global.resolution[1] / 2)
 	draw_line(screen_center, screen_center + v * shooter_line_length, ColorN("red"))

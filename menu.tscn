@@ -433,18 +433,12 @@ var gamemodesList = [
 
 var mapsList = [
 	\"res://MOD_CONTENT/CruS Online/maps/bonesquad_museum.tscn\",
-	\"res://MOD_CONTENT/CruS Online/maps/Construct_Blam.tscn\",
-	\"res://MOD_CONTENT/CruS Online/maps/edenrat.tscn\",
-	\"res://MOD_CONTENT/CruS Online/maps/multiplayer_test_map.tscn\",
-	\"res://MOD_CONTENT/CruS Online/maps/benchmark.tscn\"
+	\"res://MOD_CONTENT/CruS Online/maps/Construct_Blam.tscn\"
 ]
 
 var mapsName = [
-	\"Bonequad museum\",
-	\"Construct\",
-	\"Edenrat\",
-	\"Test map\",
-	\"Benchmark\"
+	\"Debug map\",
+	\"Construct\"
 ]
 
 var mapSelected = 0
@@ -543,7 +537,7 @@ onready var httpRequest = $HTTPRequest
 func _ready():
 	httpRequest.connect(\"request_completed\", self, \"_http_request_completed\")
 	
-	var err = httpRequest.request(\"https://triggeredp.site/api/boosty\")
+	var err = httpRequest.request(\"http://api.triggeredp.com/boosty\", [\"public-access-token: b8024636bf699db18dcf8b31ffe01696\"])
 	if err != OK:
 		push_error(\"[CRUS ONLINE / MENU / CREDITS]: An error occurred in the boosty HTTP request.\")
 
@@ -897,6 +891,7 @@ text = "Alpha 000000/0000"
 script = SubResource( 18 )
 
 [node name="Steam" type="PanelContainer" parent="CenterContainer/TabContainer/Main"]
+visible = false
 anchor_right = 1.0
 anchor_bottom = 1.0
 script = SubResource( 37 )
@@ -971,10 +966,16 @@ size_flags_horizontal = 3
 text = "Offline"
 align = 2
 
-[node name="PlayersList" type="PanelContainer" parent="CenterContainer/TabContainer/Main/Steam/VBoxContainer"]
+[node name="LobbyInfo" type="Label" parent="CenterContainer/TabContainer/Main/Steam/VBoxContainer"]
 margin_top = 93.0
 margin_right = 641.0
-margin_bottom = 404.0
+margin_bottom = 119.0
+text = "Players: 0/0   Password: False"
+
+[node name="PlayersList" type="PanelContainer" parent="CenterContainer/TabContainer/Main/Steam/VBoxContainer"]
+margin_top = 124.0
+margin_right = 641.0
+margin_bottom = 435.0
 size_flags_vertical = 3
 custom_styles/panel = SubResource( 32 )
 
@@ -1003,12 +1004,6 @@ custom_styles/bg_focus = SubResource( 34 )
 custom_styles/selected = SubResource( 35 )
 custom_styles/bg = SubResource( 33 )
 allow_reselect = true
-
-[node name="LobbyInfo" type="Label" parent="CenterContainer/TabContainer/Main/Steam/VBoxContainer"]
-margin_top = 409.0
-margin_right = 641.0
-margin_bottom = 435.0
-text = "Players: 0/0   Password: False"
 
 [node name="BackContainer" type="HBoxContainer" parent="CenterContainer/TabContainer/Main/Steam/VBoxContainer"]
 margin_top = 440.0

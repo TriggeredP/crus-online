@@ -126,6 +126,9 @@ func set_toxic():
 
 func cancer():
 	client.set_cancer()
+
+func tranquilize(garbage = null):
+	client.set_tranquilize()
 "
 
 [sub_resource type="BoxShape" id=64]
@@ -281,6 +284,9 @@ onready var client = get_node(\"../../../../../../\")
 
 func destroy(col_n, col_p):
 	client.drop_weapon()
+
+func tranquilize(garbage = null):
+	client.set_tranquilize()
 "
 
 [sub_resource type="BoxShape" id=58]
@@ -336,6 +342,9 @@ func cancer():
 func player_use():
 	set_collision_layer_bit(8, false)
 	client.respawn_player()
+
+func tranquilize(garbage = null):
+	client.set_tranquilize()
 "
 
 [sub_resource type="BoxShape" id=35]
@@ -1080,6 +1089,11 @@ unit_db = 1.0
 unit_size = 5.7
 pitch_scale = 0.91
 bus = "SFX"
+
+[node name="GrappleStartPoint" type="Position3D" parent="Puppet"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.16187, 0 )
+
+[node name="GrapplePoint" type="Position3D" parent="."]
 
 [node name="FlashBuffer" type="Timer" parent="."]
 wait_time = 0.2

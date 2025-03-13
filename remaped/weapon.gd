@@ -207,6 +207,13 @@ remote func _create_drop_weapon(id, parentPath, recivedTransform,recivedHoldPos,
 	new_weapon_drop.gun.MESH[recivedCurrentWeapon].show()
 	new_weapon_drop.playerIgnoreId = playerIgnoreId
 
+	if NetworkBridge.n_is_network_master(self):
+		NetworkBridge.n_rpc(self, "_client_create_drop_weapon", [id, parentPath, recivedTransform,recivedHoldPos, implantThrowBonus, recivedCurrentWeapon, recivedAmmo, playerVelocity, recivdeRandName, playerIgnoreId])
+
+puppet func _client_create_drop_weapon(id, recived_id, parentPath, recivedTransform,recivedHoldPos, implantThrowBonus, recivedCurrentWeapon, recivedAmmo, playerVelocity, recivdeRandName, playerIgnoreId):
+	if recived_id != NetworkBridge.get_id():
+		_create_drop_weapon(id, parentPath, recivedTransform,recivedHoldPos, implantThrowBonus, recivedCurrentWeapon, recivedAmmo, playerVelocity, recivdeRandName, playerIgnoreId)
+
 remote func _spawn_object(id, parentPath, recivedObject, recivedName, recivedTransform, recivedVelocity = null):
 	var newObject = load(recivedObject).instance()
 	newObject.set_name(recivedName)
@@ -214,9 +221,23 @@ remote func _spawn_object(id, parentPath, recivedObject, recivedName, recivedTra
 	newObject.global_transform = recivedTransform
 	if recivedVelocity != null:
 		newObject.velocity = recivedVelocity
+	
+	if NetworkBridge.n_is_network_master(self):
+		NetworkBridge.n_rpc(self, "_client_spawn_object", [id, parentPath, recivedObject, recivedName, recivedTransform, recivedVelocity])
+
+puppet func _client_spawn_object(id, recived_id, parentPath, recivedObject, recivedName, recivedTransform, recivedVelocity = null):
+	if recived_id != NetworkBridge.get_id():
+		_spawn_object(id, parentPath, recivedObject, recivedName, recivedTransform, recivedVelocity)
 
 remote func _play_sound(id, soundName):
 	Global.get_node("Multiplayer").players[id].puppet.get_node("Puppet/PlayerModel/SFX/" + soundName).play()
+
+	if NetworkBridge.n_is_network_master(self):
+		NetworkBridge.n_rpc(self, "_client_play_sound", [id, soundName])
+
+puppet func _client_play_sound(id, recived_id, soundName):
+	if recived_id != NetworkBridge.get_id():
+		_play_sound(id, soundName)
 
 func update_implants():
 	if Global.implants.torso_implant.orbsuit:
@@ -256,6 +277,9 @@ puppet func npc_muzzleflash(id, recivedWeapon, recivedPitch = null):
 func _ready() -> void :
 	NetworkBridge.register_rpcs(self, [
 		["npc_muzzleflash", NetworkBridge.PERMISSION.SERVER],
+		["_client_spawn_object", NetworkBridge.PERMISSION.SERVER],
+		["_client_create_drop_weapon", NetworkBridge.PERMISSION.SERVER],
+		["_client_play_sound", NetworkBridge.PERMISSION.SERVER],
 		["_create_drop_weapon", NetworkBridge.PERMISSION.ALL],
 		["_spawn_object", NetworkBridge.PERMISSION.ALL],
 		["_play_sound", NetworkBridge.PERMISSION.ALL]
@@ -391,15 +415,7 @@ func alert_body_exited(b):
 
 func hold(item):
 	if NetworkBridge.check_connection():
-		item.holdId = get_tree().get_network_unique_id()
-	else:
-		var item_parent = item.get_parent()
-		if "soul" in item:
-			item.soul.remove_child(item)
-			add_child(item)
-		else :
-			item.get_parent().remove_child(item)
-			add_child(item)
+		item.holdId = NetworkBridge.get_id()
 	
 	use_ray.add_exception(item)
 	
@@ -521,6 +537,8 @@ func _process(delta)->void :
 				glob.player.grapple(grapple_point)
 			if grapple_target != null:
 				grapple_target.grapple(grapple_point)
+		else:
+			playerPuppet.set_grapple(null)
 		radiation_cylinder.rotation.z -= cylinder_velocity
 		RAD_light.light_energy = cylinder_velocity * 10
 		if current_weapon != W_RADIATOR:
@@ -666,9 +684,11 @@ func _process(delta)->void :
 			new_weapon_drop.velocity -= (20 + glob.implants.arm_implant.throw_bonus) * (global_transform.origin - hold_pos.global_transform.origin).normalized()
 			new_weapon_drop.velocity += glob.player.player_velocity
 			new_weapon_drop.gun.MESH[current_weapon].show()
-			new_weapon_drop.playerIgnoreId = get_tree().get_network_unique_id()
+			new_weapon_drop.playerIgnoreId = NetworkBridge.get_id()
 			
-			NetworkBridge.n_rpc(self, "_create_drop_weapon", [glob.player.get_parent().get_path(),global_transform.origin,hold_pos.global_transform.origin,glob.implants.arm_implant.throw_bonus,current_weapon,magazine_ammo[current_weapon],glob.player.player_velocity,new_weapon_drop.name,get_tree().get_network_unique_id()])
+			#get_tree().get_network_unique_id()
+			
+			NetworkBridge.n_rpc(self, "_create_drop_weapon", [glob.player.get_parent().get_path(),global_transform.origin,hold_pos.global_transform.origin,glob.implants.arm_implant.throw_bonus,current_weapon,magazine_ammo[current_weapon],glob.player.player_velocity,new_weapon_drop.name,NetworkBridge.get_id()])
 			
 			if weapon1 == current_weapon:
 				weapon1 = null
@@ -686,7 +706,7 @@ func _process(delta)->void :
 			if use_ray.is_colliding():
 				if global_transform.origin.distance_to(use_ray.get_collision_point()) < global_transform.origin.distance_to(hold_pos.global_transform.origin):
 					pos = use_ray.get_collision_point()
-			held_object.set_transform(hold_pos.global_transform, true)
+			held_object.set_network_transform(null, hold_pos.global_transform, true)
 			held_object.global_transform.origin = pos
 			held_object.velocity = Vector3.ZERO
 			var col_is_usable
@@ -700,24 +720,27 @@ func _process(delta)->void :
 				if NetworkBridge.check_connection():
 					held_object.set_hold_collision(false)
 					use_ray.remove_exception(held_object)
-				else:
-					if "soul" in held_object:
-						held_object.get_parent().remove_child(held_object)
-						held_object.soul.add_child(held_object)
-					else :
-						held_object.get_parent().remove_child(held_object)
-						glob.player.get_parent().add_child(held_object)
-						held_object.set_collision_layer_bit(6, 1)
-					held_object.global_transform.origin = pos
-					if held_object_world:
-						held_object.set_collision_layer_bit(0, 1)
 					
-					held_object.set_collision_mask_bit(0, 1)
-					yield (get_tree(), "idle_frame")
-					if is_instance_valid(held_object):
-						use_ray.remove_exception(held_object)
-						if "held" in held_object:
-							held_object.held = false
+					held_object.set_drop_object()
+					NetworkBridge.n_rpc(held_object, "set_drop_object")
+#				else:
+#					if "soul" in held_object:
+#						held_object.get_parent().remove_child(held_object)
+#						held_object.soul.add_child(held_object)
+#					else :
+#						held_object.get_parent().remove_child(held_object)
+#						glob.player.get_parent().add_child(held_object)
+#						held_object.set_collision_layer_bit(6, 1)
+#					held_object.global_transform.origin = pos
+#					if held_object_world:
+#						held_object.set_collision_layer_bit(0, 1)
+#
+#					held_object.set_collision_mask_bit(0, 1)
+#					yield (get_tree(), "idle_frame")
+#					if is_instance_valid(held_object):
+#						use_ray.remove_exception(held_object)
+#						if "held" in held_object:
+#							held_object.held = false
 			
 			if Input.is_action_just_pressed("kick") and not col_is_usable:
 				holding = false
@@ -726,6 +749,9 @@ func _process(delta)->void :
 					held_object.set_hold_collision(false)
 					use_ray.remove_exception(held_object)
 					
+					held_object.set_drop_object()
+					NetworkBridge.n_rpc(held_object, "set_drop_object")
+					
 					var calculatedVelocity
 					if "mass" in held_object:
 						calculatedVelocity = (20 + glob.implants.arm_implant.throw_bonus - held_object.mass) * (global_transform.origin - hold_pos.global_transform.origin).normalized()
@@ -733,31 +759,31 @@ func _process(delta)->void :
 						calculatedVelocity = (20 + glob.implants.arm_implant.throw_bonus) * (global_transform.origin - hold_pos.global_transform.origin).normalized()
 					held_object.velocity += glob.player.player_velocity
 					NetworkBridge.n_rset(held_object, "velocity", [held_object.velocity + glob.player.player_velocity - calculatedVelocity])
-				else:
-					if "alerter" in held_object:
-						held_object.alerter = true
-					if "soul" in held_object:
-						held_object.get_parent().remove_child(held_object)
-						held_object.soul.add_child(held_object)
-					else :
-						held_object.get_parent().remove_child(held_object)
-						glob.player.get_parent().add_child(held_object)
-					held_object.global_transform.origin = pos
-					if "mass" in held_object:
-						held_object.velocity -= (20 + glob.implants.arm_implant.throw_bonus - held_object.mass) * (global_transform.origin - hold_pos.global_transform.origin).normalized()
-					else :
-						held_object.velocity -= (20 + glob.implants.arm_implant.throw_bonus) * (global_transform.origin - hold_pos.global_transform.origin).normalized()
-					held_object.velocity += glob.player.player_velocity
-					if held_object_world:
-						held_object.set_collision_layer_bit(0, 1)
-					held_object.set_collision_mask_bit(0, 1)
-					if "alerter" in held_object:
-						held_object.set_collision_layer_bit(6, 1)
-					yield (get_tree(), "idle_frame")
-					if is_instance_valid(held_object):
-						use_ray.remove_exception(held_object)
-						if "held" in held_object:
-							held_object.held = false
+#				else:
+#					if "alerter" in held_object:
+#						held_object.alerter = true
+#					if "soul" in held_object:
+#						held_object.get_parent().remove_child(held_object)
+#						held_object.soul.add_child(held_object)
+#					else :
+#						held_object.get_parent().remove_child(held_object)
+#						glob.player.get_parent().add_child(held_object)
+#					held_object.global_transform.origin = pos
+#					if "mass" in held_object:
+#						held_object.velocity -= (20 + glob.implants.arm_implant.throw_bonus - held_object.mass) * (global_transform.origin - hold_pos.global_transform.origin).normalized()
+#					else :
+#						held_object.velocity -= (20 + glob.implants.arm_implant.throw_bonus) * (global_transform.origin - hold_pos.global_transform.origin).normalized()
+#					held_object.velocity += glob.player.player_velocity
+#					if held_object_world:
+#						held_object.set_collision_layer_bit(0, 1)
+#					held_object.set_collision_mask_bit(0, 1)
+#					if "alerter" in held_object:
+#						held_object.set_collision_layer_bit(6, 1)
+#					yield (get_tree(), "idle_frame")
+#					if is_instance_valid(held_object):
+#						use_ray.remove_exception(held_object)
+#						if "held" in held_object:
+#							held_object.held = false
 
 		if not is_zero_approx(player_weapon.rotation.z):
 			player_weapon.rotation.z = lerp(player_weapon.rotation.z, 0, 0.8)
@@ -1223,7 +1249,7 @@ func cancer()->void :
 		timer.start(0.2)
 		audio[0].play()
 		if player:
-			playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
+			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 		if player:
 			magazine_ammo[current_weapon] -= 1
 		raycast.rotation = raycast_init_rot
@@ -1280,7 +1306,7 @@ func smg()->void :
 		audio[current_weapon].play()
 		audio[current_weapon].pitch_scale = float(magazine_ammo[current_weapon]) / MAX_MAG_AMMO[current_weapon] + 0.4 + rand_range( - 0.1, 0.1)
 		if player:
-			playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
+			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 		magazine_ammo[current_weapon] -= 1
 
 func steyr()->void :
@@ -1295,7 +1321,7 @@ func steyr()->void :
 			NetworkBridge.n_rpc(self, "npc_muzzleflash", [current_weapon, null])
 		audio[current_weapon].play()
 		if player:
-			playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
+			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 		
 		
 		timer.start(0.2)
@@ -1435,7 +1461,7 @@ func mkr()->void :
 		audio[current_weapon].play()
 		audio[current_weapon].pitch_scale = float(magazine_ammo[current_weapon]) / MAX_MAG_AMMO[current_weapon] + 0.4 + rand_range( - 0.1, 0.1)
 		if player:
-			playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
+			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 		magazine_ammo[current_weapon] -= 1
 
 func blackjack()->void :
@@ -1453,7 +1479,7 @@ func blackjack_timeout():
 			if global_transform.origin.distance_to(col_p) < 3 and is_instance_valid(col):
 				$Batonsound.play()
 				if player:
-					playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
+					playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 				glob.player.player_velocity += 5 * col_n
 				glob.player.player_view.fov *= 1.02
 				if col.has_method("tranq_timeout"):
@@ -1517,7 +1543,7 @@ func mg3()->void :
 				get_parent().get_parent().muzzleflash.show()
 		audio[current_weapon][0].play()
 		if player:
-			playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
+			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 		
 
 		magazine_ammo[current_weapon] -= 1
@@ -1554,7 +1580,7 @@ func silenced_smg()->void :
 		audio[current_weapon].play()
 		audio[current_weapon].pitch_scale = float(magazine_ammo[current_weapon]) / MAX_MAG_AMMO[current_weapon] + 0.4
 		if player:
-			playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
+			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 		magazine_ammo[current_weapon] -= 1
 
 func nailer()->void :
@@ -1592,7 +1618,7 @@ func nailer()->void :
 			NetworkBridge.n_rpc(self, "npc_muzzleflash", [current_weapon, null])
 		audio[current_weapon].play()
 		if player:
-			playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
+			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 
 		magazine_ammo[current_weapon] -= 1
 
@@ -1645,7 +1671,7 @@ func an94_internal():
 			NetworkBridge.n_rpc(self, "npc_muzzleflash", [current_weapon, null])
 		audio[current_weapon].play()
 		if player:
-			playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
+			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 
 		magazine_ammo[current_weapon] -= 1
 
@@ -1694,7 +1720,7 @@ func ar_internal():
 			anim.play(FIRE_ANIM[current_weapon])
 		audio[current_weapon].play()
 		if player:
-			playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
+			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 
 		magazine_ammo[current_weapon] -= 1
 func zippy()->void :
@@ -1740,7 +1766,7 @@ func zippy()->void :
 			audio[current_weapon].play()
 			audio[current_weapon].pitch_scale = float(magazine_ammo[current_weapon]) / MAX_MAG_AMMO[current_weapon] + 0.4
 			if player:
-				playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
+				playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 			magazine_ammo[current_weapon] -= 1
 		elif rand == 1:
 			timer.start(0.07)
@@ -1749,7 +1775,7 @@ func zippy()->void :
 			magazine_ammo[current_weapon] -= 1
 			audio[current_weapon].play()
 			if player:
-				playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
+				playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 			glob.player.damage(5, Vector3.ZERO, global_transform.origin, global_transform.origin)
 func pistol()->void :
 	if timer.is_stopped():
@@ -1797,7 +1823,7 @@ func pistol()->void :
 		audio[current_weapon].play()
 		audio[current_weapon].pitch_scale = float(magazine_ammo[current_weapon]) / MAX_MAG_AMMO[current_weapon] + 0.4
 		if player:
-			playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
+			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 		magazine_ammo[current_weapon] -= 1
 
 
@@ -1845,7 +1871,7 @@ func vag72()->void :
 			
 		audio[current_weapon].play()
 		if player:
-			playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
+			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 		magazine_ammo[current_weapon] -= 1
 
 func sks()->void :
@@ -1884,7 +1910,7 @@ func sks()->void :
 				dmg = 20000
 				$SKS_Sound2.play()
 				if player:
-					playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale, 1)
+					playerPuppet.shoot_play(audio[current_weapon].pitch_scale, 1)
 			damage[current_weapon] = dmg
 			print(damage[current_weapon])
 			do_damage(collider)
@@ -1909,7 +1935,7 @@ func sks()->void :
 			
 		$SKS_Sound.play()
 		if player:
-			playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
+			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 		
 		
 
@@ -1949,7 +1975,7 @@ func skullgun_internal():
 			
 		audio[0].play()
 		if player:
-			playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
+			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 		
 
 
@@ -1991,7 +2017,7 @@ func nambu()->void :
 		audio[current_weapon].play()
 		audio[current_weapon].pitch_scale = float(magazine_ammo[current_weapon]) / MAX_MAG_AMMO[current_weapon] + 0.4
 		if player:
-			playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
+			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 		
 	
 func nambu_fire():
@@ -2019,7 +2045,7 @@ func nambu_fire():
 		audio[current_weapon].play()
 		audio[current_weapon].pitch_scale = float(magazine_ammo[current_weapon]) / MAX_MAG_AMMO[current_weapon] + 0.4
 		if player:
-			playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
+			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 	
 func shoot_through(collider, collision_p):
 	if collider.has_method("damage"):
@@ -2108,7 +2134,7 @@ func sniper()->void :
 		
 		audio[current_weapon].play()
 		if player:
-			playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
+			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 		magazine_ammo[current_weapon] -= 1
 		if player:
 			yield (get_tree().create_timer(0.1), "timeout")
@@ -2165,7 +2191,7 @@ func mauser()->void :
 		audio[current_weapon].play()
 		audio[current_weapon].pitch_scale = float(magazine_ammo[current_weapon]) / MAX_MAG_AMMO[current_weapon]
 		if player:
-			playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
+			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 		magazine_ammo[current_weapon] -= 1
 		if player:
 			yield (get_tree().create_timer(0.2), "timeout")
@@ -2198,7 +2224,7 @@ func shock()->void :
 		audio[current_weapon].play()
 		audio[current_weapon].pitch_scale = float(magazine_ammo[current_weapon]) / MAX_MAG_AMMO[current_weapon] + 0.4
 		if player:
-			playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
+			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 		magazine_ammo[current_weapon] -= 1
 		
 		if player:
@@ -2229,7 +2255,7 @@ func shotgun()->void :
 		audio[current_weapon].play()
 		audio[current_weapon].pitch_scale = float(magazine_ammo[current_weapon]) / MAX_MAG_AMMO[current_weapon] + 0.4
 		if player:
-			playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
+			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 		magazine_ammo[current_weapon] -= 1
 		
 		if player:
@@ -2263,7 +2289,7 @@ func autoshotgun()->void :
 			NetworkBridge.n_rpc(self, "npc_muzzleflash", [current_weapon, null])
 		audio[current_weapon].play()
 		if player:
-			playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
+			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 		magazine_ammo[current_weapon] -= 1
 		
 		if player:
@@ -2300,7 +2326,7 @@ func rocket_launcher()->void :
 				anim.play(FIRE_ANIM[current_weapon])
 				audio[current_weapon].play()
 				if player:
-					playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
+					playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 				glob.player.reticle.shoot()
 			else:
 				NetworkBridge.n_rpc(self, "npc_muzzleflash", [current_weapon, null])
@@ -2325,7 +2351,7 @@ func light()->void :
 				anim.play(FIRE_ANIM[current_weapon])
 				audio[current_weapon].play()
 				if player:
-					playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
+					playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 				glob.player.reticle.shoot()
 				get_parent().rotation.x -= rand_range(0, 0.03)
 				player_weapon.rotation.z = 0 + rand_range( - 0.1, 0.1)
@@ -2335,6 +2361,9 @@ func light()->void :
 				missile_new.set_collision_mask_bit(1, 1)
 			
 			missile_new.set_name(missile_new.name + "#" + str(missile_new.get_instance_id()))
+			
+			if missile_new.has_method("update_rpcs"):
+				missile_new.update_rpcs()
 			
 			NetworkBridge.n_rpc(self, "_spawn_object", [missile_new.get_parent().get_path(), "res://Entities/Bullets/Light_Bullet.tscn", missile_new.name, missile_new.global_transform, missile_new.velocity])
 
@@ -2365,13 +2394,16 @@ func gas()->void :
 			missile_new.add_collision_exception_with(get_parent().get_parent())
 			missile_new.set_velocity(60, (global_transform.origin - $Front_Pos_Helper.global_transform.origin).normalized(), global_transform.origin)
 			
+			if missile_new.has_method("update_rpcs"):
+				missile_new.update_rpcs()
+			
 			NetworkBridge.n_rpc(self, "_spawn_object", [missleParent.get_path(), "res://Entities/Bullets/Grenade.tscn", missile_new.name, missile_new.global_transform, missile_new.velocity])
 			
 			timer.start(3)
 			
 			audio[current_weapon].play()
 			if player:
-				playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
+				playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 			if player:
 				magazine_ammo[current_weapon] -= 1
 				anim.stop()
@@ -2425,7 +2457,7 @@ func bore()->void :
 			anim.play(FIRE_ANIM[current_weapon])
 			audio[current_weapon].play()
 			if player:
-				playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
+				playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 			else:
 				NetworkBridge.n_rpc(self, "npc_muzzleflash", [current_weapon, null])
 			glob.player.reticle.shoot()
@@ -2437,7 +2469,7 @@ func radiator()->void :
 	if not audio[current_weapon].playing:
 		audio[current_weapon].play()
 		if player:
-			playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
+			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 		else:
 			NetworkBridge.n_rpc(self, "npc_muzzleflash", [current_weapon, null])
 	cylinder_velocity += 0.005
@@ -2447,7 +2479,7 @@ func radiator()->void :
 	if timer.is_stopped():
 		$Rad_Sound2.play()
 		if player:
-			playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
+			playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 		timer.start(0.8)
 		$Radiation_Area / MeshInstance.scale.z = 1
 		$Radiation_Area / MeshInstance.scale.x = 1
@@ -2473,23 +2505,34 @@ func tranq()->void :
 			
 			var missile_new = TRANQ_DART.instance()
 			DART_mesh.get_node("Particles").emitting = true
+			var missleParent = null
+			
 			if player:
-				get_parent().get_parent().get_parent().add_child(missile_new)
+				missleParent = get_parent().get_parent().get_parent()
 			else :
-				get_parent().get_parent().get_parent().get_parent().add_child(missile_new)
+				missleParent = get_parent().get_parent().get_parent().get_parent()
+				
+			missleParent.add_child(missile_new)
+			
+			missile_new.set_name(missile_new.name + "#" + str(missile_new.get_instance_id()))
+			
 			if player:
 				missile_new.set_collision_mask_bit(1, 0)
 			else:
 				NetworkBridge.n_rpc(self, "npc_muzzleflash", [current_weapon, null])
 				missile_new.set_collision_mask_bit(1, 1)
 				missile_new.set_collision_mask_bit(2, 0)
-			missile_new.global_transform.origin = global_transform.origin
+			missile_new.global_transform.origin = global_transform.origin - (global_transform.origin - $Front_Pos_Helper.global_transform.origin).normalized()
 			missile_new.set_velocity(90, (global_transform.origin - $Front_Pos_Helper.global_transform.origin).normalized(), global_transform.origin)
 			
+			if missile_new.has_method("update_rpcs"):
+				missile_new.update_rpcs()
+			
+			NetworkBridge.n_rpc(self, "_spawn_object", [missleParent.get_path(), "res://Entities/Bullets/tranquilizer_dart.tscn", missile_new.name, missile_new.global_transform, missile_new.velocity])
 			
 			audio[current_weapon].play()
 			if player:
-				playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
+				playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 			if player:
 				magazine_ammo[current_weapon] -= 1
 				anim.stop()
@@ -2651,7 +2694,7 @@ func shoot()->void :
 				if Input.is_action_pressed("mouse_1"):
 					audio[current_weapon].play()
 					if player:
-						playerPuppet.shoot_play(null, audio[current_weapon].pitch_scale)
+						playerPuppet.shoot_play(audio[current_weapon].pitch_scale)
 		W_NAILER:
 			nailer()
 	set_UI_ammo()

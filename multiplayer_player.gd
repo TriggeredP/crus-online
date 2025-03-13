@@ -16,6 +16,8 @@ var weaponBlend = 0.0
 var playerAimBlend = 0.0
 var crouchBlend
 
+var death = false
+
 var skinPath = "res://Textures/Misc/mainguy_clothes.png"
 var nickname = "MT Foxtrot"
 var color = "ff0000"
@@ -29,6 +31,14 @@ onready var NetworkBridge = Global.get_node("Multiplayer/NetworkBridge")
 onready var SteamInit = Global.get_node("Multiplayer/NetworkBridge")
 
 var canDamage = false
+
+var grapple_pos = null
+
+onready var grapple_point = $GrapplePoint
+onready var grapple_start_point = $Puppet/GrappleStartPoint
+
+onready var grapple_orb = preload("res://Entities/grappleorb.tscn")
+var grapple_orbs = []
 
 func _ready():
 	NetworkBridge.register_rpcs(self, [
@@ -47,7 +57,8 @@ func _ready():
 		["set_gravity", NetworkBridge.PERMISSION.ALL],
 		["shoot_commit", NetworkBridge.PERMISSION.ALL],
 		["_respawn_player", NetworkBridge.PERMISSION.ALL],
-		["hideHelpLabel", NetworkBridge.PERMISSION.ALL]
+		["hideHelpLabel", NetworkBridge.PERMISSION.ALL],
+		["_set_tranquilize", NetworkBridge.PERMISSION.ALL]
 	])
 	
 	weaponsMesh = $Puppet/PlayerModel/Armature/Skeleton/RightHand/Weapons.get_children()
@@ -68,7 +79,9 @@ func _ready():
 	canDamage = false
 	$RespawnDamage.start()
 
-remote func _set_death(id, death):
+remote func _set_death(id, recived_death):
+	death = recived_death
+	
 	if death:
 		animTree.set("parameters/DEATH1/active", true)
 	else:
@@ -133,21 +146,52 @@ func _process(delta):
 	if $Puppet/PlayerModel/SFX/IED_alert.playing:
 		$Puppet/PlayerModel/SFX/IED_alert.pitch_scale += 0.025
 
+func set_grapple_orbs():
+	grapple_point.global_transform.origin = grapple_pos
+	var distance = grapple_start_point.global_transform.origin.distance_to(grapple_point)
+	var orb_res = 4
+	
+	if grapple_orbs.size() < int(distance) * orb_res:
+		for i in range(orb_res):
+			var new_grapple_orb = grapple_orb.instance()
+			add_child(new_grapple_orb)
+			grapple_orbs.append(new_grapple_orb)
+	elif grapple_orbs.size() > int(distance) * orb_res:
+		for i in range(orb_res):
+			grapple_orbs[grapple_orbs.size() - 1].queue_free()
+			grapple_orbs.pop_back()
+	for orb in grapple_orbs:
+		var o_scale = (sin(Global.player.time * 2 - grapple_orbs.find(orb)) * 0.5 + 2) * 0.5
+		orb.scale = Vector3(o_scale, o_scale, o_scale)
+		orb.global_transform.origin = grapple_start_point.global_transform.origin - (grapple_start_point.global_transform.origin - grapple_point.global_transform.origin).normalized() * grapple_orbs.find(orb) / orb_res
+
+func delete_grapple_orbs():
+	for orb in grapple_orbs:
+		orb.queue_free()
+	grapple_orbs = []
+
 func _physics_process(delta):
+	if int(self.name) != NetworkBridge.get_id():
+		if grapple_pos != null and not death:
+			set_grapple_orbs()
+		else:
+			delete_grapple_orbs()
+	
 	if NetworkBridge.check_connection():
-		Multiplayer.packages_count += 1
 		if int(self.name) == NetworkBridge.get_id():
-			NetworkBridge.n_rpc_unreliable(self, "_update_puppet", [Global.player.global_transform, [Global.player.cmd.forward_move,Global.player.cmd.right_move], Global.player.rotation_helper.rotation.x])
+			NetworkBridge.n_rpc_unreliable(self, "_update_puppet", [Global.player.global_transform, [Global.player.cmd.forward_move,Global.player.cmd.right_move], Global.player.rotation_helper.rotation.x, grapple_pos])
 			hide()
 
-remote func _update_puppet(id, recivedTransform, recivedPlayerMovement, recivedPlayerAim):
+remote func _update_puppet(id, recivedTransform, recivedPlayerMovement, recivedPlayerAim, recived_grapple_pos = null):
 	if int(self.name) != NetworkBridge.get_id():
 		transform_lerp = recivedTransform
 		playerMovement = recivedPlayerMovement
 		playerAim = recivedPlayerAim
+		
+		grapple_pos = recived_grapple_pos
 	
 	if NetworkBridge.n_is_network_master(self):
-		NetworkBridge.n_rpc_unreliable(self, "_update_puppet", [recivedTransform, recivedPlayerMovement, recivedPlayerAim])
+		NetworkBridge.n_rpc_unreliable(self, "_update_puppet", [recivedTransform, recivedPlayerMovement, recivedPlayerAim, grapple_pos])
 
 puppet func respawn_puppet(id):
 	if int(self.name) == NetworkBridge.get_id():
@@ -207,6 +251,15 @@ func do_damage(damage, collision_n, collision_p, shooter_pos, weapon_type = null
 remote func _do_damage(id, damage, collision_n, collision_p, shooter_pos, weapon_type):
 	Global.player.set_last_damager_id(id, weapon_type)
 	Global.player.damage(damage, collision_n, collision_p, shooter_pos)
+
+func set_tranquilize():
+	NetworkBridge.n_rpc_id(self, int(self.name), "_set_tranquilize")
+
+remote func _set_tranquilize(id):
+	Global.player.set_tranquilize()
+
+func set_grapple(recived_position):
+	grapple_pos = recived_position
 
 func set_toxic():
 	NetworkBridge.n_rpc_id(self, int(self.name), "_set_toxic")

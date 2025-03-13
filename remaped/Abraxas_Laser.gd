@@ -45,6 +45,7 @@ func _ready():
 	NetworkBridge.register_rset(laser, "global_transform", NetworkBridge.PERMISSION.SERVER)
 	NetworkBridge.register_rset(particle, "global_transform", NetworkBridge.PERMISSION.SERVER)
 	
+	NetworkBridge.register_rset(self, "visible", NetworkBridge.PERMISSION.SERVER)
 	rset_config("visible", MultiplayerAPI.RPC_MODE_PUPPET)
 
 puppet func particle_visible(id, value = true):
@@ -54,12 +55,14 @@ func _physics_process(delta):
 	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		t += 1
 		if destroyed:
-			hide()
-			NetworkBridge.n_rset_unreliable(self, "visible", false)
+			if visible:
+				hide()
+				NetworkBridge.n_rset_unreliable(self, "visible", false)
 			return 
 		if disabled:
-			particle.hide()
-			NetworkBridge.n_rpc_unreliable(self, "particle_visible", [false])
+			if particle.visible:
+				particle.hide()
+				NetworkBridge.n_rpc_unreliable(self, "particle_visible", [false])
 			if laser.scale.z < 3:
 				hide()
 			laser.scale.z = lerp(laser.scale.z, 1, 0.2)

@@ -114,6 +114,7 @@ func respawn():
 			respawnPoint.shuffle()
 				
 			Global.player.global_transform.origin = respawnPoint[0].global_transform.origin
+			Global.player.global_rotation.y = respawnPoint[0].global_rotation.y
 			
 			Multiplayer.playerPuppet.player_restart()
 		else:

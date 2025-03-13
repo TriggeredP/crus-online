@@ -17,12 +17,12 @@ var velocity_target = Vector3.ZERO
 func _ready():
 	NetworkBridge.register_rpcs(self, [
 		["_stop_sound", NetworkBridge.PERMISSION.ALL],
-		["_set_master", NetworkBridge.PERMISSION.ALL]
+		["_set_master", NetworkBridge.PERMISSION.ALL],
+		["set_in_use", NetworkBridge.PERMISSION.ALL]
 	])
 	
 	set_collision_layer_bit(8, 1)
 	
-	rset_config("in_use", MultiplayerAPI.RPC_MODE_REMOTE)
 	rset_config("global_transform", MultiplayerAPI.RPC_MODE_REMOTE)
 
 func align_up(node_basis, normal)->Basis:
@@ -125,6 +125,9 @@ func _process(delta):
 		NetworkBridge.n_rpc(self, "_stop_sound")
 		NetworkBridge.n_rpc(self, "_set_master", [1])
 
+remote func set_in_use(id, recived_value):
+	in_use = recived_value
+
 func player_use():
 	if not in_use:
 		$Car / Camera.current = true
@@ -139,10 +142,10 @@ func player_use():
 		Global.player.set_collision_mask_bit(7, false)
 		yield (get_tree(), "idle_frame")
 		in_use = true
-		NetworkBridge.n_rset(self, "in_use", true)
+		NetworkBridge.n_rpc(self, "set_in_use", [true])
 		
-		set_network_master(get_tree().get_network_unique_id())
-		NetworkBridge.n_rpc(self, "_set_master", [get_tree().get_network_unique_id()])
+#		set_network_master(get_tree().get_network_unique_id())
+#		NetworkBridge.n_rpc(self, "_set_master", [get_tree().get_network_unique_id()])
 
 func _on_VehicleBody_body_entered(body):
 	pass
@@ -158,4 +161,5 @@ func _on_Area_body_entered(body):
 		body.damage(200, (global_transform.origin - body.global_transform.origin).normalized(), body.global_transform.origin, global_transform.origin)
 
 remote func _set_master(id):
-	set_network_master(id)
+	#set_network_master(id)
+	pass

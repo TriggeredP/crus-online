@@ -1,5 +1,7 @@
 extends KinematicBody
 
+# TODO: Оптимизировать анимации -> Слишком большое количество RPC (15/сек на NPC)
+
 onready var NetworkBridge = Global.get_node("Multiplayer/NetworkBridge")
 
 var rotation_helper:Spatial
@@ -118,17 +120,21 @@ var last_transform : Transform
 puppet func set_puppet_transform(id, recived_position, recived_rotation):
 	lerp_transform.origin = recived_position
 
+var tick = 0
+
 func host_tick():
 	if (global_transform.origin - last_transform.origin).length() > 0.01:
-		NetworkBridge.n_rset_unreliable(self, "lerp_transform", global_transform)
-		Multiplayer.packages_count += 1
-		last_transform = global_transform
+		tick += 1
+		if not soul.gibs_spawned and tick % 2 == 0:
+			NetworkBridge.n_rset_unreliable(self, "lerp_transform", global_transform)
+			last_transform = global_transform
+			tick = 0
 
 ################################################################################
 
 func _ready()->void :
 	NetworkBridge.register_rpcs(self,[
-		["add_velocity", NetworkBridge.PERMISSION.ALL],
+		["network_add_velocity", NetworkBridge.PERMISSION.ALL],
 		["network_alert", NetworkBridge.PERMISSION.ALL],
 		["network_set_flee", NetworkBridge.PERMISSION.ALL],
 		["network_set_dead", NetworkBridge.PERMISSION.ALL],
@@ -145,7 +151,7 @@ func _ready()->void :
 #	Multiplayer.connect("host_tick", self, "host_tick")
 	NetworkBridge.register_rset(self, "lerp_transform", NetworkBridge.PERMISSION.SERVER)
 	rset_config("lerp_transform", MultiplayerAPI.RPC_MODE_PUPPET)
-	
+
 	glob = Global
 	forward_helper = Position3D.new()
 	add_child(forward_helper)
@@ -166,7 +172,13 @@ func _ready()->void :
 	if wait_sound:
 		knocksound = get_node("Knocksound")
 	movement_sound = get_node_or_null("Movement_Sound")
+	
 	anim_player = get_parent().get_node("Nemesis/AnimationPlayer")
+	
+	anim_player.get_animation("Idle").loop = true
+	anim_player.get_animation("Run").loop = true
+	anim_player.get_animation("Attack").loop = true
+	
 	footstep = AudioStreamPlayer3D.new()
 	add_child(footstep)
 	footstep.global_transform.origin = global_transform.origin
@@ -247,7 +259,7 @@ func _physics_process(delta)->void :
 			height_difference = player.global_transform.origin.y > global_transform.origin.y and abs(player.global_transform.origin.y - global_transform.origin.y) > 21
 			anim_counter += 1
 			time += 1
-			if muzzleflash:
+			if muzzleflash.visible:
 				muzzleflash.hide()
 				NetworkBridge.n_rpc(self, "hide_muzzleflash", [true])
 			if player_distance > ai_distance:
@@ -328,14 +340,16 @@ func wait_for_player(delta)->void :
 	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		if not patrol:
 			if move_speed == 0:
-				anim_player.play("Idle", - 1, 1)
-				NetworkBridge.n_rpc(self, "set_animation", ["Idle", 1])
+				if anim_player.current_animation != "Idle":
+					anim_player.play("Idle", - 1, 1)
+					NetworkBridge.n_rpc(self, "set_animation", ["Idle", 1])
 				
 			if is_on_floor():
 				velocity.y = 0
 			if path.size() == 0:
-				anim_player.play("Idle", - 1, 1)
-				NetworkBridge.n_rpc(self, "set_animation", ["Idle", 1])
+				if anim_player.current_animation != "Idle":
+					anim_player.play("Idle", - 1, 1)
+					NetworkBridge.n_rpc(self, "set_animation", ["Idle", 1])
 				if fmod(time, alertness) == 0:
 					alerted = false
 					if rand_patroller and randi() % 5 == 1:
@@ -433,7 +447,10 @@ func player_spotted()->void :
 		elif fmod(time, pathing_frequency) and path.size() == 0:
 			path = NavigationServer.map_get_path(navigation, global_transform.origin, global_transform.origin + Vector3(rand_range( - 3, 3), 0, rand_range( - 3, 3)), true)
 
-master func add_velocity(id, incvelocity:Vector3)->void :
+func add_velocity(incvelocity:Vector3):
+	network_add_velocity(null, incvelocity)
+
+master func network_add_velocity(id, incvelocity:Vector3)->void :
 	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		velocity -= incvelocity
 		if not dead and not tranq:
@@ -444,7 +461,7 @@ master func add_velocity(id, incvelocity:Vector3)->void :
 				look_at(player.global_transform.origin, Vector3.UP)
 				rotation.x = 0
 	else:
-		NetworkBridge.n_rpc(self, "add_velocity", [incvelocity])
+		NetworkBridge.n_rpc(self, "network_add_velocity", [incvelocity])
 
 func alert(pos:Vector3):
 	network_alert(null, pos)
@@ -489,14 +506,16 @@ func active(delta:float)->void :
 			velocity.x = 0
 			velocity.z = 0
 		if not has_anim_attack:
-			anim_player.play("Idle")
-			NetworkBridge.n_rpc(self, "set_animation", ["Idle", 1])
+			if anim_player.current_animation != "Idle":
+				anim_player.play("Idle")
+				NetworkBridge.n_rpc(self, "set_animation", ["Idle", 1])
 
 func find_path(delta)->void :
 	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		if move_speed == 0:
-			anim_player.play("Idle")
-			NetworkBridge.n_rpc(self, "set_animation", ["Idle", 1])
+			if anim_player.current_animation != "Idle":
+				anim_player.play("Idle")
+				NetworkBridge.n_rpc(self, "set_animation", ["Idle", 1])
 			return 
 		if civ_killer:
 			weapon.AI_shoot()
@@ -505,10 +524,12 @@ func find_path(delta)->void :
 					var anim_speed = 2
 					if not player_spotted:
 						anim_speed = 1
-					anim_player.play("Run", - 1, anim_speed)
-					NetworkBridge.n_rpc(self, "set_animation", ["Run", anim_speed])
+					if anim_player.current_animation != "Run":
+						anim_player.play("Run", - 1, anim_speed)
+						NetworkBridge.n_rpc(self, "set_animation", ["Run", anim_speed])
 				else :
-					NetworkBridge.n_rpc(self, "set_animation", ["Idle", 1])
+					if anim_player.current_animation != "Idle":
+						NetworkBridge.n_rpc(self, "set_animation", ["Idle", 1])
 				if is_instance_valid(movement_sound):
 					if fmod(time, 5) == 0:
 						movement_sound.pitch_scale = clamp(sin(time * 0.3) + 0.7, 0.5, 2)
@@ -588,8 +609,8 @@ master func network_set_dead(id)->void :
 	else:
 		NetworkBridge.n_rpc(self, "network_set_dead")
 
-func set_tranquilized():
-	network_set_tranquilized(null)
+func tranquilize(id = null):
+	network_set_tranquilized(id)
 
 master func network_set_tranquilized(id):
 	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):

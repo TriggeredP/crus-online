@@ -65,6 +65,11 @@ signal throw_error(error)
 # SERVER = PUPPET
 # CLIENT_ALL = REMOTE
 
+func _notification(what):
+	match what:
+		NOTIFICATION_CRASH:
+			push_error("[CRUS ONLINE / MAIN]: CRASH DETECTED")
+
 func _ready():
 	SteamNetwork.register_rpcs(self,[
 		["set_packages_count", SteamNetwork.PERMISSION.SERVER],
@@ -141,6 +146,8 @@ puppet func set_packages_count(id, value):
 	$Debug/VBoxContainer/PPT.text = "Packages per sec: " + str(value)
 
 func ping_check():
+	$Debug/VBoxContainer/FPS.text = "FPS: " + str(Engine.get_frames_per_second())
+	
 	if NetworkBridge.check_connection():
 		if not NetworkBridge.n_is_network_master(self):
 			NetworkBridge.n_rpc(self, "ping_host", [OS.get_ticks_msec()])
@@ -148,6 +155,7 @@ func ping_check():
 			$Debug/VBoxContainer/PPT.text = "Packages per sec: " + str(packages_count + 1)
 			NetworkBridge.n_rpc(self, "set_packages_count", [packages_count])
 			packages_count = 0
+			NetworkBridge.print_debug_list()
 
 master func ping_host(id, recived_ping):
 	NetworkBridge.n_rpc_id(self, id, "ping_set", [recived_ping])
@@ -360,7 +368,7 @@ func goto_menu_host(levelFinished = false):
 	if NetworkBridge.is_lan():
 		get_tree().network_peer.refuse_new_connections = true
 	else:
-		SteamInit.Steam.setLobbyJoinable(SteamLobby.get_lobby_id(), false)
+		SteamInit.Steam.setLobbyJoinable(SteamLobby.get_lobby_id(), true)
 	
 	Global.CURRENT_LEVEL = 0
 	Global.goto_scene(menuPath)

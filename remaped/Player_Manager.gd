@@ -8,8 +8,14 @@ func _ready():
 		scale = Vector3(0.1, 0.1, 0.1)
 	
 	var respawnPoint = load("res://MOD_CONTENT/CruS Online/respawn_point.tscn").instance()
-	get_node("..").call_deferred("add_child",respawnPoint)
+	get_node("..").call_deferred("add_child", respawnPoint)
 	respawnPoint.global_transform.origin = self.global_transform.origin
+	
+	var respawnPoints = get_tree().get_nodes_in_group("Respawn")
+	respawnPoints.shuffle()
+	
+	player.global_transform.origin = respawnPoints[0].global_transform.origin
+	player.global_rotation.y = respawnPoints[0].global_rotation.y
 
 func _process(delta):
 	if Input.is_action_just_pressed("Stocks"):

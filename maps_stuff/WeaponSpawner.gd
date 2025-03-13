@@ -11,10 +11,10 @@ export var rotateSpeed = 0.1
 export var respawnWeaponIds = [0]
 export var respawnTime = 5
 
-remotesync func _disable(disable):
+remotesync func _disable(id, disable):
 	$Collect/CollisionShape.disabled = disable
 
-remotesync func _set_weapon(weaponId):
+remotesync func _set_weapon(id, weaponId):
 	if activeWeapon != null:
 		weaponModels[activeWeapon].hide()
 		
@@ -23,7 +23,7 @@ remotesync func _set_weapon(weaponId):
 	if activeWeapon != null:
 		weaponModels[activeWeapon].show()
 
-mastersync func _enable_timer():
+mastersync func _enable_timer(id):
 	$Timer.start()
 
 func _ready():

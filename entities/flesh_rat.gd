@@ -55,14 +55,13 @@ var last_transform : Transform
 func host_tick():
 	if (global_transform.origin - last_transform.origin).length() > 0.01:
 		NetworkBridge.n_rset_unreliable(self, "lerp_transform", global_transform)
-		Multiplayer.packages_count += 1
 		last_transform = global_transform
 
 ################################################################################
 
 func _ready():
 	NetworkBridge.register_rpcs(self,[
-		["add_velocity", NetworkBridge.PERMISSION.ALL],
+		["network_add_velocity", NetworkBridge.PERMISSION.ALL],
 		["set_animation", NetworkBridge.PERMISSION.SERVER],
 		["play_chatter", NetworkBridge.PERMISSION.SERVER]
 	])
@@ -104,8 +103,9 @@ func _physics_process(delta):
 					get_parent().health = 50
 					dead = false
 					immortal_death_time = 200
-					anim_player.play("Undie")
-					NetworkBridge.n_rpc(self, "set_animation", ["Undie", 1])
+					if anim_player.current_animation != "Undie":
+						anim_player.play("Undie")
+						NetworkBridge.n_rpc(self, "set_animation", ["Undie", 1])
 					yield (get_tree(), "idle_frame")
 			if get_near_player().distance > 20:
 				velocity.x = 0
@@ -129,8 +129,9 @@ func _physics_process(delta):
 				
 				if get_near_player().distance < attack_distance:
 					weapon.AI_shoot()
-					anim_player.play("Attack", - 1, 1)
-					NetworkBridge.n_rpc(self, "set_animation", ["Attack", 1])
+					if anim_player.current_animation != "Attack":
+						anim_player.play("Attack", - 1, 1)
+						NetworkBridge.n_rpc(self, "set_animation", ["Attack", 1])
 			else :
 				if fmod(time, 20) == 0 and not dead and not anim_player.current_animation == "Undie":
 					velocity = - move_speed * (global_transform.origin - get_near_player().player.global_transform.origin).normalized()
@@ -138,14 +139,17 @@ func _physics_process(delta):
 					rotation.x = 0
 				if Vector3(velocity.x, 0, velocity.z).length() > 0.4 and not dead and not anim_player.current_animation == "Undie":
 					if not flee:
-						anim_player.play("Walk", - 1, anim_speed)
-						NetworkBridge.n_rpc(self, "set_animation", ["Walk", anim_speed])
+						if anim_player.current_animation != "Walk":
+							anim_player.play("Walk", - 1, anim_speed)
+							NetworkBridge.n_rpc(self, "set_animation", ["Walk", anim_speed])
 					else :
-						anim_player.play("Run", - 1, 2)
-						NetworkBridge.n_rpc(self, "set_animation", ["Walk", 2])
+						if anim_player.current_animation != "Run":
+							anim_player.play("Run", - 1, 2)
+							NetworkBridge.n_rpc(self, "set_animation", ["Run", 2])
 				elif not dead and not anim_player.current_animation == "Undie":
-					anim_player.play("Idle")
-					NetworkBridge.n_rpc(self, "set_animation", ["Idle", 1])
+					if anim_player.current_animation != "Idle":
+						anim_player.play("Idle")
+						NetworkBridge.n_rpc(self, "set_animation", ["Idle", 1])
 			if water:
 				GRAVITY = 2
 			else :
@@ -171,11 +175,14 @@ func _physics_process(delta):
 		else:
 			global_transform = global_transform.interpolate_with(lerp_transform, delta * 10.0)
 
-master func add_velocity(id, increase_velocity):
+func add_velocity(increase_velocity):
+	network_add_velocity(null, increase_velocity)
+
+master func network_add_velocity(id, increase_velocity):
 	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		velocity -= increase_velocity
 	else:
-		NetworkBridge.n_rpc_id(self, 0, "add_velocity", [increase_velocity])
+		NetworkBridge.n_rpc_id(self, 0, "network_add_velocity", [increase_velocity])
 
 func set_water(a):
 	water = a

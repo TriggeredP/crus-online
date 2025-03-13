@@ -152,8 +152,8 @@ margin_right = 420.0
 margin_bottom = 228.0
 texture = ExtResource( 8 )
 idleTexture = ExtResource( 8 )
-labelText = "Disconnect"
-buttonType = "Disconnect"
+labelText = "To menu"
+buttonType = "To menu"
 
 [node name="OpenChat" parent="Menu" instance=ExtResource( 4 )]
 margin_left = 164.0
@@ -281,7 +281,7 @@ custom_constants/minimum_spaces = 0
 custom_fonts/font = SubResource( 11 )
 selecting_enabled = false
 deselect_on_focus_loss_enabled = false
-placeholder_text = " / to type"
+placeholder_text = "Click to type"
 
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="Menu/ChatBox"]
 stream = SubResource( 13 )
@@ -428,6 +428,13 @@ margin_top = 52.0
 margin_right = 1130.0
 margin_bottom = 78.0
 text = "Ping: 0"
+align = 2
+
+[node name="FPS" type="Label" parent="Debug/VBoxContainer"]
+margin_top = 78.0
+margin_right = 1130.0
+margin_bottom = 104.0
+text = "FPS: 0"
 align = 2
 
 [connection signal="button_pressed" from="Menu/Start" to="Menu" method="hide_menu"]
