@@ -33,14 +33,14 @@ This modification provides two ways to connect players.:
 1. Steam
 2. LAN
 
-###Steam:
+**Steam:**
 To create a lobby in the game, you need to:
 
 1. Open the CruS Online menu (The second icon in the main menu)
 2. Select Steam connection mode
 3. Click on the 'Create` button to create a lobby
 
-###LAN:
+**LAN:**
 There are two ways to create a lobby via LAN connection:
 
 1. Port forwarding
@@ -60,14 +60,14 @@ To create a lobby in the game, you need to:
 ## Connecting to lobby
 After the host has created the lobby, the players must:
 
-###Steam:
+**Steam:**
 
 1. Open the CruS Online menu (The second icon in the main menu)
 2. Select Steam connection mode
 3. Select the lobby from the list (Or receive an invitation from the host)
 4. Click on the `Join` button to connect to the lobby
 
-###LAN:
+**LAN:**
 
 1. Open the CruS Online menu (The second icon in the main menu)
 2. Enter the IP and port received from the host
