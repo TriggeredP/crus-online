@@ -331,8 +331,10 @@ margin_right = 601.0
 margin_bottom = 360.0
 custom_fonts/normal_font = SubResource( 10 )
 bbcode_enabled = true
-bbcode_text = "Work in progress (sorry o.o)"
-text = "Work in progress (sorry o.o)"
+bbcode_text = "1: [color=#34ff98]TRIGGERED P [ALT][/color] (host)
+2: [color=#34ff98]TRIGGERED P[/color]"
+text = "1: TRIGGERED P [ALT] (host)
+2: TRIGGERED P"
 scroll_following = true
 
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="Menu/Stats"]
@@ -414,6 +416,15 @@ mouse_filter = 2
 margin_right = 1130.0
 margin_bottom = 26.0
 text = "Player is not connected"
+align = 2
+
+[node name="PackagesDebugList" type="Label" parent="Debug/VBoxContainer"]
+visible = false
+margin_top = 26.0
+margin_right = 1130.0
+margin_bottom = 81.0
+text = "Packages inspector active
+(See console)"
 align = 2
 
 [node name="PPT" type="Label" parent="Debug/VBoxContainer"]

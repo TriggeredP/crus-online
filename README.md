@@ -14,7 +14,7 @@ English | [Русский](README_RU.md)
 > You may encounter bugs and poor performance.
 
 ## About
-Cruelty Squad Online (CruS Online) is a huge modification for game [Cruelty Squad](https://store.steampowered.com/app/1388770/Cruelty_Squad/) that add a lobby style LAN multiplayer
+Cruelty Squad Online (CruS Online) is a huge modification for game [Cruelty Squad](https://store.steampowered.com/app/1388770/Cruelty_Squad/) that add a lobby style Steam and LAN multiplayer
 
 ## Installation
 CruS Online is installed in the same way as other modifications
@@ -28,7 +28,20 @@ CruS Online is installed in the same way as other modifications
 > CruS Online is currently incompatible with other modifications
 
 ## Hosting lobby
-Due to the fact that the modification adds LAN multiplayer, there are two ways to host the lobby:
+This modification provides two ways to connect players.:
+
+1. Steam
+2. LAN
+
+###Steam:
+To create a lobby in the game, you need to:
+
+1. Open the CruS Online menu (The second icon in the main menu)
+2. Select Steam connection mode
+3. Click on the 'Create` button to create a lobby
+
+###LAN:
+There are two ways to create a lobby via LAN connection:
 
 1. Port forwarding
 2. Using a VPN software (like Radmin VPN)
@@ -45,7 +58,16 @@ To create a lobby in the game, you need to:
 4. Share IP and port with those you are going to play with
 
 ## Connecting to lobby
-After the host has created a lobby, players must:
+After the host has created the lobby, the players must:
+
+###Steam:
+
+1. Open the CruS Online menu (The second icon in the main menu)
+2. Select Steam connection mode
+3. Select the lobby from the list (Or receive an invitation from the host)
+4. Click on the `Join` button to connect to the lobby
+
+###LAN:
 
 1. Open the CruS Online menu (The second icon in the main menu)
 2. Enter the IP and port received from the host
@@ -63,6 +85,7 @@ After the game starts, players will not be able to join the lobby
 ## Usefull information
 
 You can change the nickname, color and skin in the `Player` tab
+The `Host` tab has a bunch of parameters that can be changed
 
 ## Links
 My site: https://triggeredp.site

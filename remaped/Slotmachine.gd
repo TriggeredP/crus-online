@@ -6,16 +6,18 @@ var rotation_counter = - 1
 var coin = preload("res://Entities/Physics_Objects/Coin.tscn")
 
 func _ready():
-	rset_config("rotation_counter", MultiplayerAPI.RPC_MODE_MASTER)
-	
 	NetworkBridge.register_rpcs(self, [
 		["set_mech_rotation", NetworkBridge.PERMISSION.SERVER],
+		["set_rotation_counter", NetworkBridge.PERMISSION.ALL],
 		["notify", NetworkBridge.PERMISSION.SERVER],
 		["play_audio", NetworkBridge.PERMISSION.SERVER],
 		["client_spawn_coin", NetworkBridge.PERMISSION.SERVER],
 		["money_check", NetworkBridge.PERMISSION.SERVER],
 		["check_use", NetworkBridge.PERMISSION.ALL]
 	])
+
+master func set_rotation_counter(id, recived_value):
+	rotation_counter = recived_value
 
 puppet func set_mech_rotation(id, value):
 	$MeshInstance2.rotation.x = value
@@ -75,10 +77,11 @@ puppet func client_spawn_coin(id, parentPath, recivedName, recivedTransform):
 	get_node(parentPath).add_child(new_coin)
 
 func player_use():
-	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
-		check_use(true)
-	else:
-		NetworkBridge.n_rpc(self, "check_use")
+	if NetworkBridge.check_connection():
+		if NetworkBridge.n_is_network_master(self):
+			check_use(null, true)
+		else:
+			NetworkBridge.n_rpc(self, "check_use")
 
 master func check_use(id, host = false):
 	if rotation_counter >= 0:
@@ -98,4 +101,4 @@ puppet func money_check(id):
 	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		rotation_counter = 50
 	else:
-		NetworkBridge.n_rset(self, "rotation_counter", 50)
+		NetworkBridge.n_rpc(self, "set_rotation_counter", [50])

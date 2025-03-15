@@ -1,6 +1,6 @@
 extends Node
 
-var version = "Beta 210225/0048"
+var version = "Beta 150325/1950"
 
 enum errorType {UNKNOW, TIME_OUT, WRONG_PASSWORD, WRONG_VERSION, PASSWORD_REQUIRE, SERVER_CLOSED, UPNP_ERROR, PLAYER_CONNECTED}
 
@@ -109,6 +109,8 @@ var tick = 0
 
 var packages_count = 0
 
+var packages_inspector = false
+
 func peer_update(steam_id):
 	if players[steam_id] != null:
 		if Global.player.health != null:
@@ -130,6 +132,9 @@ func _input(event):
 				print("[CRUS ONLINE / DEBUG] players: ")
 				for player in players:
 					print(str(player) + ": ", players[player])
+			KEY_F3:
+				packages_inspector = !packages_inspector
+				$Debug/VBoxContainer/PackagesDebugList.visible = packages_inspector
 
 func _physics_process(delta):
 	if NetworkBridge.is_lan():
@@ -155,7 +160,8 @@ func ping_check():
 			$Debug/VBoxContainer/PPT.text = "Packages per sec: " + str(packages_count + 1)
 			NetworkBridge.n_rpc(self, "set_packages_count", [packages_count])
 			packages_count = 0
-			NetworkBridge.print_debug_list()
+			if packages_inspector:
+				NetworkBridge.print_debug_list()
 
 master func ping_host(id, recived_ping):
 	NetworkBridge.n_rpc_id(self, id, "ping_set", [recived_ping])

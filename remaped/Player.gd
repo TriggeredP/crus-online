@@ -145,6 +145,8 @@ var r
 onready var orbWalkSound = preload("res://Sfx/orbwalk.wav")
 var playerWalkSound
 
+var car = null
+
 ################################################################################
 
 onready var Multiplayer = Global.get_node("Multiplayer")
@@ -322,7 +324,7 @@ func _ready():
 	add_child(fakeFire)
 	fakeFire.transform.origin += Vector3.UP
 	
-	set_collision_mask_bit(10, 1)
+	set_collision_layer_bit(10, 1)
 	
 	tranquilize_timer = Timer.new()
 	add_child(tranquilize_timer)
@@ -505,6 +507,9 @@ func grapple(pos3d:Position3D):
 
 var tranquilize_flag = false
 var tranquilize_mul = 0.0
+
+func tranquilize(garbage):
+	set_tranquilize()
 
 func set_tranquilize():
 	tranquilize_timer.start()
@@ -1053,15 +1058,6 @@ func ground_move(delta):
 	wishspeed *= move_speed
 	
 	accelerate(wishdir, wishspeed, run_acceleration, delta)
-
-
-
-
-
-
-
-
-
 	player_velocity.y = 0
 
 	if (wish_jump):
@@ -1094,8 +1090,6 @@ func apply_friction(t, delta):
 	drop = 0.0
 	
 	if is_on_floor() or is_on_wall() or water:
-	
-		
 		control = run_deacceleration if speed < run_deacceleration else speed
 		drop = control * friction * delta * t
 	
@@ -1193,6 +1187,9 @@ func die(damage, collision_n, collision_p, shooter_pos):
 	death_timer.start()
 
 func instadie(damage = 100, collision_n = Vector3.ZERO, collision_p = Vector3.ZERO, shooter_pos = Vector3.ZERO):
+	if car != null:
+		car.eject()
+	
 	death_timer.stop()
 	if dead:
 		$SFX / IED1.stop()

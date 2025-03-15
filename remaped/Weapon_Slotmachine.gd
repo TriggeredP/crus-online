@@ -17,11 +17,13 @@ var weapon_drop = preload("res://Entities/Objects/Gun_Pickup.tscn")
 var weapon_indexes:Array = [[0, 1, 4, 7, 9], [2, 5, 6, 8, 12, 13, 17], [18]]
 var wep = 0
 
+master func set_rotation_counter(id, recived_value):
+	rotation_counter = recived_value
+
 func _ready():
-	rset_config("rotation_counter", MultiplayerAPI.RPC_MODE_MASTER)
-	
 	NetworkBridge.register_rpcs(self, [
 		["set_mech_rotation", NetworkBridge.PERMISSION.SERVER],
+		["set_rotation_counter", NetworkBridge.PERMISSION.ALL],
 		["notify", NetworkBridge.PERMISSION.SERVER],
 		["play_audio", NetworkBridge.PERMISSION.SERVER],
 		["client_spawn_item", NetworkBridge.PERMISSION.SERVER],
@@ -76,6 +78,9 @@ func spawn_item():
 	new_weapon_drop.global_transform.origin = $Position3D.global_transform.origin
 	new_weapon_drop.damage(5, (global_transform.origin - ($Forward_Position.global_transform.origin + Vector3(rand_range( - 0.1, 0.1), rand_range( - 0.1, 0.1), rand_range( - 0.1, 0.1)))).normalized(), global_transform.origin, Vector3.ZERO)
 	
+	new_weapon_drop.register_all_rpcs()
+	new_weapon_drop.gun.register_all_rpcs()
+	
 	NetworkBridge.n_rpc(self, "client_spawn_item", [get_parent().get_path(), new_weapon_drop.name, new_weapon_drop.global_transform, wep, wepRand])
 
 puppet func client_spawn_item(id, recivedPath, recivedName, recivedTransform, recivedIndexA, recivedIndexB):
@@ -87,10 +92,13 @@ puppet func client_spawn_item(id, recivedPath, recivedName, recivedTransform, re
 	new_weapon_drop.gun.ammo = Global.player.weapon.MAX_MAG_AMMO[new_weapon_drop.gun.current_weapon]
 	new_weapon_drop.gun.MESH[new_weapon_drop.gun.current_weapon].show()
 	new_weapon_drop.global_transform = recivedTransform
+	
+	new_weapon_drop.register_all_rpcs()
+	new_weapon_drop.gun.register_all_rpcs()
 
 func player_use():
 	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
-		check_use(true)
+		check_use(null, true)
 	else:
 		NetworkBridge.n_rpc(self, "check_use")
 
@@ -112,4 +120,4 @@ puppet func money_check(id):
 	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		rotation_counter = 50
 	else:
-		NetworkBridge.n_rset(self, "rotation_counter", 50)
+		NetworkBridge.n_rpc(self, "set_rotation_counter", [50])

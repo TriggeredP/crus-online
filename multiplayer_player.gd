@@ -16,6 +16,9 @@ var weaponBlend = 0.0
 var playerAimBlend = 0.0
 var crouchBlend
 
+var sit_blend = 0.0
+var player_sitting = false
+
 var death = false
 
 var skinPath = "res://Textures/Misc/mainguy_clothes.png"
@@ -53,6 +56,7 @@ func _ready():
 		["_set_death", NetworkBridge.PERMISSION.ALL],
 		["set_is_on_floor", NetworkBridge.PERMISSION.ALL],
 		["set_kick", NetworkBridge.PERMISSION.ALL],
+		["set_sit", NetworkBridge.PERMISSION.ALL],
 		["set_crouch", NetworkBridge.PERMISSION.ALL],
 		["set_gravity", NetworkBridge.PERMISSION.ALL],
 		["shoot_commit", NetworkBridge.PERMISSION.ALL],
@@ -120,16 +124,23 @@ func can_respawn():
 	$Puppet/PlayerModel/HelpLabel.text = "Press [Use] to help"
 	$Puppet/PlayerModel/Armature/Skeleton/Chest/Body.set_collision_layer_bit(8, true)
 
+remote func set_sit(id, recived_value):
+	if int(self.name) == NetworkBridge.get_id():
+		NetworkBridge.n_rpc(self, "set_sit", [recived_value])
+	else:
+		player_sitting = recived_value
+
 func _process(delta):
-	weaponBlend = lerp(weaponBlend,float(!weaponHold),0.1)
-	crouchBlend = lerp(crouchBlend,floor(playerCrouch),0.1)
-	jumpBlend = lerp(jumpBlend,abs(floor(playerOnFloor) - 1),0.1)
+	weaponBlend = lerp(weaponBlend, float(!weaponHold), delta * 4.0)
+	crouchBlend = lerp(crouchBlend, floor(playerCrouch), delta * 4.0)
+	jumpBlend = lerp(jumpBlend, abs(floor(playerOnFloor) - 1), delta * 4.0)
+	sit_blend = lerp(sit_blend, floor(player_sitting) * 2.0, delta * 4.0)
 	
 	movementBlend[0] = lerp(movementBlend[0],playerMovement[0],0.1)
 	movementBlend[1] = lerp(movementBlend[1],playerMovement[1],0.1)
 	playerAimBlend = lerp(playerAimBlend,playerAim,0.1)
 	
-	animTree.set("parameters/LEGS_BLEND/blend_amount",jumpBlend)
+	animTree.set("parameters/LEGS_BLEND/blend_amount", clamp(jumpBlend - sit_blend, -1, 1))
 	animTree.set("parameters/STANDMOVE_AMOUNT/blend_amount", movementBlend[0] * -1)
 	animTree.set("parameters/CROUCHMOVE_AMOUNT/blend_amount", movementBlend[0] * -1)
 	animTree.set("parameters/RUN_FORWARD_DIRECTION/blend_amount", movementBlend[1])
@@ -193,14 +204,14 @@ remote func _update_puppet(id, recivedTransform, recivedPlayerMovement, recivedP
 	if NetworkBridge.n_is_network_master(self):
 		NetworkBridge.n_rpc_unreliable(self, "_update_puppet", [recivedTransform, recivedPlayerMovement, recivedPlayerAim, grapple_pos])
 
-puppet func respawn_puppet(id):
+remote func respawn_puppet(id):
 	if int(self.name) == NetworkBridge.get_id():
 		NetworkBridge.n_rpc(self, "respawn_puppet")
 	else:
 		animTree.set("parameters/DEATH1/active", false)
 		animTree.active = true
 
-puppet func set_current_weapon(id, value):
+remote func set_current_weapon(id, value):
 	if int(self.name) == NetworkBridge.get_id():
 		NetworkBridge.n_rpc(self, "set_current_weapon", [value])
 	else:
@@ -214,13 +225,13 @@ puppet func set_current_weapon(id, value):
 			weaponsMesh[value].get_child(0).hide()
 			currentWeaponId = value
 
-puppet func set_is_on_floor(id, value):
+remote func set_is_on_floor(id, value):
 	if int(self.name) == NetworkBridge.get_id():
 		NetworkBridge.n_rpc(self, "set_is_on_floor", [value])
 	else:
 		playerOnFloor = value
 
-puppet func set_kick(id):
+remote func set_kick(id):
 	if int(self.name) == NetworkBridge.get_id():
 		NetworkBridge.n_rpc(self, "set_kick")
 	else:
@@ -229,13 +240,13 @@ puppet func set_kick(id):
 remote func _set_cancer(id):
 	Global.player.cancer()
 
-puppet func set_crouch(id, value):
+remote func set_crouch(id, value):
 	if int(self.name) == NetworkBridge.get_id():
 		NetworkBridge.n_rpc(self, "set_crouch", [value])
 	else:
 		playerCrouch = value
 
-puppet func set_gravity(id, value):
+remote func set_gravity(id, value):
 	if int(self.name) == NetworkBridge.get_id():
 		NetworkBridge.n_rpc(self, "set_gravity", [value])
 	else:

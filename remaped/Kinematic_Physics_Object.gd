@@ -89,7 +89,7 @@ remote func _create_blood_decal(id, collider, recivedTransform, recivedBasis):
 	new_blood_decal.global_transform.origin = recivedTransform
 	new_blood_decal.transform.basis = recivedBasis
 
-puppet func _delete(id):
+puppet func _remove(id):
 	hide()
 	global_translation = Vector3(-1000, -1000, -1000)
 	
@@ -136,7 +136,7 @@ func register_all_rpcs():
 		["_spawn_fake_gas", NetworkBridge.PERMISSION.ALL],
 		["_grill", NetworkBridge.PERMISSION.ALL],
 		["_create_blood_decal", NetworkBridge.PERMISSION.ALL],
-		["_delete", NetworkBridge.PERMISSION.SERVER],
+		["_remove", NetworkBridge.PERMISSION.SERVER],
 		["_set_hold_collision", NetworkBridge.PERMISSION.ALL],
 		["set_lerp_transform", NetworkBridge.PERMISSION.ALL],
 		["client_set_lerp_transform", NetworkBridge.PERMISSION.SERVER],
@@ -367,8 +367,8 @@ func _physics_process(delta):
 					get_parent().add_child(new_gas_cloud)
 					new_gas_cloud.global_transform.origin = global_transform.origin
 					NetworkBridge.n_rpc(self, "_spawn_fake_gas", [new_gas_cloud.global_transform.origin])
-					NetworkBridge.n_rpc(self, "_delete")
-					_delete(null)
+					NetworkBridge.n_rpc(self, "_remove")
+					_remove(null)
 				velocity = velocity.bounce(collision.normal) * 0.6
 				angular_velocity = Vector2(velocity.x, velocity.z).length()
 
@@ -449,8 +449,8 @@ func network_damage(id, damage, collision_n, collision_p, shooter_pos):
 				get_parent().add_child(new_gas_cloud)
 				new_gas_cloud.global_transform.origin = global_transform.origin
 				NetworkBridge.n_rpc(self, "_spawn_fake_gas", [new_gas_cloud.global_transform.origin])
-				NetworkBridge.n_rpc(self, "_delete")
-				_delete(null)
+				NetworkBridge.n_rpc(self, "_remove")
+				_remove(null)
 			if damage < 3:
 				return 
 			

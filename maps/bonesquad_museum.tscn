@@ -1,4 +1,4 @@
-[gd_scene load_steps=204 format=2]
+[gd_scene load_steps=207 format=2]
 
 [ext_resource path="res://Textures/skybox3.png" type="Texture" id=1]
 [ext_resource path="res://Maps/textures/base/Stone_wall_2.png" type="Texture" id=2]
@@ -20,8 +20,8 @@
 [ext_resource path="res://MOD_CONTENT/CruS Online/maps_stuff/WeaponSpawner.tscn" type="PackedScene" id=18]
 [ext_resource path="res://Scripts/Message_Area.gd" type="Script" id=19]
 [ext_resource path="res://Entities/Enemies/E_Civilian.tscn" type="PackedScene" id=20]
-[ext_resource path="res://Entities/Enemies/E_Dog.tscn" type="PackedScene" id=21]
-[ext_resource path="res://Entities/Enemies/E_Fleshrat.tscn" type="PackedScene" id=22]
+[ext_resource path="res://Textures/NPC/Objective_Chief.png" type="Texture" id=21]
+[ext_resource path="res://Imported_Mesh/Props/fatberg.obj" type="ArrayMesh" id=22]
 [ext_resource path="res://Scripts/Destructible.gd" type="Script" id=23]
 [ext_resource path="res://Maps/textures/base/glass1.tres" type="Material" id=24]
 [ext_resource path="res://Entities/Creatures/snirby2.tscn" type="PackedScene" id=25]
@@ -42,6 +42,7 @@
 [ext_resource path="res://Entities/Props/copcar.tscn" type="PackedScene" id=40]
 [ext_resource path="res://Entities/Props/Monitor.tscn" type="PackedScene" id=41]
 [ext_resource path="res://MOD_CONTENT/CruS Online/maps_stuff/respawn_point.tscn" type="PackedScene" id=42]
+[ext_resource path="res://Fonts/gamefont(1).ttf" type="DynamicFontData" id=43]
 
 [sub_resource type="NavigationMesh" id=1]
 
@@ -840,6 +841,16 @@ func player_use():
 	if currentLine + 1 < len(lines):
 		currentLine += 1
 "
+
+[sub_resource type="SpatialMaterial" id=1233]
+albedo_texture = ExtResource( 21 )
+uv1_scale = Vector3( 1.228, 1.119, 1 )
+uv1_triplanar = true
+uv1_triplanar_sharpness = 0.965936
+
+[sub_resource type="DynamicFont" id=1234]
+outline_size = 2
+font_data = ExtResource( 43 )
 
 [node name="Level" type="Spatial"]
 
@@ -1670,12 +1681,6 @@ anims/rotation = SubResource( 399 )
 [node name="Civilian" parent="." instance=ExtResource( 20 )]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 10.3238, 3.08748, 18.1721 )
 
-[node name="Fleshrat" parent="." instance=ExtResource( 22 )]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 25.4676, 1.39468, -23.2971 )
-
-[node name="Dog" parent="." instance=ExtResource( 21 )]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 22.0553, 2.05054, -24.0082 )
-
 [node name="Toilet" parent="." instance=ExtResource( 30 )]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -5.30761, 1.67465, 27.756 )
 
@@ -1686,7 +1691,7 @@ transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -4.45699, 1.67465, 27.756 )
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -3.64917, 1.67465, 27.756 )
 
 [node name="Car" parent="." instance=ExtResource( 28 )]
-transform = Transform( -0.246407, 0, 0.969166, 0, 1, 0, -0.969166, 0, -0.246407, -23.5207, 1.87868, 25.373 )
+transform = Transform( 0.811288, 0, 0.584646, 0, 1, 0, -0.584646, 0, 0.811288, 26.6144, 1.87868, -24.5834 )
 
 [node name="Car2" parent="." instance=ExtResource( 32 )]
 transform = Transform( -0.914084, 0, -0.405525, 0, 1, 0, 0.405525, 0, -0.914084, -26.9482, 1.9652, 9.80139 )
@@ -1695,13 +1700,13 @@ transform = Transform( -0.914084, 0, -0.405525, 0, 1, 0, 0.405525, 0, -0.914084,
 transform = Transform( -0.93004, 0, 0.367459, 0, 1, 0, -0.367459, 0, -0.93004, -9.93833, 1.35548, 28.3374 )
 
 [node name="Slotmachine" parent="." instance=ExtResource( 33 )]
-transform = Transform( -0.702675, 0, 0.711511, 0, 1, 0, -0.711511, 0, -0.702675, -12.6322, 1.04465, 28.9347 )
+transform = Transform( -0.940768, 0, 0.33905, 0, 1, 0, -0.33905, 0, -0.940768, -26.2555, 1.04465, 29.0796 )
 
 [node name="Slotmachine2" parent="." instance=ExtResource( 34 )]
-transform = Transform( -0.974229, 0, -0.225563, 0, 1, 0, 0.225563, 0, -0.974229, -14.2258, 1.04356, 29.2247 )
+transform = Transform( 0.28818, 0, 0.957577, 0, 1, 0, -0.957577, 0, 0.28818, -29.054, 1.04356, 26.0609 )
 
 [node name="Slotmachine3" parent="." instance=ExtResource( 31 )]
-transform = Transform( -0.704151, 0, 0.71005, 0, 1, 0, -0.71005, 0, -0.704151, -16.0173, 1.0469, 29.2017 )
+transform = Transform( -0.665191, 0, 0.746673, 0, 1, 0, -0.746673, 0, -0.665191, -28.7299, 1.0469, 28.7044 )
 
 [node name="Tree" parent="." instance=ExtResource( 37 )]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 25.4663, 1.04173, 25.9052 )
@@ -1866,6 +1871,19 @@ transform = Transform( -1, 0, 1.50996e-07, 0, 1, 0, -1.50996e-07, 0, -1, 16.3309
 
 [node name="RespawnPoint3" parent="." instance=ExtResource( 42 )]
 transform = Transform( 1.94707e-07, 0, 1, 0, 1, 0, -1, 0, 1.94707e-07, -25.1699, 1.79875, -15.7481 )
+
+[node name="MeshInstance" type="MeshInstance" parent="."]
+transform = Transform( -2.23517e-08, -0.682037, 0.731318, -0.0279391, 0.731032, 0.68177, -0.99961, -0.0204323, -0.0190555, -30.3245, 1.66247, 27.908 )
+material_override = SubResource( 1233 )
+mesh = ExtResource( 22 )
+skeleton = NodePath("../Label3D")
+
+[node name="Label3D" type="Label3D" parent="."]
+transform = Transform( -4.28625e-08, -8.57256e-09, 1, -0.196117, 0.98058, 0, -0.98058, -0.196117, -4.37114e-08, -31.9874, 4.65906, 27.0739 )
+pixel_size = 0.015
+modulate = Color( 1, 0, 0, 1 )
+text = "LETS GO GAMBLING"
+font = SubResource( 1234 )
 
 [connection signal="body_entered" from="Message_Area" to="Message_Area" method="_on_Message_Area_body_entered"]
 

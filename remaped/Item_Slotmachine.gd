@@ -12,11 +12,13 @@ var junk_items:Array = [
 	preload("res://Entities/Props/Monitor.tscn")
 ]
 
+master func set_rotation_counter(id, recived_value):
+	rotation_counter = recived_value
+
 func _ready():
-	rset_config("rotation_counter", MultiplayerAPI.RPC_MODE_MASTER)
-	
 	NetworkBridge.register_rpcs(self, [
 		["set_mech_rotation", NetworkBridge.PERMISSION.SERVER],
+		["set_rotation_counter", NetworkBridge.PERMISSION.ALL],
 		["notify", NetworkBridge.PERMISSION.SERVER],
 		["play_audio", NetworkBridge.PERMISSION.SERVER],
 		["client_spawn_item", NetworkBridge.PERMISSION.SERVER],
@@ -73,7 +75,7 @@ puppet func client_spawn_item(id, recivedItem, recivedPath, recivedName, recived
 
 func player_use():
 	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
-		check_use(true)
+		check_use(null, true)
 	else:
 		NetworkBridge.n_rpc(self, "check_use")
 
@@ -95,4 +97,4 @@ puppet func money_check(id):
 	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
 		rotation_counter = 50
 	else:
-		NetworkBridge.n_rset(self, "rotation_counter", 50)
+		NetworkBridge.n_rpc(self, "set_rotation_counter", [50])

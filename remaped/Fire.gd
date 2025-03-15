@@ -8,8 +8,22 @@ var f = preload("res://Entities/Bullets/Fire_Child.tscn")
 onready var p = $Particles
 var wep
 
+var last_transform
+var lerp_transform
+
+var tick = 0
+
+func host_tick():
+	tick += 1
+	if (global_transform.origin - last_transform.origin).length() > 0.01 and tick % 2 == 0:
+		last_transform = global_transform
+		
+		NetworkBridge.n_rpc_unreliable(self, "_set_transform", [global_transform, p.scale])
+		
+		tick = 0
+
 puppet func _set_transform(id, recivedTransform, recivedScale):
-	global_transform = recivedTransform
+	lerp_transform = recivedTransform
 	p.scale = recivedScale
 
 puppet func _delete(id):
@@ -22,6 +36,8 @@ puppet func _create_object(id, recivedPath, recivedObject, recivedName, recivedT
 	newObject.global_transform = recivedTransform
 
 func _ready():
+	lerp_transform = global_transform
+	
 	set_collision_mask_bit(1, 1)
 	
 	NetworkBridge.register_rpcs(self, [
@@ -32,7 +48,7 @@ func _ready():
 
 func _physics_process(delta):
 	if NetworkBridge.n_is_network_master(self):
-		NetworkBridge.n_rpc_unreliable(self, "_set_transform", [global_transform, p.scale])
+		host_tick()
 		
 		var col = move_and_collide(velocity * delta)
 		if col:
@@ -77,6 +93,8 @@ func _physics_process(delta):
 		if velocity.length() < 6:
 			NetworkBridge.n_rpc(self, "_delete")
 			queue_free()
+	else:
+		global_transform = global_transform.interpolate_with(lerp_transform, delta * 10.0)
 
 func set_water(value):
 	if NetworkBridge.n_is_network_master(self):

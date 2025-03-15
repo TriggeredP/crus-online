@@ -11,10 +11,13 @@ export var rotateSpeed = 0.1
 export var respawnWeaponIds = [0]
 export var respawnTime = 5
 
-remotesync func _disable(id, disable):
+remote func _disable(id, disable):
 	$Collect/CollisionShape.disabled = disable
+	
+	if NetworkBridge.n_is_network_master(self):
+		NetworkBridge.n_rpc(self, "_disable", [disable])
 
-remotesync func _set_weapon(id, weaponId):
+remote func _set_weapon(id, weaponId):
 	if activeWeapon != null:
 		weaponModels[activeWeapon].hide()
 		
@@ -22,9 +25,15 @@ remotesync func _set_weapon(id, weaponId):
 	
 	if activeWeapon != null:
 		weaponModels[activeWeapon].show()
+	
+	if NetworkBridge.n_is_network_master(self):
+		NetworkBridge.n_rpc(self, "_set_weapon", [weaponId])
 
-mastersync func _enable_timer(id):
-	$Timer.start()
+remote func _enable_timer(id):
+	if NetworkBridge.n_is_network_master(self):
+		$Timer.start()
+	else:
+		NetworkBridge.n_rpc(self, "_enable_timer")
 
 func _ready():
 	NetworkBridge.register_rpcs(self,[
@@ -46,11 +55,17 @@ func collected():
 			if Global.player.weapon.ammo[activeWeapon] < maxAmmo[activeWeapon]:
 				Global.player.weapon.ammo[activeWeapon] = maxAmmo[activeWeapon]
 			Global.player.weapon.set_weapon(activeWeapon)
-			NetworkBridge.n_rpc(self, "_set_weapon", [null])
-			NetworkBridge.n_rpc(self, "_disable", [true])
-			NetworkBridge.n_rpc(self, "_enable_timer")
+			
+			if not NetworkBridge.n_is_network_master(self):
+				NetworkBridge.n_rpc(self, "_disable", [true])
+				NetworkBridge.n_rpc(self, "_set_weapon", [null])
+			
+			_set_weapon(null, null)
+			_disable(null, true)
+			
+			_enable_timer(null)
 
 func _selectWeapon():
 	respawnWeaponIds.shuffle()
-	NetworkBridge.n_rpc(self, "_set_weapon", [respawnWeaponIds[0]])
-	NetworkBridge.n_rpc(self, "_disable", [false])
+	_set_weapon(null, respawnWeaponIds[0])
+	_disable(null, false)

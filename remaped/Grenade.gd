@@ -114,6 +114,9 @@ var ignore_id = null
 func _ready():
 	update_rpcs()
 	
+	if tranq:
+		set_collision_mask_bit(10, 1)
+	
 	if has_node("/Boresound"):
 		print("has bore sound")
 		boresounds = [$Boresound, $Boresound2]

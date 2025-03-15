@@ -8,7 +8,23 @@ var player_fire = false
 
 onready var f = load("res://Entities/Bullets/Fire_Child.tscn")
 
+var last_transform
+var lerp_transform
+
+var tick = 0
+
+func host_tick():
+	tick += 1
+	if (global_transform.origin - last_transform.origin).length() > 0.01 and tick % 2 == 0:
+		last_transform = global_transform
+		
+		NetworkBridge.n_rpc_unreliable(self, "_set_transform", [global_transform])
+		
+		tick = 0
+
 func _ready():
+	lerp_transform = global_transform
+	
 	NetworkBridge.register_rpcs(self, [
 		["_set_transform", NetworkBridge.PERMISSION.SERVER],
 		["_delete", NetworkBridge.PERMISSION.SERVER],
@@ -16,7 +32,7 @@ func _ready():
 	])
 
 puppet func _set_transform(id, recivedTransform):
-	global_transform = recivedTransform
+	lerp_transform = recivedTransform
 
 puppet func _delete(id):
 	queue_free()
@@ -31,7 +47,7 @@ puppet func _create_object(id, recivedPath, recivedObject, recivedName, recivedT
 
 func _physics_process(delta):
 	if NetworkBridge.n_is_network_master(self):
-		NetworkBridge.n_rpc_unreliable(self, "_set_transform", [global_transform])
+		host_tick()
 		
 		t += 1
 		if lifetime < t:
@@ -63,6 +79,8 @@ func _physics_process(delta):
 			else:
 				if parent.has_method("damage"):
 					parent.damage(5, Vector3.ZERO, global_transform.origin, global_transform.origin)
+	else:
+		global_transform = global_transform.interpolate_with(lerp_transform, delta * 10.0)
 
 func _on_Area_body_entered(body):
 	if NetworkBridge.n_is_network_master(self):

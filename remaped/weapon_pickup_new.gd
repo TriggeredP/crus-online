@@ -27,15 +27,18 @@ remote func syncUpdate(id):
 	MESH[current_weapon].show()
 
 func _ready():
+	register_all_rpcs()
+	
+	MESH[current_weapon].show()
+	if not menu:
+		ammo = Global.player.weapon.MAX_MAG_AMMO[current_weapon]
+
+func register_all_rpcs():
 	NetworkBridge.register_rpcs(self, [
 		["_update_vars", NetworkBridge.PERMISSION.ALL],
 		["_change_visible", NetworkBridge.PERMISSION.ALL],
 		["syncUpdate", NetworkBridge.PERMISSION.ALL]
 	])
-	
-	MESH[current_weapon].show()
-	if not menu:
-		ammo = Global.player.weapon.MAX_MAG_AMMO[current_weapon]
 
 func player_use():
 	if not menu:
@@ -70,8 +73,8 @@ func player_use():
 		current_weapon = last_weapon
 		NetworkBridge.n_rpc(self, "_update_vars", [current_weapon, ammo])
 		if current_weapon == null:
-			get_parent().NetworkBridge.n_rpc(self, "_remove")
-			get_parent().queue_free()
+			NetworkBridge.n_rpc(get_parent(), "_remove")
+			get_parent()._remove()
 			return 
 		ammo = last_ammo
 		NetworkBridge.n_rpc(self, "_update_vars", [current_weapon, ammo])
