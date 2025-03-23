@@ -80,6 +80,10 @@ func _physics_process(delta):
 	else:
 		show()
 
+func _input(event):
+	if Input.is_action_just_pressed("ui_cancel") and $CenterContainer.visible:
+		disable_menu()
+
 func save_player():
 	Multiplayer.playerInfo.nickname = NicknameEdit.text
 	Multiplayer.playerInfo.color = NicknameColor.color.to_html(false)
