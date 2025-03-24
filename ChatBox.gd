@@ -11,8 +11,12 @@ onready var labelText = $VBoxContainer/Label
 onready var parent = Global.get_node("Multiplayer")
 
 var sizeRatio = 16
+var dragging = false
+var drag_offset = Vector2()  # Offset between cursor and panel origin
 
 func _ready():
+	mouse_filter = Control.MOUSE_FILTER_STOP
+	
 	NetworkBridge.register_rpcs(self,[
 		["send_message_host", NetworkBridge.PERMISSION.ALL],
 		["send_message", NetworkBridge.PERMISSION.SERVER]
@@ -20,6 +24,33 @@ func _ready():
 	
 	if in_game_chat:
 		hide()
+
+func _gui_input(event):
+	if event is InputEventMouseButton:
+		if event.button_index == BUTTON_LEFT:
+			if event.pressed:
+				var local_pos = event.position
+				var header_height = labelText.rect_size.y if labelText else 30
+				var header_rect = Rect2(Vector2(0, 0), Vector2(rect_size.x, header_height))
+				
+				if header_rect.has_point(local_pos):
+					dragging = true
+					drag_offset = get_global_mouse_position() - rect_global_position
+					get_tree().set_input_as_handled()
+			else:
+				dragging = false
+	
+	elif event is InputEventMouseMotion and dragging:
+		rect_global_position = get_global_mouse_position() - drag_offset
+		
+		var viewport_size = get_viewport_rect().size
+		rect_position.x = clamp(rect_position.x, 0, viewport_size.x - rect_size.x * rect_scale.x)
+		rect_position.y = clamp(rect_position.y, 0, viewport_size.y - rect_size.y * rect_scale.y)
+		get_tree().set_input_as_handled()
+
+func _process(delta):
+	if dragging and not Input.is_mouse_button_pressed(BUTTON_LEFT):
+		dragging = false
 
 func set_size_ratio():
 	sizeRatio = 16 * (Global.resolution[0] / 1280)
@@ -68,3 +99,4 @@ func close_chat(type):
 	hide()
 	$"../OpenChat".button_enable()
 	$"../CloseChat".button_disable()
+
