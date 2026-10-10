@@ -272,8 +272,9 @@ func _physics_process(delta):
 						mesh.rotation.x = 0
 				last_pos = global_transform.origin
 		else:
-			global_transform = global_transform.interpolate_with(lerp_transform, delta * 10.0)
-			mesh.rotation = lerp(mesh.rotation, lerp_mesh_rotation, delta * 10.0)
+			NetworkBridge.approach_transform(self, lerp_transform, delta)
+			if mesh.rotation.distance_squared_to(lerp_mesh_rotation) > 0.000001:
+				mesh.rotation = lerp(mesh.rotation, lerp_mesh_rotation, delta * 10.0)
 
 func add_velocity(increase_velocity):
 	network_add_velocity(null, increase_velocity)

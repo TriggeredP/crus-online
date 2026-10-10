@@ -20,3 +20,6 @@ func _on_body_entered(body):
 	else :
 		body.hide()
 		body.global_transform.origin = Vector3(-1000,-1000,-1000)
+		# Stop it falling (and syncing) forever from down there
+		if body.has_method("remove_from_world"):
+			body.remove_from_world()

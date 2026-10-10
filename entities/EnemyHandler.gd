@@ -184,6 +184,7 @@ puppet func respawn(id):
 	show()
 	dead = false
 	body.set_collision_layer_bit(4, true)
+	body.set_physics_process(true)
 
 puppet func cleanup(id, teleport_body = true):
 	enabled = false
@@ -193,6 +194,8 @@ puppet func cleanup(id, teleport_body = true):
 		global_transform.origin = Vector3(1000,1000,1000)
 		body.lerp_transform.origin = Vector3(1000,1000,1000)
 	body.set_collision_layer_bit(4, false)
+	# Hidden and out of the level, so stop its per-frame AI and sync work
+	body.set_physics_process(false)
 
 master func check_npc(id):
 	if not enabled:

@@ -1,6 +1,6 @@
 extends Node
 
-var version = "Beta 150325/1950"
+var version = "v1.0"
 
 enum errorType {UNKNOW, TIME_OUT, WRONG_PASSWORD, WRONG_VERSION, PASSWORD_REQUIRE, SERVER_CLOSED, UPNP_ERROR, PLAYER_CONNECTED}
 
@@ -135,6 +135,7 @@ func _input(event):
 			KEY_F3:
 				packages_inspector = !packages_inspector
 				$Debug/VBoxContainer/PackagesDebugList.visible = packages_inspector
+				NetworkBridge.debug = packages_inspector
 
 func _physics_process(delta):
 	if NetworkBridge.is_lan():

@@ -427,6 +427,20 @@ func hold(item):
 		
 	holding = true
 
+# Enemy hitboxes take add_velocity(amount, normal), while bodies take a single
+# velocity vector that pushes away from the normal. Physics objects are left out:
+# damage() already knocks them back
+func push_collider(collider, amount, normal):
+	if not collider.has_method("add_velocity") or collider.has_method("physics_object"):
+		return
+	for method in collider.get_method_list():
+		if method.name == "add_velocity":
+			if method.args.size() >= 2:
+				collider.add_velocity(amount, normal)
+			else:
+				collider.add_velocity(normal * amount)
+			return
+
 
 func _input(event):
 	if glob.implants.arm_implant.regen_ammo:
@@ -721,7 +735,7 @@ func _process(delta)->void :
 					held_object.set_hold_collision(false)
 					use_ray.remove_exception(held_object)
 					
-					held_object.set_drop_object()
+					held_object.set_drop_object(null)
 					NetworkBridge.n_rpc(held_object, "set_drop_object")
 #				else:
 #					if "soul" in held_object:
@@ -749,16 +763,16 @@ func _process(delta)->void :
 					held_object.set_hold_collision(false)
 					use_ray.remove_exception(held_object)
 					
-					held_object.set_drop_object()
+					held_object.set_drop_object(null)
 					NetworkBridge.n_rpc(held_object, "set_drop_object")
-					
+
 					var calculatedVelocity
 					if "mass" in held_object:
 						calculatedVelocity = (20 + glob.implants.arm_implant.throw_bonus - held_object.mass) * (global_transform.origin - hold_pos.global_transform.origin).normalized()
 					else :
 						calculatedVelocity = (20 + glob.implants.arm_implant.throw_bonus) * (global_transform.origin - hold_pos.global_transform.origin).normalized()
-					held_object.velocity += glob.player.player_velocity
-					NetworkBridge.n_rset(held_object, "velocity", [held_object.velocity + glob.player.player_velocity - calculatedVelocity])
+					# Applied on the host, which simulates the object; a client's call is forwarded there
+					held_object.add_velocity(glob.player.player_velocity - calculatedVelocity)
 #				else:
 #					if "alerter" in held_object:
 #						held_object.alerter = true
@@ -956,8 +970,7 @@ func _process(delta)->void :
 							collider.destroy(col_n, col_p)
 						elif collider.has_method("damage"):
 							collider.damage(kick_damage, col_n, col_p, global_transform.origin)
-						if collider.has_method("add_velocity"):
-							collider.add_velocity(40, col_n)
+						push_collider(collider, 40, col_n)
 			kickflag = false
 		if Input.is_action_just_pressed("Tertiary_Weapon") and not item_consumed:
 			if glob.implants.arm_implant.grapple:
@@ -1484,8 +1497,7 @@ func blackjack_timeout():
 				glob.player.player_view.fov *= 1.02
 				if col.has_method("tranq_timeout"):
 					col.tranq_timeout(false)
-				if col.has_method("add_velocity"):
-					col.add_velocity(5, col_n)
+				push_collider(col, 5, col_n)
 	elif current_weapon == W_ROD:
 		if fishing_hook != null:
 			if fishing_hook.fish_caught:

@@ -324,7 +324,7 @@ func _physics_process(delta)->void :
 					velocity.z *= 0.95
 			move()
 		else:
-			global_transform = global_transform.interpolate_with(lerp_transform, delta * 10.0)
+			NetworkBridge.approach_transform(self, lerp_transform, delta)
 
 func move()->void :
 	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):

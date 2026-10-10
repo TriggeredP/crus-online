@@ -173,7 +173,7 @@ func _physics_process(delta):
 			else :
 				_floor = false
 		else:
-			global_transform = global_transform.interpolate_with(lerp_transform, delta * 10.0)
+			NetworkBridge.approach_transform(self, lerp_transform, delta)
 
 func add_velocity(increase_velocity):
 	network_add_velocity(null, increase_velocity)

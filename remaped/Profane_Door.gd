@@ -71,6 +71,8 @@ func _physics_process(delta):
 		if rotation_counter > 90:
 			rotation_counter = 0
 			stop = true
+			# Final position goes reliably so a dropped update cannot leave the door ajar
+			NetworkBridge.n_rset(self, "global_transform", global_transform)
 
 func get_type():
 	return type;

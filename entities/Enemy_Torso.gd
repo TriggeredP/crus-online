@@ -105,7 +105,8 @@ func set_water(a):
 				soul.body.set_water(a)
 
 func add_velocity(normal, amount):
-	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
+	# The soul forwards this to the host itself, so clients' kicks push enemies too
+	if NetworkBridge.check_connection():
 		soul.add_velocity(normal, amount)
 
 master func tranquilize(id, dart):

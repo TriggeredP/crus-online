@@ -12,7 +12,10 @@ var _peers = {}
 var _my_steam_id := 0
 var _server_steam_id := 0
 var _node_path_cache = {}
+# Reverse lookup for _node_path_cache (NodePath -> path_cache_index)
+var _node_path_to_index = {}
 
+# steam_id -> { path_cache_index: true }
 var _peers_confirmed_node_path = {}
 var _next_path_cache_index := 0
 
@@ -61,33 +64,36 @@ func register_rpcs(caller: Node, methods: Array):
 
 func clear_node_path_cache():
 	_node_path_cache.clear()
+	_node_path_to_index.clear()
 	_next_path_cache_index = 0
 
 # CLIENTS AND SERVER
 # Calls this method on the server
-func rpc_on_server(caller: Node, method: String, args: Array = []):
-	_rpc(get_server_steam_id(), caller, method, args)
+func rpc_on_server(caller: Node, method: String, args: Array = [], reliable: bool = true):
+	_rpc(get_server_steam_id(), caller, method, args, reliable)
 
 # SERVER ONLY
 # Calls this method on the client specified
-func rpc_on_client(to_peer_id: int, caller: Node, method: String, args: Array = []):
+func rpc_on_client(to_peer_id: int, caller: Node, method: String, args: Array = [], reliable: bool = true):
 	if not is_server():
 		push_warning("Tried to call RPC on client: %s %s" % [caller, method])
 		return
-	_rpc(to_peer_id, caller, method, args)
+	_rpc(to_peer_id, caller, method, args, reliable)
 
 # SERVER ONLY
 # Calls this method on ALL clients connected
-func rpc_all_clients(caller: Node, method: String, args: Array = []):
+func rpc_all_clients(caller: Node, method: String, args: Array = [], reliable: bool = true):
 	for peer_id in _peers:
 		if peer_id != _my_steam_id:
-			rpc_on_client(peer_id, caller, method, args)
+			rpc_on_client(peer_id, caller, method, args, reliable)
 
 # SERVER ONLY (OWNERSHIP TBD)
-func remote_set(caller: Node, property: String, value):
+func remote_set(caller: Node, property: String, value, reliable: bool = true):
 	# probably need to check basic ownership here, but for now its server only
-	for peer in _peers.values(): 
-		_rset(peer, caller, property, value)
+	for peer in _peers.values():
+		# Like Godot's rset, don't set it on ourselves; callers already have the value
+		if peer.steam_id != _my_steam_id:
+			_rset(peer, caller, property, value, reliable)
 
 # Returns whether a peer is connected or not.
 func is_peer_connected(steam_id) -> bool:
@@ -188,7 +194,7 @@ func _migrate_host(old_owner_id, new_owner_id):
 				_peers[steam_id].connected = true
 			
 
-func _rpc(to_peer_id: int, node: Node, method: String, args: Array):
+func _rpc(to_peer_id: int, node: Node, method: String, args: Array, reliable: bool = true):
 	var to_peer = get_peer(to_peer_id)
 	if to_peer == null:
 		push_warning("Cannot send an RPC to a null peer. Check youre completed connected to the network first")
@@ -218,7 +224,7 @@ func _rpc(to_peer_id: int, node: Node, method: String, args: Array):
 	var packet = PoolByteArray()
 	var payload = [path_cache_index, method, args]
 	
-	if is_server() and not _peer_confirmed_path(to_peer, node_path) or \
+	if is_server() and not _peer_confirmed_path(to_peer, path_cache_index) or \
 		path_cache_index == -1:
 		payload.push_front(node_path)
 		packet.append(PACKET_TYPE.RPC_WITH_NODE_PATH)
@@ -228,9 +234,9 @@ func _rpc(to_peer_id: int, node: Node, method: String, args: Array):
 	var serialized_payload = var2bytes(payload)
 	
 	packet.append_array(serialized_payload)
-	_send_p2p_packet(to_peer.steam_id, packet)
+	_send_p2p_packet(to_peer.steam_id, packet, _get_send_type(packet, reliable))
 
-func _rset(to_peer, node: Node, property: String, value):
+func _rset(to_peer, node: Node, property: String, value, reliable: bool = true):
 	var node_path = _get_rset_property_path(node.get_path(), property)
 	var path_cache_index = _get_path_cache(node_path)
 	if path_cache_index == -1 and is_server():
@@ -243,7 +249,7 @@ func _rset(to_peer, node: Node, property: String, value):
 	
 	var packet = PoolByteArray()
 	var payload = [path_cache_index, value]
-	if is_server() and not _peer_confirmed_path(to_peer, node_path) or \
+	if is_server() and not _peer_confirmed_path(to_peer, path_cache_index) or \
 		path_cache_index == -1:
 		payload.push_front(node_path)
 		packet.append(PACKET_TYPE.RSET_WITH_NODE_PATH)
@@ -252,14 +258,13 @@ func _rset(to_peer, node: Node, property: String, value):
 	
 	var serialized_payload = var2bytes(payload)
 	packet.append_array(serialized_payload)
-	_send_p2p_packet(to_peer.steam_id, packet)
+	_send_p2p_packet(to_peer.steam_id, packet, _get_send_type(packet, reliable))
 
 func _get_rset_property_path(node_path: NodePath, property: String):
 	return NodePath("%s:%s" % [node_path, property])
 
-func _peer_confirmed_path(peer, node_path: NodePath):
-	var path_cache_index = _get_path_cache(node_path)
-	return path_cache_index in _peers_confirmed_node_path[peer.steam_id]
+func _peer_confirmed_path(peer, path_cache_index: int):
+	return _peers_confirmed_node_path[peer.steam_id].has(path_cache_index)
 
 func _server_update_node_path_cache(peer_id: int, node_path: NodePath):
 	if not is_server():
@@ -268,6 +273,7 @@ func _server_update_node_path_cache(peer_id: int, node_path: NodePath):
 	if path_cache_index == -1:
 		path_cache_index = _add_node_path_cache(node_path)
 	var packet = PoolByteArray()
+	packet.append(PACKET_TYPE.NODE_PATH_UPDATE)
 	var payload = var2bytes([path_cache_index, node_path])
 	packet.append_array(payload)
 	_send_p2p_packet(peer_id, packet)
@@ -284,7 +290,7 @@ func _update_node_path_cache(sender_id: int, packet_data: PoolByteArray):
 func _server_confirm_peer_node_path(peer_id, path_cache_index: int):
 	if not is_server():
 		return
-	_peers_confirmed_node_path[peer_id].append(path_cache_index)
+	_peers_confirmed_node_path[peer_id][path_cache_index] = true
 
 func _add_node_path_cache(node_path: NodePath, path_cache_index: int = -1) -> int:
 	var already_exists_id = _get_path_cache(node_path)
@@ -294,23 +300,26 @@ func _add_node_path_cache(node_path: NodePath, path_cache_index: int = -1) -> in
 	if path_cache_index == -1:
 		_next_path_cache_index += 1
 		path_cache_index = _next_path_cache_index
+
+	var replaced_path = _node_path_cache.get(path_cache_index)
+	if replaced_path != null and _node_path_to_index.get(replaced_path) == path_cache_index:
+		_node_path_to_index.erase(replaced_path)
+
 	_node_path_cache[path_cache_index] = node_path
-	
+	_node_path_to_index[node_path] = path_cache_index
+
 	return path_cache_index
 
 func _get_node_path(path_cache_index: int) -> NodePath:
 	return _node_path_cache.get(path_cache_index)
 
 func _get_path_cache(node_path: NodePath) -> int:
-	for path_cache_index in _node_path_cache:
-		if _node_path_cache[path_cache_index] == node_path:
-			return path_cache_index
-	return -1
+	return _node_path_to_index.get(node_path, -1)
 
 func _create_peer(steam_id):
 	var peer = Peer.new()
 	peer.steam_id = steam_id
-	_peers_confirmed_node_path[steam_id] = []
+	_peers_confirmed_node_path[steam_id] = {}
 	return peer
 
 func _init_p2p_host(lobby_id):
@@ -353,10 +362,24 @@ func _send_p2p_command_packet(steam_id, packet_type: int, arg = null):
 	if not _send_p2p_packet(steam_id, payload):
 		push_error("Failed to send command packet %s" % packet_type)
 
-func _send_p2p_packet(steam_id, data: PoolByteArray, send_type: int = SteamInit.Steam.P2P_SEND_RELIABLE, channel: int = 0) -> bool:
+# Steamworks EP2PSend values. The GDNative GodotSteam build the game ships doesn't
+# expose its constants: Steam.P2P_SEND_RELIABLE is silently null in release builds,
+# and passing that to a typed int parameter silently skips the call entirely
+const P2P_SEND_UNRELIABLE = 0
+const P2P_SEND_RELIABLE = 2
+
+# Steam drops unreliable P2P packets larger than this, so send those reliably
+const MAX_UNRELIABLE_PACKET_SIZE = 1200
+
+func _get_send_type(packet: PoolByteArray, reliable: bool) -> int:
+	if reliable or packet.size() > MAX_UNRELIABLE_PACKET_SIZE:
+		return P2P_SEND_RELIABLE
+	return P2P_SEND_UNRELIABLE
+
+func _send_p2p_packet(steam_id, data: PoolByteArray, send_type: int = P2P_SEND_RELIABLE, channel: int = 0) -> bool:
 	return SteamInit.Steam.sendP2PPacket(steam_id, data, send_type, channel)
 
-func _broadcast_p2p_packet(data: PoolByteArray, send_type: int = SteamInit.Steam.P2P_SEND_RELIABLE, channel: int = 0):
+func _broadcast_p2p_packet(data: PoolByteArray, send_type: int = P2P_SEND_RELIABLE, channel: int = 0):
 	for peer_id in _peers:
 		if peer_id != _my_steam_id:
 			_send_p2p_packet(peer_id, data, send_type, channel)

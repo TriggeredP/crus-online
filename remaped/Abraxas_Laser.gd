@@ -57,12 +57,12 @@ func _physics_process(delta):
 		if destroyed:
 			if visible:
 				hide()
-				NetworkBridge.n_rset_unreliable(self, "visible", false)
+				NetworkBridge.n_rset(self, "visible", false)
 			return 
 		if disabled:
 			if particle.visible:
 				particle.hide()
-				NetworkBridge.n_rpc_unreliable(self, "particle_visible", [false])
+				NetworkBridge.n_rpc(self, "particle_visible", [false])
 			if laser.scale.z < 3:
 				hide()
 			laser.scale.z = lerp(laser.scale.z, 1, 0.2)

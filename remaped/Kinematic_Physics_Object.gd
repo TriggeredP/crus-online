@@ -52,6 +52,11 @@ var first_col = true
 
 var change_transform = true
 
+# Objects that fall this long without touching anything have left the level
+# and would otherwise keep falling (and syncing) forever
+const MAX_AIRBORNE_TIME = 10.0
+var airborne_time = 0.0
+
 onready var Multiplayer = Global.get_node("Multiplayer")
 
 ################################################################################
@@ -98,6 +103,11 @@ puppet func _remove(id):
 	set_process(false)
 	set_physics_process(false)
 
+func remove_from_world():
+	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
+		NetworkBridge.n_rpc(self, "_remove")
+		_remove(null)
+
 func syncUpdate():
 	if gun != null:
 		gun.syncUpdate()
@@ -131,6 +141,7 @@ func register_all_rpcs():
 		["_get_transform", NetworkBridge.PERMISSION.ALL],
 		["set_network_transform", NetworkBridge.PERMISSION.ALL],
 		["add_velocity", NetworkBridge.PERMISSION.ALL],
+		["network_add_velocity", NetworkBridge.PERMISSION.ALL],
 		["_sync_vars", NetworkBridge.PERMISSION.ALL],
 		["_set_grill", NetworkBridge.PERMISSION.ALL],
 		["_spawn_fake_gas", NetworkBridge.PERMISSION.ALL],
@@ -210,8 +221,8 @@ func _ready()->void :
 		NetworkBridge.n_rpc(self, "_get_transform")
 
 master func _get_transform(id):
-	NetworkBridge.n_rset_unreliable(self, "lerp_transform", lerp_transform)
-	NetworkBridge.n_rset_unreliable(self, "global_transform", global_transform)
+	NetworkBridge.n_rset(self, "lerp_transform", lerp_transform)
+	NetworkBridge.n_rset(self, "global_transform", global_transform)
 
 master func set_network_transform(id, recivedTransform, only_origin = false):
 	if NetworkBridge.n_is_network_master(self):
@@ -336,6 +347,14 @@ func _physics_process(delta):
 			
 			var collision = move_and_collide(velocity * delta)
 
+			if collision or held:
+				airborne_time = 0.0
+			else:
+				airborne_time += delta
+				if airborne_time > MAX_AIRBORNE_TIME:
+					remove_from_world()
+					return
+
 			if collision and alerter and velocity.length() > 7:
 				sphere_collision.disabled = false
 			elif sphere_collision.disabled == false:
@@ -375,12 +394,15 @@ func _physics_process(delta):
 			if collision and t >= 200 and not player_head:
 				if not stay_active:
 					finished = true
+					# Position updates are unreliable, so make sure clients get where it came to rest
+					last_transform = global_transform
+					NetworkBridge.n_rpc(self, "client_set_lerp_transform", [global_transform])
 				if particle:
 					particle_node.emitting = false
 					particle_node.hide()
 			velocity.y -= gravity * delta
 		else:
-			global_transform = global_transform.interpolate_with(lerp_transform, delta * 10.0)
+			NetworkBridge.approach_transform(self, lerp_transform, delta)
 
 func align_up(node_basis, normal)->Basis:
 	var result = Basis()

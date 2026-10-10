@@ -63,7 +63,7 @@ func _ready():
 		NetworkBridge.n_rpc(self, "_get_transform")
 
 master func _get_transform(id):
-	NetworkBridge.n_rset_unreliable(self, "global_transform", global_transform)
+	NetworkBridge.n_rset(self, "global_transform", global_transform)
 
 func _physics_process(delta):
 	if NetworkBridge.check_connection() and NetworkBridge.n_is_network_master(self):
@@ -78,6 +78,8 @@ func _physics_process(delta):
 		if rotation_counter > 90:
 			rotation_counter = 0
 			stop = true
+			# Final position goes reliably so a dropped update cannot leave the door ajar
+			NetworkBridge.n_rset(self, "global_transform", global_transform)
 
 func get_type():
 	return type;
